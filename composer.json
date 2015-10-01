@@ -1,0 +1,23 @@
+{
+    "name": "genesis/behat-sql-extension",
+    "type": "behat-extension",
+    "description": "SQL extension for behat",
+    "keywords": ["web", "test", "browser", "gui"],
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Abdul Wahhab Qureshi",
+            "email": "its.inevitable@hotmail.com"
+        }
+    ],
+
+    "require": {
+        "php": "~5.4",
+        "pdo": "*",
+        "behat/behat": "~2.5.0",
+    },
+
+    "autoload": {
+        "psr-0": { "Genesis\\SQLExtension": "src/" }
+    }
+}
