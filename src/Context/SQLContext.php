@@ -8,6 +8,8 @@ use Behat\MinkExtension\Context\MinkContext,
 
 class SQLContext extends MinkContext
 {
+    CONST IGNORE_DUPLICATE = true;
+
     private $columns = [];
     private $lastQuery;
     private $connection;
@@ -74,7 +76,7 @@ class SQLContext extends MinkContext
         $columnValues = implode(', ', $columnClause);
 
         $sql = sprintf('INSERT INTO %s (%s) VALUES (%s)', $entity, $columnNames, $columnValues);
-        $this->execute($sql);
+        $this->execute($sql, self::IGNORE_DUPLICATE);
 
         return $this;
     }
@@ -113,7 +115,7 @@ class SQLContext extends MinkContext
         $whereClause = $this->constructClause(' AND ', $this->columns);
 
         $sql = sprintf('UPDATE %s SET %s WHERE %s', $entity, $updateClause, $whereClause);
-        $this->execute($sql);
+        $this->execute($sql, self::IGNORE_DUPLICATE);
     }
 
     private function tableColumns($table)
@@ -186,7 +188,7 @@ class SQLContext extends MinkContext
         }
     }
 
-    private function execute($sql)
+    private function execute($sql, $ignoreDuplicate = false)
     {
         $this->lastQuery = $sql;
 
@@ -194,12 +196,18 @@ class SQLContext extends MinkContext
         $stmt->execute();
 
         if(! $stmt->rowCount()) {
+            $error = print_r($this->connection->errorInfo(), true);
+
+            if($ignoreDuplicate AND strpos($error, 'duplicate key value') !== false) {
+                return $stmt;
+            }
+
             throw new \Exception(
                 sprintf('No rows were effected!%sSQL: "%s",%sError: %s', 
                     PHP_EOL, 
                     $sql, 
                     PHP_EOL, 
-                    print_r($this->connection->errorInfo(), true)
+                    $error
                 )
             );
         }
