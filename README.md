@@ -1,6 +1,60 @@
 # genesis-behat-sql-extension
 Provides easy data manipulation with any pdo enabled database
 
+Installation
+------------
+require with composer
+```
+require "genesis/behat-sql-extension"
+```
+
+Setup
+-----
+After composer has installed the extension you would need to setup the connection details. This can be done in 2 ways:
+
+###1. Behat.yml
+
+In addition to the usual mink-extension parameters, you can pass in a `connection_details` parameter as follows:
+```
+default:
+    extensions:
+        Genesis\SQLExtension\Extension:
+          goutte: ~
+          ...
+          connection_details:
+            engine: pgsql
+            host: 127.0.0.1
+            schema: ...
+            dbname: ...
+            username: ...
+            password: ...
+```
+
+###2. Environment variable
+
+An environment variable for the database connection details. This will essentially be a semi colon separated string like so:
+
+```
+$ export BEHAT_ENV_PARAMS="DBENGINE:mysql;DBHOST:127.0.0.1;DBSCH..."
+```
+
+Fields required are
+```
+DBENGINE
+DBHOST
+DBSCHEMA
+DBNAME
+DBUSER
+DBPASSWORD
+```
+
+The field needs to be present but it may be left empty.
+
+DB Support
+----------
+Tested with PostgreSQL. Expected to work with MySQL as well.
+
+
 Calls provided by this extension
 --------------------------------
 
