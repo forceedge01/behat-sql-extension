@@ -13,7 +13,7 @@
 
     "require": {
         "php": "~5.4",
-        "pdo": "*",
+        "ext-pdo": "*",
         "behat/behat": "~2.5.0",
         "behat/mink-extension": "1.*"
     },
