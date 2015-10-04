@@ -2,6 +2,8 @@
 
 namespace Genesis\SQLExtension;
 
+use Symfony\Component\DependencyInjection\ContainerBuilder;
+use Symfony\Component\Config\Definition\Builder\ArrayNodeDefinition;
 use Behat\MinkExtension;
 
 /*
@@ -20,5 +22,68 @@ use Behat\MinkExtension;
  */
 class Extension extends MinkExtension\Extension
 {
+    public function load(array $config, ContainerBuilder $container)
+    {
+        if(isset($config['connection_details'])) {
+            DEFINE('SQLDBENGINE', $config['connection_details']['engine']);
+            DEFINE('SQLDBHOST', $config['connection_details']['host']);
+            DEFINE('SQLDBSCHEMA', $config['connection_details']['schema']);
+            DEFINE('SQLDBNAME', $config['connection_details']['dbname']);
+            DEFINE('SQLDBUSERNAME', $config['connection_details']['username']);
+            DEFINE('SQLDBPASSWORD', $config['connection_details']['password']);
+            // Store any keywords set in behat.yml file
+            if(isset($config['keywords']) AND $config['keywords']) {
+                session_start();
+                // $_SESSION['behat'] = [];
 
+                foreach($config['keywords'] as $keyword => $value) {
+                    $_SESSION['behat']['keywords'][$keyword] = $value;
+                }
+            }
+        }
+
+        parent::load($config, $container);
+    }
+
+    /**
+     * Setups configuration for current extension.
+     *
+     * @param ArrayNodeDefinition $builder
+     */
+    public function getConfig(ArrayNodeDefinition $builder)
+    {
+        $config = $this->loadEnvironmentConfiguration();
+
+        $builder->
+            children()->
+                arrayNode('connection_details')->
+                    children()->
+                        scalarNode('engine')->
+                            defaultValue('pgsql')->
+                        end()->
+                        scalarNode('host')->
+                            defaultValue('127.0.0.1')->
+                        end()->
+                        scalarNode('schema')->
+                            defaultValue(null)->
+                        end()->
+                        scalarNode('dbname')->
+                            defaultValue(null)->
+                        end()->
+                        scalarNode('username')->
+                            defaultValue('root')->
+                        end()->
+                        scalarNode('password')->
+                            defaultValue(null)->
+                        end()->
+                    end()->
+                end()->
+                arrayNode('keywords')->
+                    ignoreExtraKeys(false)->
+                end()->
+            end()->
+        end();
+
+        parent::getConfig($builder);
+    }
 }
