@@ -146,10 +146,29 @@ class SQLHandler extends MinkContext
         $whereClause = [];
 
         foreach($columns as $column => $value) {
-            $whereClause[] = sprintf('%s = %s', $column, $value);
+            $whereClause[] = sprintf('%s = %s', $column, $this->quoteOrNot($value));
         }
 
         return implode($glue, $whereClause);
+    }
+
+    /**
+     * Gets table columns and its values, returns array
+     */
+    protected function getTableColumns($entity)
+    {
+        $columnClause = [];
+        // Auto generate values for insert
+        $allColumns = $this->tableColumns($entity);
+
+        foreach($allColumns as $col => $type) {
+            $columnClause[$col] = isset($this->columns[$col]) ? $this->quoteOrNot($this->columns[$col]) : $this->sampleData($type);
+        }
+
+        $columnNames = implode(', ', array_keys($columnClause));
+        $columnValues = implode(', ', $columnClause);
+
+        return [$columnNames, $columnValues];
     }
 
     /**
@@ -168,7 +187,7 @@ class SQLHandler extends MinkContext
             }
 
             $val = $this->checkForKeyword(trim($val));
-            $this->columns[trim($col)] = $this->quoteOrNot($val);
+            $this->columns[trim($col)] = $val;
         }
     }
 
@@ -206,7 +225,7 @@ class SQLHandler extends MinkContext
             $error = print_r($this->connection->errorInfo(), true);
 
             if($ignoreDuplicate AND strpos($error, 'duplicate key value') !== false) {
-                return $stmt;
+                return $this->connection->errorInfo();
             }
 
             throw new \Exception(
@@ -231,6 +250,29 @@ class SQLHandler extends MinkContext
     }
 
     /**
+     * get the duplicate key from the error message
+     */
+    protected function getKeyFromError($error)
+    {
+        if(! isset($error[2])) {
+            return false;
+        }
+
+        // Extract duplicate key and run update using it
+        $matches = [];
+
+        if(preg_match('/.*DETAIL:  Key (.*)=.*/sim', $error[2], $matches)) {
+            // Index 1 holds the name of the key matched
+            $key = trim($matches[1], '()');
+            echo sprintf('Duplicate record, running update using "%s"...%s', $key, PHP_EOL);
+            
+            return $key;
+        }
+
+        return false;
+    }
+
+    /**
      * Checks if the value isnt a keyword
      */
     private function isNotQuoteable($val)
@@ -239,6 +281,7 @@ class SQLHandler extends MinkContext
             'true',
             'false',
             'null',
+            'NOW\(\)',
             'COUNT\(.*\)',
             'MAX\(.*\)',
             '\d+'

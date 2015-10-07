@@ -37,7 +37,6 @@ class Extension extends MinkExtension\Extension
                 // $_SESSION['behat'] = [];
 
                 foreach($config['keywords'] as $keyword => $value) {
-                    echo $value;
                     $_SESSION['behat']['keywords'][$keyword] = $value;
                 }
             }

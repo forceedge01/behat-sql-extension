@@ -27,20 +27,19 @@ class SQLContext extends SQLHandler
     public function iHaveAWhere($entity, $columns)
     {
         $this->handleParam($columns);
-
-        // Auto generate values for insert
-        $allColumns = $this->tableColumns($entity);
-        $columnClause = [];
-
-        foreach($allColumns as $col => $type) {
-            $columnClause[$col] = isset($this->columns[$col]) ? $this->columns[$col] : $this->sampleData($type);
-        }
-
-        $columnNames = implode(', ', array_keys($columnClause));
-        $columnValues = implode(', ', $columnClause);
+        list($columnNames, $columnValues) = $this->getTableColumns($entity);
 
         $sql = sprintf('INSERT INTO %s (%s) VALUES (%s)', $entity, $columnNames, $columnValues);
-        $this->execute($sql, self::IGNORE_DUPLICATE);
+        $result = $this->execute($sql, self::IGNORE_DUPLICATE);
+        
+        // Extract duplicate key and run update using it
+        if($key = $this->getKeyFromError($result)) {
+            return $this->iHaveAnExistingWithWhere(
+                $entity, 
+                sprintf('%s:%s',$key, $this->columns[$key]), 
+                $columns
+            );
+        }
 
         return $this;
     }
