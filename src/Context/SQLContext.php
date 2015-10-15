@@ -31,13 +31,20 @@ class SQLContext extends SQLHandler
 
         $sql = sprintf('INSERT INTO %s (%s) VALUES (%s)', $entity, $columnNames, $columnValues);
         $result = $this->execute($sql, self::IGNORE_DUPLICATE);
-        
+
         // Extract duplicate key and run update using it
-        if($key = $this->getKeyFromError($result)) {
-            return $this->iHaveAnExistingWithWhere(
-                $entity, 
-                sprintf('%s:%s',$key, $this->columns[$key]), 
-                $columns
+        if($key = $this->getKeyFromDuplicateError($result)) {
+            $this->debugLog(sprintf('Duplicate key found, running update using key "%s"', $key));
+
+            $this->iHaveAnExistingWithWhere(
+                $entity,
+                $columns,
+                sprintf('%s:%s',$key, $this->columns[$key])
+            );
+
+            $this->setLastIdWhere(
+                $entity,
+                sprintf('%s = %s', $key, $this->quoteOrNot($this->columns[$key]))
             );
         }
 
@@ -79,5 +86,31 @@ class SQLContext extends SQLHandler
 
         $sql = sprintf('UPDATE %s SET %s WHERE %s', $entity, $updateClause, $whereClause);
         $this->execute($sql, self::IGNORE_DUPLICATE);
+
+        $this->setLastIdWhere(
+            $entity,
+            $whereClause
+        );
+    }
+
+    /**
+     * @Given /^I save the id as "([^"]*)"$/
+     */
+    public function iSaveTheIdAs($key)
+    {
+        $this->setKeyword($key, $this->getLastInsertId());
+
+        return $this;
+    }
+
+
+    /**
+     * @Given /^I am in debug mode$/
+     */
+    public function iAmInDebugMode()
+    {
+        define('DEBUG_MODE', 1);
+
+        echo 'IN DEBUG MODE NOW';
     }
 }
