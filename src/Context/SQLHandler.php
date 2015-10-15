@@ -21,10 +21,13 @@ use Behat\MinkExtension\Context\MinkContext;
 class SQLHandler extends MinkContext
 {
     CONST IGNORE_DUPLICATE = true;
+    CONST EXPLODE_MAX_LIMIT = 2;
 
     private $lastQuery;
     private $connection;
     private $params;
+    private $lastId;
+    private $entity;
 
     protected $columns = [];
 
@@ -93,7 +96,7 @@ class SQLHandler extends MinkContext
     /**
      * Gets a column list for a table with their type
      */
-    protected function tableColumns($table)
+    protected function requiredTableColumns($table)
     {
         $this->setDBParams();
 
@@ -101,6 +104,7 @@ class SQLHandler extends MinkContext
             $table = str_replace($this->params['DBSCHEMA'].'.' , '', $table);
         }
 
+        // Get not null columns
         $sql = sprintf("SELECT column_name, data_type FROM information_schema.columns WHERE is_nullable = 'NO' and table_name = '%s' and table_schema = '%s';", $table, $this->params['DBSCHEMA']);
         $result = $this->execute($sql);
 
@@ -108,6 +112,9 @@ class SQLHandler extends MinkContext
         foreach($result as $column) {
             $cols[$column['column_name']] = $column['data_type'];
         }
+
+        // Dont populate primary key, let db handle that
+        unset($cols['id']);
 
         return $cols;
     }
@@ -157,10 +164,14 @@ class SQLHandler extends MinkContext
      */
     protected function getTableColumns($entity)
     {
-        $columnClause = [];
-        // Auto generate values for insert
-        $allColumns = $this->tableColumns($entity);
+        $this->entity = $entity;
 
+        $columnClause = [];
+
+        // Get all columns for insertion
+        $allColumns = array_merge($this->requiredTableColumns($entity), $this->columns);
+
+        // Set values for columns
         foreach($allColumns as $col => $type) {
             $columnClause[$col] = isset($this->columns[$col]) ? $this->quoteOrNot($this->columns[$col]) : $this->sampleData($type);
         }
@@ -181,7 +192,7 @@ class SQLHandler extends MinkContext
 
         foreach($columns as $column) {
             try {
-                list($col, $val) = explode(':', $column);    
+                list($col, $val) = explode(':', $column, self::EXPLODE_MAX_LIMIT);
             } catch(\Exception $e) {
                 throw new \Exception('Unable to explode columns based on ":" separator');
             }
@@ -189,6 +200,31 @@ class SQLHandler extends MinkContext
             $val = $this->checkForKeyword(trim($val));
             $this->columns[trim($col)] = $val;
         }
+    }
+
+    /**
+     * Sets a behat keyword
+     */
+    protected function setKeyword($key, $value)
+    {
+        $_SESSION['behat']['keywords'][$key] = $value;
+
+        return $this;
+    }
+
+    /**
+     * Fetches a specific keyword from the behat keywords store
+     */
+    protected function getKeyword($key)
+    {
+        if(! isset($_SESSION['behat']['keywords'][$key])) {
+            throw new \Exception(sprintf('Key "%s" not found in behat store, all keys available: %s', 
+                $key, 
+                print_r($_SESSION['behat']['keywords'], true)
+            ));
+        }
+
+        return $_SESSION['behat']['keywords'][$key];
     }
 
     /**
@@ -212,14 +248,31 @@ class SQLHandler extends MinkContext
     }
 
     /**
+     * Prints out messages when in debug mode
+     */
+    protected function debugLog($log)
+    {
+        if(defined('DEBUG_MODE') AND DEBUG_MODE == 1) {
+            echo $log . PHP_EOL . PHP_EOL;
+        }
+
+        return $this;
+    }
+
+    /**
      * Executes sql command
      */
     protected function execute($sql, $ignoreDuplicate = false)
     {
         $this->lastQuery = $sql;
 
+        $this->debugLog(sprintf('Executing SQL: %s', $sql));
+
         $stmt = $this->getConnection()->prepare($sql);
         $stmt->execute();
+        $this->lastId = $this->connection->lastInsertId(sprintf('%s_id_seq', $this->entity));
+
+        $this->debugLog(sprintf('Last ID fetched: %d', $this->lastId));
 
         if(! $stmt->rowCount()) {
             $error = print_r($this->connection->errorInfo(), true);
@@ -242,9 +295,21 @@ class SQLHandler extends MinkContext
     }
 
     /**
+     * Gets the last insert id
+     */
+    protected function getLastInsertId()
+    {
+        if(! $this->lastId) {
+            throw new \Exception('Could not get last id');
+        }
+
+        return $this->lastId;
+    }
+
+    /**
      * Quotes value if needed for sql
      */
-    private function quoteOrNot($val) 
+    protected function quoteOrNot($val) 
     {
         return ((is_string($val) || is_numeric($val)) AND !$this->isNotQuoteable($val)) ? sprintf("'%s'", $val) : $val;
     }
@@ -252,7 +317,7 @@ class SQLHandler extends MinkContext
     /**
      * get the duplicate key from the error message
      */
-    protected function getKeyFromError($error)
+    protected function getKeyFromDuplicateError($error)
     {
         if(! isset($error[2])) {
             return false;
@@ -270,6 +335,20 @@ class SQLHandler extends MinkContext
         }
 
         return false;
+    }
+
+    /**
+     * sets the last id by executing a select on the id column
+     */
+    protected function setLastIdWhere($entity, $criteria)
+    {
+        $sql = sprintf('SELECT id FROM %s WHERE %s', $entity, $criteria);
+        $result = $this->execute($sql);
+        $this->lastId = $result[0]['id'];
+
+        $this->debugLog(sprintf('Last ID fetched: %d', $this->lastId));
+
+        return $this;
     }
 
     /**
