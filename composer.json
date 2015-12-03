@@ -10,15 +10,15 @@
             "email": "its.inevitable@hotmail.com"
         }
     ],
-
     "require": {
         "php": "~5.4",
         "ext-pdo": "*",
         "behat/behat": "~2.5.0",
         "behat/mink-extension": "1.*"
     },
-
     "autoload": {
-        "psr-4": { "Genesis\\SQLExtension": "src/" }
+        "psr-4": {
+            "Genesis\\SQLExtension\\": "src/"
+         }
     }
 }
