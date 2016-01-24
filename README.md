@@ -49,11 +49,11 @@ This will make the `qwerty` keyword usable as follows:
 ```gherkin
 Given I have a "user" where "email:its.inevitable@hotmail.com,password_hash:{qwerty}"
 ```
-In the above example note the use of `{qwerty}` keyword. `{qwerty}` will be replaced with `thisisthehashofthepassword`.
+Note the use of `{qwerty}` keyword. `{qwerty}` will be replaced with `thisisthehashofthepassword`.
 
 ###2. Environment variable
 
-An environment variable for the database connection details. This will essentially be a semi colon separated string like so:
+An environment variable can be set for the database connection details in the following way:
 
 ```bash
 $ export BEHAT_ENV_PARAMS="DBENGINE:mysql;DBHOST:127.0.0.1;DBSCH..."
@@ -69,7 +69,7 @@ DBUSER
 DBPASSWORD
 ```
 
-The field needs to be present but it may be left empty.
+The fields needs to be preset but may be left empty.
 
 DB Support
 ----------
