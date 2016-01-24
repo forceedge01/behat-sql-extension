@@ -32,6 +32,8 @@ default:
           # Keywords to be used with the sql extension steps
           keywords:
             ...
+          notQuotableKeywords:
+            ...
 ```
 
 In the above example, the `keywords` section provides injection of keywords. For example you can have:
@@ -50,6 +52,23 @@ This will make the `qwerty` keyword usable as follows:
 Given I have a "user" where "email:its.inevitable@hotmail.com,password_hash:{qwerty}"
 ```
 Note the use of `{qwerty}` keyword. `{qwerty}` will be replaced with `thisisthehashofthepassword`.
+
+The 'notQuotableKeywords' provide a way to specify mysql functions you do not wish to put in quotes when the SQLContext generates
+the SQL query. These are expected to be regular expressions but without the delimiters. The defaults that are already set are:
+
+```php
+$keywords = [
+  'true',
+  'false',
+  'null',
+  'NOW\(\)',
+  'COUNT\(.*\)',
+  'MAX\(.*\)',
+  '\d+'
+];
+```
+
+Note: The `schema` is a very important parameter for the SQLContext, if you are working with multiple databases don't set a fixed schema. To reference a table from another database simply prefix that databases' name as per the sql convention and it will be used as your schema on the fly for that table. If you are just using one database in your application set the schema the same as the database.
 
 ###2. Environment variable
 

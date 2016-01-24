@@ -50,7 +50,7 @@ class SQLHandler extends BehatContext
      */
     private function setDBParams()
     {
-        if (defined('SQL.DBENGINE')) {
+        if (defined('SQLDBENGINE')) {
             $this->params = [
                 'DBENGINE' => SQLDBENGINE,
                 'DBHOST' => SQLDBHOST,
@@ -63,7 +63,7 @@ class SQLHandler extends BehatContext
             $params = getenv('BEHAT_ENV_PARAMS');
 
             if (! $params) {
-                throw new \Exception('Could not find "BEHAT_ENV_PARAMS" environment variable.');
+                throw new \Exception('"BEHAT_ENV_PARAMS" environment variable was not found.');
             }
 
             $params = explode(';', $params);
@@ -101,21 +101,30 @@ class SQLHandler extends BehatContext
     {
         $this->setDBParams();
 
-        if (isset($this->params['DBSCHEMA'])) {
-            $table = str_replace($this->params['DBSCHEMA'].'.', '', $table);
+        // If the DBSCHEMA is not set, try using the database name if provided with the table.
+        if (! $this->params['DBSCHEMA']) {
+            preg_match('/(.*)\./', $table, $db);
+
+            if (isset($db[1])) {
+                $this->params['DBSCHEMA'] = $db[1];
+            }
         }
 
+        // Parse out the table name.
+        $table = preg_replace('/(.*\.)/', '', $table);
+
+        // Statement to extract all required columns for a table.
         $sqlStatement = "
-        SELECT 
-            column_name, data_type 
-        FROM 
-            information_schema.columns 
-        WHERE 
-            is_nullable = 'NO' 
-        AND 
-            table_name = '%s' 
-        AND 
-            table_schema = '%s';";
+            SELECT 
+                column_name, data_type 
+            FROM 
+                information_schema.columns 
+            WHERE 
+                is_nullable = 'NO' 
+            AND 
+                table_name = '%s' 
+            AND 
+                table_schema = '%s';";
 
         // Get not null columns
         $sql = sprintf(
@@ -123,6 +132,7 @@ class SQLHandler extends BehatContext
             $table,
             $this->params['DBSCHEMA']
         );
+
         $result = $this->execute($sql);
 
         $cols = [];
@@ -146,14 +156,18 @@ class SQLHandler extends BehatContext
                 return 'false';
             case 'integer':
             case 'double':
+            case 'int':
                 return rand();
+            case 'tinyint':
+                return rand(0, 9);
             case 'string':
             case 'text':
             case 'varchar':
             case 'character varying':
-                return sprintf("'behat-test-string-random-%s'", time());
+            case 'tinytext':
+                return sprintf("'behat-test-string-%s'", time());
             case 'char':
-                return 'f';
+                return "'f'";
             case 'timestamp':
             case 'timestamp with time zone':
                 return 'NOW()';
@@ -182,7 +196,6 @@ class SQLHandler extends BehatContext
     protected function getTableColumns($entity)
     {
         $this->entity = $entity;
-
         $columnClause = [];
 
         // Get all columns for insertion
@@ -226,7 +239,7 @@ class SQLHandler extends BehatContext
      */
     protected function setKeyword($key, $value)
     {
-        $_SESSION['behat']['keywords'][$key] = $value;
+        $_SESSION['behat']['GenesisSqlExtension']['keywords'][$key] = $value;
 
         return $this;
     }
@@ -236,15 +249,15 @@ class SQLHandler extends BehatContext
      */
     protected function getKeyword($key)
     {
-        if (! isset($_SESSION['behat']['keywords'][$key])) {
+        if (! isset($_SESSION['behat']['GenesisSqlExtension']['keywords'][$key])) {
             throw new \Exception(sprintf(
                 'Key "%s" not found in behat store, all keys available: %s',
                 $key,
-                print_r($_SESSION['behat']['keywords'], true)
+                print_r($_SESSION['behat']['GenesisSqlExtension']['keywords'], true)
             ));
         }
 
-        return $_SESSION['behat']['keywords'][$key];
+        return $_SESSION['behat']['GenesisSqlExtension']['keywords'][$key];
     }
 
     /**
@@ -252,11 +265,11 @@ class SQLHandler extends BehatContext
      */
     private function checkForKeyword($value)
     {
-        if (! isset($_SESSION['behat']['keywords'])) {
-            return $this;
+        if (! isset($_SESSION['behat']['GenesisSqlExtension']['keywords'])) {
+            return $value;
         }
 
-        foreach ($_SESSION['behat']['keywords'] as $keyword => $val) {
+        foreach ($_SESSION['behat']['GenesisSqlExtension']['keywords'] as $keyword => $val) {
             $key = sprintf('{%s}', $keyword);
 
             if ($value == $key) {
@@ -332,7 +345,7 @@ class SQLHandler extends BehatContext
      */
     protected function quoteOrNot($val)
     {
-        return ((is_string($val) || is_numeric($val)) and !$this->isNotQuoteable($val)) ? sprintf("'%s'", $val) : $val;
+        return ((is_string($val) || is_numeric($val)) and !$this->isNotQuotable($val)) ? sprintf("'%s'", $val) : $val;
     }
 
     /**
@@ -373,9 +386,9 @@ class SQLHandler extends BehatContext
     }
 
     /**
-     * Checks if the value isnt a keyword.
+     * Checks if the value isn't a keyword.
      */
-    private function isNotQuoteable($val)
+    private function isNotQuotable($val)
     {
         $keywords = [
             'true',
@@ -386,6 +399,8 @@ class SQLHandler extends BehatContext
             'MAX\(.*\)',
             '\d+'
         ];
+
+        $keywords = array_merge($keywords, $_SESSION['behat']['GenesisSqlExtension']['notQuotableKeywords']);
 
         // Check if the val is a keyword
         foreach ($keywords as $keyword) {

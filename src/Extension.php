@@ -2,9 +2,9 @@
 
 namespace Genesis\SQLExtension;
 
-use Symfony\Component\DependencyInjection\ContainerBuilder;
-use Symfony\Component\Config\Definition\Builder\ArrayNodeDefinition;
 use Behat\MinkExtension;
+use Symfony\Component\Config\Definition\Builder\ArrayNodeDefinition;
+use Symfony\Component\DependencyInjection\ContainerBuilder;
 
 /*
  * This file is part of the Behat\SQLExtension
@@ -16,7 +16,7 @@ use Behat\MinkExtension;
  */
 
 /**
- * SQL Extension 
+ * SQL Extension.
  *
  * @author Abdul Wahab Qureshi <its.inevitable@hotmail.com>
  */
@@ -24,21 +24,26 @@ class Extension extends MinkExtension\Extension
 {
     public function load(array $config, ContainerBuilder $container)
     {
-        if(isset($config['connection_details'])) {
+        if (isset($config['connection_details'])) {
             DEFINE('SQLDBENGINE', $config['connection_details']['engine']);
             DEFINE('SQLDBHOST', $config['connection_details']['host']);
             DEFINE('SQLDBSCHEMA', $config['connection_details']['schema']);
             DEFINE('SQLDBNAME', $config['connection_details']['dbname']);
             DEFINE('SQLDBUSERNAME', $config['connection_details']['username']);
             DEFINE('SQLDBPASSWORD', $config['connection_details']['password']);
+            session_start();
             // Store any keywords set in behat.yml file
-            if(isset($config['keywords']) AND $config['keywords']) {
-                session_start();
-                // $_SESSION['behat'] = [];
-
-                foreach($config['keywords'] as $keyword => $value) {
-                    $_SESSION['behat']['keywords'][$keyword] = $value;
+            if (isset($config['keywords']) and $config['keywords']) {
+                foreach ($config['keywords'] as $keyword => $value) {
+                    $_SESSION['behat']['GenesisSqlExtension']['keywords'][$keyword] = $value;
                 }
+            }
+
+            // Set 'notQuotableKeywords' for later use.
+            $_SESSION['behat']['GenesisSqlExtension']['notQuotableKeywords'] = [];
+
+            if (isset($config['notQuotableKeywords'])) {
+                $_SESSION['behat']['GenesisSqlExtension']['notQuotableKeywords'] = $config['notQuotableKeywords'];
             }
         }
 
@@ -52,7 +57,7 @@ class Extension extends MinkExtension\Extension
      */
     public function getConfig(ArrayNodeDefinition $builder)
     {
-        $config = $this->loadEnvironmentConfiguration();
+        $this->loadEnvironmentConfiguration();
 
         $builder->
             children()->
