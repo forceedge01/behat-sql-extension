@@ -149,7 +149,7 @@ Last ID fetched: 57
 
 Registering SQL context additionally to an existing context can be done as follows:
 
-```
+```php
 # file: FeatureContext.php
 <?php
 
