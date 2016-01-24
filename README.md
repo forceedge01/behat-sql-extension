@@ -159,6 +159,6 @@ public function __construct(array $parameters) {
     $this->parameters = $parameters;
 
     // Load Context Class
-    $this->useContext('my_label_first_context', new SQLContext());
+    $this->useContext('genesis_sql_context', new SQLContext());
 }
 ```
