@@ -2,7 +2,7 @@
 
 namespace Genesis\SQLExtension\Context;
 
-use Behat\MinkExtension\Context\MinkContext;
+use Behat\Behat\Context\BehatContext;
 
 /*
  * This file is part of the Behat\SQLExtension
@@ -18,7 +18,7 @@ use Behat\MinkExtension\Context\MinkContext;
  *
  * @author Abdul Wahab Qureshi <its.inevitable@hotmail.com>
  */
-class SQLHandler extends MinkContext
+class SQLHandler extends BehatContext
 {
     const IGNORE_DUPLICATE = true;
     const EXPLODE_MAX_LIMIT = 2;

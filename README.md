@@ -144,3 +144,21 @@ Executing SQL: INSERT INTO user (email) VALUES ('its.inevitable@hotmail.com')
 
 Last ID fetched: 57
 ```
+
+### Using SQL context with other contexts
+
+Registering SQL context additionally to an existing context can be done as follows:
+
+```
+# file: FeatureContext.php
+<?php
+
+use Genesis\SQLExtension\Context\SQLContext;
+
+public function __construct(array $parameters) {
+    $this->parameters = $parameters;
+
+    // Load Context Class
+    $this->useContext('my_label_first_context', new SQLContext());
+}
+```
