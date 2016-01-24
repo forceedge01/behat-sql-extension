@@ -14,7 +14,7 @@ use Behat\Behat\Context\Step\Given;
  */
 
 /**
- * SQL Context 
+ * SQL Context.
  *
  * @author Abdul Wahab Qureshi <its.inevitable@hotmail.com>
  */
@@ -33,13 +33,13 @@ class SQLContext extends SQLHandler
         $result = $this->execute($sql, self::IGNORE_DUPLICATE);
 
         // Extract duplicate key and run update using it
-        if($key = $this->getKeyFromDuplicateError($result)) {
+        if ($key = $this->getKeyFromDuplicateError($result)) {
             $this->debugLog(sprintf('Duplicate key found, running update using key "%s"', $key));
 
             $this->iHaveAnExistingWithWhere(
                 $entity,
                 $columns,
-                sprintf('%s:%s',$key, $this->columns[$key])
+                sprintf('%s:%s', $key, $this->columns[$key])
             );
 
             $this->setLastIdWhere(
@@ -52,12 +52,12 @@ class SQLContext extends SQLHandler
     }
 
     /**
-     * @Given /^I dont have an? "([^"]*)" where "([^"]*)"$/
-     * @Given /^I dont have an? "([^"]*)" with "([^"]*)"$/
+     * @Given /^I don't have an? "([^"]*)" where "([^"]*)"$/
+     * @Given /^I don't have an? "([^"]*)" with "([^"]*)"$/
      */
     public function iDontHaveAWhere($entity, $columns)
     {
-        if(! $columns) {
+        if (! $columns) {
             throw new \Exception('You must provide a where clause!');
         }
 
@@ -75,7 +75,7 @@ class SQLContext extends SQLHandler
      */
     public function iHaveAnExistingWithWhere($entity, $with, $columns)
     {
-        if(! $columns) {
+        if (! $columns) {
             throw new \Exception('You must provide a where clause!');
         }
 

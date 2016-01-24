@@ -14,14 +14,14 @@ use Behat\MinkExtension\Context\MinkContext;
  */
 
 /**
- * SQL Handler 
+ * SQL Handler.
  *
  * @author Abdul Wahab Qureshi <its.inevitable@hotmail.com>
  */
 class SQLHandler extends MinkContext
 {
-    CONST IGNORE_DUPLICATE = true;
-    CONST EXPLODE_MAX_LIMIT = 2;
+    const IGNORE_DUPLICATE = true;
+    const EXPLODE_MAX_LIMIT = 2;
 
     private $lastQuery;
     private $connection;
@@ -32,11 +32,11 @@ class SQLHandler extends MinkContext
     protected $columns = [];
 
     /**
-     * Gets the connection for query execution
+     * Gets the connection for query execution.
      */
     private function getConnection()
     {
-        if(! $this->connection) {
+        if (! $this->connection) {
             list($dns, $username, $password) = $this->setDBParams()->connectionString();
             $this->connection = new \PDO($dns, $username, $password);
         }
@@ -50,7 +50,7 @@ class SQLHandler extends MinkContext
      */
     private function setDBParams()
     {
-        if(defined('SQL.DBENGINE')) {
+        if (defined('SQL.DBENGINE')) {
             $this->params = [
                 'DBENGINE' => SQLDBENGINE,
                 'DBHOST' => SQLDBHOST,
@@ -62,13 +62,13 @@ class SQLHandler extends MinkContext
         } else {
             $params = getenv('BEHAT_ENV_PARAMS');
 
-            if(! $params) {
+            if (! $params) {
                 throw new \Exception('Could not find "BEHAT_ENV_PARAMS" environment variable.');
             }
 
             $params = explode(';', $params);
 
-            foreach($params as $param) {
+            foreach ($params as $param) {
                 list($key, $val) = explode(':', $param);
                 $this->params[$key] = $val;
             }
@@ -78,38 +78,55 @@ class SQLHandler extends MinkContext
     }
 
     /**
-     * Creates the connection string for the pdo object
+     * Creates the connection string for the pdo object.
      */
     private function connectionString()
     {
         return [
-            sprintf('%s:dbname=%s;host=%s', 
-                $this->params['DBENGINE'], 
-                $this->params['DBNAME'], 
+            sprintf(
+                '%s:dbname=%s;host=%s',
+                $this->params['DBENGINE'],
+                $this->params['DBNAME'],
                 $this->params['DBHOST']
-            ), 
-            $this->params['DBUSER'], 
+            ),
+            $this->params['DBUSER'],
             $this->params['DBPASSWORD']
         ];
     }
 
     /**
-     * Gets a column list for a table with their type
+     * Gets a column list for a table with their type.
      */
     protected function requiredTableColumns($table)
     {
         $this->setDBParams();
 
-        if(isset($this->params['DBSCHEMA'])) {
-            $table = str_replace($this->params['DBSCHEMA'].'.' , '', $table);
+        if (isset($this->params['DBSCHEMA'])) {
+            $table = str_replace($this->params['DBSCHEMA'].'.', '', $table);
         }
 
+        $sqlStatement = "
+        SELECT 
+            column_name, data_type 
+        FROM 
+            information_schema.columns 
+        WHERE 
+            is_nullable = 'NO' 
+        AND 
+            table_name = '%s' 
+        AND 
+            table_schema = '%s';";
+
         // Get not null columns
-        $sql = sprintf("SELECT column_name, data_type FROM information_schema.columns WHERE is_nullable = 'NO' and table_name = '%s' and table_schema = '%s';", $table, $this->params['DBSCHEMA']);
+        $sql = sprintf(
+            $sqlStatement,
+            $table,
+            $this->params['DBSCHEMA']
+        );
         $result = $this->execute($sql);
 
         $cols = [];
-        foreach($result as $column) {
+        foreach ($result as $column) {
             $cols[$column['column_name']] = $column['data_type'];
         }
 
@@ -120,7 +137,7 @@ class SQLHandler extends MinkContext
     }
 
     /**
-     * returns sample data for a data type
+     * returns sample data for a data type.
      */
     protected function sampleData($type)
     {
@@ -146,13 +163,13 @@ class SQLHandler extends MinkContext
     }
 
     /**
-     * Constructs a clause based on the glue, to be used for where and update clause
+     * Constructs a clause based on the glue, to be used for where and update clause.
      */
     protected function constructClause($glue, $columns)
     {
         $whereClause = [];
 
-        foreach($columns as $column => $value) {
+        foreach ($columns as $column => $value) {
             $whereClause[] = sprintf('%s = %s', $column, $this->quoteOrNot($value));
         }
 
@@ -160,7 +177,7 @@ class SQLHandler extends MinkContext
     }
 
     /**
-     * Gets table columns and its values, returns array
+     * Gets table columns and its values, returns array.
      */
     protected function getTableColumns($entity)
     {
@@ -172,8 +189,10 @@ class SQLHandler extends MinkContext
         $allColumns = array_merge($this->requiredTableColumns($entity), $this->columns);
 
         // Set values for columns
-        foreach($allColumns as $col => $type) {
-            $columnClause[$col] = isset($this->columns[$col]) ? $this->quoteOrNot($this->columns[$col]) : $this->sampleData($type);
+        foreach ($allColumns as $col => $type) {
+            $columnClause[$col] = isset($this->columns[$col]) ?
+                $this->quoteOrNot($this->columns[$col]) :
+                $this->sampleData($type);
         }
 
         $columnNames = implode(', ', array_keys($columnClause));
@@ -183,17 +202,17 @@ class SQLHandler extends MinkContext
     }
 
     /**
-     * Converts the incoming string param from steps to array
+     * Converts the incoming string param from steps to array.
      */
     protected function handleParam($columns)
     {
         $this->columns = [];
         $columns = explode(',', $columns);
 
-        foreach($columns as $column) {
+        foreach ($columns as $column) {
             try {
                 list($col, $val) = explode(':', $column, self::EXPLODE_MAX_LIMIT);
-            } catch(\Exception $e) {
+            } catch (\Exception $e) {
                 throw new \Exception('Unable to explode columns based on ":" separator');
             }
 
@@ -203,7 +222,7 @@ class SQLHandler extends MinkContext
     }
 
     /**
-     * Sets a behat keyword
+     * Sets a behat keyword.
      */
     protected function setKeyword($key, $value)
     {
@@ -213,13 +232,14 @@ class SQLHandler extends MinkContext
     }
 
     /**
-     * Fetches a specific keyword from the behat keywords store
+     * Fetches a specific keyword from the behat keywords store.
      */
     protected function getKeyword($key)
     {
-        if(! isset($_SESSION['behat']['keywords'][$key])) {
-            throw new \Exception(sprintf('Key "%s" not found in behat store, all keys available: %s', 
-                $key, 
+        if (! isset($_SESSION['behat']['keywords'][$key])) {
+            throw new \Exception(sprintf(
+                'Key "%s" not found in behat store, all keys available: %s',
+                $key,
                 print_r($_SESSION['behat']['keywords'], true)
             ));
         }
@@ -228,18 +248,18 @@ class SQLHandler extends MinkContext
     }
 
     /**
-     * Checks the value for possible keywords set in behat.yml file
+     * Checks the value for possible keywords set in behat.yml file.
      */
     private function checkForKeyword($value)
     {
-        if(! isset($_SESSION['behat']['keywords'])) {
+        if (! isset($_SESSION['behat']['keywords'])) {
             return $this;
         }
 
-        foreach($_SESSION['behat']['keywords'] as $keyword => $val) {
+        foreach ($_SESSION['behat']['keywords'] as $keyword => $val) {
             $key = sprintf('{%s}', $keyword);
 
-            if($value == $key) {
+            if ($value == $key) {
                 $value = str_replace($key, $val, $value);
             }
         }
@@ -248,11 +268,11 @@ class SQLHandler extends MinkContext
     }
 
     /**
-     * Prints out messages when in debug mode
+     * Prints out messages when in debug mode.
      */
     protected function debugLog($log)
     {
-        if(defined('DEBUG_MODE') AND DEBUG_MODE == 1) {
+        if (defined('DEBUG_MODE') and DEBUG_MODE == 1) {
             echo $log . PHP_EOL . PHP_EOL;
         }
 
@@ -260,7 +280,7 @@ class SQLHandler extends MinkContext
     }
 
     /**
-     * Executes sql command
+     * Executes sql command.
      */
     protected function execute($sql, $ignoreDuplicate = false)
     {
@@ -274,18 +294,19 @@ class SQLHandler extends MinkContext
 
         $this->debugLog(sprintf('Last ID fetched: %d', $this->lastId));
 
-        if(! $stmt->rowCount()) {
+        if (! $stmt->rowCount()) {
             $error = print_r($this->connection->errorInfo(), true);
 
-            if($ignoreDuplicate AND strpos($error, 'duplicate key value') !== false) {
+            if ($ignoreDuplicate and strpos($error, 'duplicate key value') !== false) {
                 return $this->connection->errorInfo();
             }
 
             throw new \Exception(
-                sprintf('No rows were effected!%sSQL: "%s",%sError: %s', 
-                    PHP_EOL, 
-                    $sql, 
-                    PHP_EOL, 
+                sprintf(
+                    'No rows were effected!%sSQL: "%s",%sError: %s',
+                    PHP_EOL,
+                    $sql,
+                    PHP_EOL,
                     $error
                 )
             );
@@ -295,11 +316,11 @@ class SQLHandler extends MinkContext
     }
 
     /**
-     * Gets the last insert id
+     * Gets the last insert id.
      */
     protected function getLastInsertId()
     {
-        if(! $this->lastId) {
+        if (! $this->lastId) {
             throw new \Exception('Could not get last id');
         }
 
@@ -307,30 +328,30 @@ class SQLHandler extends MinkContext
     }
 
     /**
-     * Quotes value if needed for sql
+     * Quotes value if needed for sql.
      */
-    protected function quoteOrNot($val) 
+    protected function quoteOrNot($val)
     {
-        return ((is_string($val) || is_numeric($val)) AND !$this->isNotQuoteable($val)) ? sprintf("'%s'", $val) : $val;
+        return ((is_string($val) || is_numeric($val)) and !$this->isNotQuoteable($val)) ? sprintf("'%s'", $val) : $val;
     }
 
     /**
-     * get the duplicate key from the error message
+     * Get the duplicate key from the error message.
      */
     protected function getKeyFromDuplicateError($error)
     {
-        if(! isset($error[2])) {
+        if (! isset($error[2])) {
             return false;
         }
 
         // Extract duplicate key and run update using it
         $matches = [];
 
-        if(preg_match('/.*DETAIL:  Key (.*)=.*/sim', $error[2], $matches)) {
+        if (preg_match('/.*DETAIL:  Key (.*)=.*/sim', $error[2], $matches)) {
             // Index 1 holds the name of the key matched
             $key = trim($matches[1], '()');
             echo sprintf('Duplicate record, running update using "%s"...%s', $key, PHP_EOL);
-            
+
             return $key;
         }
 
@@ -338,7 +359,7 @@ class SQLHandler extends MinkContext
     }
 
     /**
-     * sets the last id by executing a select on the id column
+     * Sets the last id by executing a select on the id column.
      */
     protected function setLastIdWhere($entity, $criteria)
     {
@@ -352,7 +373,7 @@ class SQLHandler extends MinkContext
     }
 
     /**
-     * Checks if the value isnt a keyword
+     * Checks if the value isnt a keyword.
      */
     private function isNotQuoteable($val)
     {
@@ -367,8 +388,8 @@ class SQLHandler extends MinkContext
         ];
 
         // Check if the val is a keyword
-        foreach($keywords as $keyword) {
-            if(preg_match(sprintf('/^%s$/is', $keyword), $val)) {
+        foreach ($keywords as $keyword) {
+            if (preg_match(sprintf('/^%s$/is', $keyword), $val)) {
                 return true;
             }
         }
