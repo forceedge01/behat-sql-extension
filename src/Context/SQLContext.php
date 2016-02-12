@@ -103,7 +103,6 @@ class SQLContext extends SQLHandler
         return $this;
     }
 
-
     /**
      * @Given /^I am in debug mode$/
      */
