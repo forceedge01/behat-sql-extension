@@ -13,7 +13,7 @@
     "require": {
         "php": "~5.4",
         "ext-pdo": "*",
-        "behat/behat": "~2.5.0"
+        "behat/behat": "~2.5"
     },
     "require-dev": {
         "phpunit/phpunit": "~5.2"
