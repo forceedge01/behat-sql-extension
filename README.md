@@ -146,6 +146,13 @@ And I save the id as "user_id"
 Given I have an "account" where "title:my account, user_id:{user_id}"
 ```
 
+### Verifying data in the database
+
+Verify the database records as follows:
+```gherkin
+Then I should have a "user" with "email:its.inevitable@hotmail.com,status:1"
+```
+
 ### Debug mode
 
 Debug mode can be used to print sql queries and results to the screen for quick debugging.
