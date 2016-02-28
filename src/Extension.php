@@ -2,7 +2,7 @@
 
 namespace Genesis\SQLExtension;
 
-use Behat\MinkExtension;
+use Behat\Behat\Extension\ExtensionInterface;
 use Symfony\Component\Config\Definition\Builder\ArrayNodeDefinition;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 
@@ -20,8 +20,11 @@ use Symfony\Component\DependencyInjection\ContainerBuilder;
  *
  * @author Abdul Wahab Qureshi <its.inevitable@hotmail.com>
  */
-class Extension extends MinkExtension\Extension
+class Extension implements ExtensionInterface
 {
+    /**
+     * Load and set the configuration options.
+     */
     public function load(array $config, ContainerBuilder $container)
     {
         if (isset($config['connection_details'])) {
@@ -46,8 +49,6 @@ class Extension extends MinkExtension\Extension
                 $_SESSION['behat']['GenesisSqlExtension']['notQuotableKeywords'] = $config['notQuotableKeywords'];
             }
         }
-
-        parent::load($config, $container);
     }
 
     /**
@@ -57,8 +58,6 @@ class Extension extends MinkExtension\Extension
      */
     public function getConfig(ArrayNodeDefinition $builder)
     {
-        $this->loadEnvironmentConfiguration();
-
         $builder->
             children()->
                 arrayNode('connection_details')->
@@ -88,7 +87,13 @@ class Extension extends MinkExtension\Extension
                 end()->
             end()->
         end();
+    }
 
-        parent::getConfig($builder);
+    /**
+     * Register additional compiler passes.
+     */
+    public function getCompilerPasses()
+    {
+        return array();
     }
 }
