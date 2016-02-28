@@ -18,7 +18,7 @@ use Behat\Behat\Context\Step\Given;
  *
  * @author Abdul Wahab Qureshi <its.inevitable@hotmail.com>
  */
-class SQLContext extends SQLHandler
+class SQLContext extends SQLHandler implements Interfaces\SQLContextInterface
 {
     /**
      * @Given /^I have an? "([^"]*)" where "([^"]*)"$/
@@ -26,7 +26,7 @@ class SQLContext extends SQLHandler
      */
     public function iHaveAWhere($entity, $columns)
     {
-        $this->handleParam($columns);
+        $this->filterAndConvertToArray($columns);
         list($columnNames, $columnValues) = $this->getTableColumns($entity);
 
         $sql = sprintf('INSERT INTO %s (%s) VALUES (%s)', $entity, $columnNames, $columnValues);
@@ -39,12 +39,12 @@ class SQLContext extends SQLHandler
             $this->iHaveAnExistingWithWhere(
                 $entity,
                 $columns,
-                sprintf('%s:%s', $key, $this->columns[$key])
+                sprintf('%s:%s', $key, $this->getColumns()[$key])
             );
 
             $this->setLastIdWhere(
                 $entity,
-                sprintf('%s = %s', $key, $this->quoteOrNot($this->columns[$key]))
+                sprintf('%s = %s', $key, $this->quoteOrNot($this->getColumns()[$key]))
             );
         }
 
@@ -61,8 +61,8 @@ class SQLContext extends SQLHandler
             throw new \Exception('You must provide a where clause!');
         }
 
-        $this->handleParam($columns);
-        $whereClause = $this->constructClause(' AND ', $this->columns);
+        $this->filterAndConvertToArray($columns);
+        $whereClause = $this->constructClause(' AND ', $this->getColumns());
 
         $sql = sprintf('DELETE FROM %s WHERE %s', $entity, $whereClause);
         $this->execute($sql);
@@ -79,10 +79,10 @@ class SQLContext extends SQLHandler
             throw new \Exception('You must provide a where clause!');
         }
 
-        $this->handleParam($with);
-        $updateClause = $this->constructClause(', ', $this->columns);
-        $this->handleParam($columns);
-        $whereClause = $this->constructClause(' AND ', $this->columns);
+        $this->filterAndConvertToArray($with);
+        $updateClause = $this->constructClause(', ', $this->getColumns());
+        $this->filterAndConvertToArray($columns);
+        $whereClause = $this->constructClause(' AND ', $this->getColumns());
 
         $sql = sprintf('UPDATE %s SET %s WHERE %s', $entity, $updateClause, $whereClause);
         $this->execute($sql, self::IGNORE_DUPLICATE);
@@ -91,6 +91,38 @@ class SQLContext extends SQLHandler
             $entity,
             $whereClause
         );
+    }
+
+    /**
+     * @Then /^I should have a "([^"]*)" with "([^"]*)"$/
+     */
+    public function iShouldHaveAWith($entity, $with)
+    {
+        // Create array out of the with string given.
+        $this->filterAndConvertToArray($with);
+        // Create a usable sql clause.
+        $selectWhereClause = $this->constructClause(' AND ', $this->getColumns());
+
+        // Create the sql to be inserted.
+        $sql = sprintf(
+            'SELECT * FROM %s WHERE %s',
+            $entity,
+            $selectWhereClause
+        );
+
+        // Execute the sql query, if the query throws a generic not found error,
+        // catch it and give it some context.
+        try {
+            $this->execute($sql);
+        } catch (\Exception $e) {
+            if (! $this->hasFetchedRows()) {
+                throw new \Exception(sprintf(
+                    'Record not found with "%s" in "%s"',
+                    $selectWhereClause,
+                    $entity
+                ));
+            }
+        }
     }
 
     /**
@@ -110,6 +142,6 @@ class SQLContext extends SQLHandler
     {
         define('DEBUG_MODE', 1);
 
-        echo 'IN DEBUG MODE NOW';
+        $this->debugLog('IN DEBUG MODE NOW');
     }
 }

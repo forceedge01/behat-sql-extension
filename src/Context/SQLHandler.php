@@ -28,8 +28,8 @@ class SQLHandler extends BehatContext
     private $params;
     private $lastId;
     private $entity;
-
-    protected $columns = [];
+    private $sqlStatement;
+    private $columns = [];
 
     /**
      * Gets the connection for query execution.
@@ -48,7 +48,7 @@ class SQLHandler extends BehatContext
      * Sets the database param from either the environment variable or params
      * passed in by behat.yml, params have precedence over env variable.
      */
-    private function setDBParams()
+    public function setDBParams()
     {
         if (defined('SQLDBENGINE')) {
             $this->params = [
@@ -70,11 +70,19 @@ class SQLHandler extends BehatContext
 
             foreach ($params as $param) {
                 list($key, $val) = explode(':', $param);
-                $this->params[$key] = $val;
+                $this->params[$key] = trim($val);
             }
         }
 
         return $this;
+    }
+
+    /**
+     * Get db params set.
+     */
+    public function getParams()
+    {
+        return $this->params;
     }
 
     /**
@@ -149,7 +157,7 @@ class SQLHandler extends BehatContext
     /**
      * returns sample data for a data type.
      */
-    protected function sampleData($type)
+    public function sampleData($type)
     {
         switch ($type) {
             case 'boolean':
@@ -179,7 +187,7 @@ class SQLHandler extends BehatContext
     /**
      * Constructs a clause based on the glue, to be used for where and update clause.
      */
-    protected function constructClause($glue, $columns)
+    public function constructClause($glue, array $columns)
     {
         $whereClause = [];
 
@@ -217,7 +225,7 @@ class SQLHandler extends BehatContext
     /**
      * Converts the incoming string param from steps to array.
      */
-    protected function handleParam($columns)
+    public function filterAndConvertToArray($columns)
     {
         $this->columns = [];
         $columns = explode(',', $columns);
@@ -232,13 +240,21 @@ class SQLHandler extends BehatContext
             $val = $this->checkForKeyword(trim($val));
             $this->columns[trim($col)] = $val;
         }
+
+        return $this;
     }
 
     /**
      * Sets a behat keyword.
      */
-    protected function setKeyword($key, $value)
+    public function setKeyword($key, $value)
     {
+        $this->debugLog(sprintf(
+            'Saving keyword "%s" with value "%s"',
+            $key,
+            $value
+        ));
+
         $_SESSION['behat']['GenesisSqlExtension']['keywords'][$key] = $value;
 
         return $this;
@@ -247,7 +263,7 @@ class SQLHandler extends BehatContext
     /**
      * Fetches a specific keyword from the behat keywords store.
      */
-    protected function getKeyword($key)
+    public function getKeyword($key)
     {
         if (! isset($_SESSION['behat']['GenesisSqlExtension']['keywords'][$key])) {
             throw new \Exception(sprintf(
@@ -283,10 +299,10 @@ class SQLHandler extends BehatContext
     /**
      * Prints out messages when in debug mode.
      */
-    protected function debugLog($log)
+    public function debugLog($log)
     {
         if (defined('DEBUG_MODE') and DEBUG_MODE == 1) {
-            echo $log . PHP_EOL . PHP_EOL;
+            echo 'DEBUG >>> ' . $log . PHP_EOL . PHP_EOL;
         }
 
         return $this;
@@ -301,13 +317,13 @@ class SQLHandler extends BehatContext
 
         $this->debugLog(sprintf('Executing SQL: %s', $sql));
 
-        $stmt = $this->getConnection()->prepare($sql);
-        $stmt->execute();
+        $this->sqlStatement = $this->getConnection()->prepare($sql);
+        $this->sqlStatement->execute();
         $this->lastId = $this->connection->lastInsertId(sprintf('%s_id_seq', $this->entity));
 
         $this->debugLog(sprintf('Last ID fetched: %d', $this->lastId));
 
-        if (! $stmt->rowCount()) {
+        if (! $this->hasFetchedRows()) {
             $error = print_r($this->connection->errorInfo(), true);
 
             if ($ignoreDuplicate and strpos($error, 'duplicate key value') !== false) {
@@ -325,7 +341,7 @@ class SQLHandler extends BehatContext
             );
         }
 
-        return $stmt->fetchAll();
+        return $this->sqlStatement->fetchAll();
     }
 
     /**
@@ -343,7 +359,7 @@ class SQLHandler extends BehatContext
     /**
      * Quotes value if needed for sql.
      */
-    protected function quoteOrNot($val)
+    public function quoteOrNot($val)
     {
         return ((is_string($val) || is_numeric($val)) and !$this->isNotQuotable($val)) ? sprintf("'%s'", $val) : $val;
     }
@@ -351,7 +367,7 @@ class SQLHandler extends BehatContext
     /**
      * Get the duplicate key from the error message.
      */
-    protected function getKeyFromDuplicateError($error)
+    public function getKeyFromDuplicateError($error)
     {
         if (! isset($error[2])) {
             return false;
@@ -360,7 +376,7 @@ class SQLHandler extends BehatContext
         // Extract duplicate key and run update using it
         $matches = [];
 
-        if (preg_match('/.*DETAIL:  Key (.*)=.*/sim', $error[2], $matches)) {
+        if (preg_match('/.*DETAIL:\s*Key (.*)=.*/sim', $error[2], $matches)) {
             // Index 1 holds the name of the key matched
             $key = trim($matches[1], '()');
             echo sprintf('Duplicate record, running update using "%s"...%s', $key, PHP_EOL);
@@ -410,5 +426,21 @@ class SQLHandler extends BehatContext
         }
 
         return false;
+    }
+
+    /**
+     * Checks if the command executed affected any rows.
+     */
+    protected function hasFetchedRows()
+    {
+        return ($this->sqlStatement->rowCount());
+    }
+
+    /**
+     * Get the value of columns var.
+     */
+    public function getColumns()
+    {
+        return $this->columns;
     }
 }
