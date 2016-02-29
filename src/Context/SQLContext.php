@@ -94,6 +94,22 @@ class SQLContext extends SQLHandler implements Interfaces\SQLContextInterface
     }
 
     /**
+     * @Given /^I have an existing "([^"]*)" where "([^"]*)"$/
+     */
+    public function iHaveAnExistingWhere($entity, $where)
+    {
+        // Create array out of the with string given.
+        $this->filterAndConvertToArray($where);
+        // Create a usable sql clause.
+        $selectWhereClause = $this->constructClause(' AND ', $this->getColumns());
+
+        $this->setLastIdWhere(
+            $entity,
+            $selectWhereClause
+        );
+    }
+
+    /**
      * @Then /^(?:|I )should have a "([^"]*)" with "([^"]*)"$/
      */
     public function iShouldHaveAWith($entity, $with)

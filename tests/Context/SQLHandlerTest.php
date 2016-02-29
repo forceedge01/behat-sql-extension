@@ -112,6 +112,8 @@ class SQLHandlerTest extends PHPUnit_Framework_TestCase
      */
     public function testSampleData()
     {
+        $_SESSION['behat']['GenesisSqlExtension']['notQuotableKeywords'] = [];
+
         $types = [
             'boolean' => 'false',
             'integer' => self::INT_NUMBER,
@@ -126,7 +128,9 @@ class SQLHandlerTest extends PHPUnit_Framework_TestCase
             'char' => "'f'",
             'timestamp' => 'NOW()',
             'timestamp with time zone' => 'NOW()',
-            'null' => null
+            'null' => null,
+            'longtext' => "'behat-test-string-" . self::TYPE_STRING_TIME . "'",
+            'randomness' => "'behat-test-string-" . self::TYPE_STRING_TIME . "'"
         ];
 
         // Assert

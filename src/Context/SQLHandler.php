@@ -159,7 +159,7 @@ class SQLHandler extends BehatContext
      */
     public function sampleData($type)
     {
-        switch ($type) {
+        switch (strtolower($type)) {
             case 'boolean':
                 return 'false';
             case 'integer':
@@ -173,7 +173,8 @@ class SQLHandler extends BehatContext
             case 'varchar':
             case 'character varying':
             case 'tinytext':
-                return sprintf("'behat-test-string-%s'", time());
+            case 'longtext':
+                return $this->quoteOrNot(sprintf("behat-test-string-%s", time()));
             case 'char':
                 return "'f'";
             case 'timestamp':
@@ -181,6 +182,8 @@ class SQLHandler extends BehatContext
                 return 'NOW()';
             case 'null':
                 return null;
+            default:
+                return $this->quoteOrNot(sprintf("behat-test-string-%s", time()));
         }
     }
 
@@ -394,8 +397,12 @@ class SQLHandler extends BehatContext
     {
         $sql = sprintf('SELECT id FROM %s WHERE %s', $entity, $criteria);
         $result = $this->execute($sql);
-        $this->lastId = $result[0]['id'];
 
+        if (! isset($result[0]['id'])) {
+            throw new \Exception('Id not found in table.');
+        }
+
+        $this->lastId = $result[0]['id'];
         $this->debugLog(sprintf('Last ID fetched: %d', $this->lastId));
 
         return $this;
