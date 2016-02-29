@@ -3,6 +3,7 @@
 namespace Genesis\SQLExtension\Context;
 
 use Behat\Behat\Context\BehatContext;
+use Behat\Gherkin\Node\TableNode;
 
 /*
  * This file is part of the Behat\SQLExtension
@@ -433,6 +434,38 @@ class SQLHandler extends BehatContext
         }
 
         return false;
+    }
+
+    /**
+     * @param  TableNode $node The node with all fields and data.
+     *
+     * @return array The queries built of the TableNode.
+     */
+    public function convertTableNodeToQueries(TableNode $node)
+    {
+        // Get the title row.
+        $columns = $node->getRow(0);
+
+        // Get all rows and extract the heading.
+        $rows = $node->getRows();
+        unset($rows[0]);
+
+        if (! $rows) {
+            throw new \Exception('No data provided to loop through.');
+        }
+
+        $queries = [];
+
+        // Loop through the rest of the rows and form up the queries.
+        foreach ($rows as $row) {
+            $query = '';
+            foreach ($row as $index => $value) {
+                $query .= sprintf('%s:%s,', $columns[$index], $value);
+            }
+            $queries[] = trim($query, ',');
+        }
+
+        return $queries;
     }
 
     /**

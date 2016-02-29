@@ -109,6 +109,19 @@ This will run an insert query using the @where/@with data provided
 Given I have a "@table" where "@where"
 ```
 
+To insert more rows at once the above statement can be re-written as follows:
+
+```gherkin
+# file: insert.feature
+
+Given I have "@table" where:
+  | column1            | column2            |
+  | row1-column1-value | row1-column2-value |
+  | row2-column1-value | row2-column2-value |
+```
+
+The above will insert two rows.
+
 ### Deleting data in a table
 
 This will run a delete query against the database using the @where/@with criteria given

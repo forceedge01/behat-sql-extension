@@ -50,6 +50,7 @@ function time()
 
 namespace Genesis\SQLExtension\Tests\Context;
 
+use Behat\Gherkin\Node\TableNode;
 use Genesis\SQLExtension\Context\SQLHandler;
 use PHPUnit_Framework_TestCase;
 
@@ -306,5 +307,39 @@ class SQLHandlerTest extends PHPUnit_Framework_TestCase
 
         // Assert Result
         $this->assertFalse($result);
+    }
+
+    /**
+     * Test that convertTableNodeToQueries works as expected.
+     */
+    public function testConvertTableNodeToQueries()
+    {
+        // Mock.
+        $node = new TableNode();
+        // Add title row.
+        $node->addRow([
+            'email',
+            'name'
+        ]);
+
+        // Add data.
+        $node->addRow([
+            'its.inevitable@hotmail.com',
+            'Abdul'
+        ]);
+
+        // Add more data.
+        $node->addRow([
+            'forceedge01@gmail.com',
+            'Qureshi'
+        ]);
+
+        // Run.
+        $queries = $this->testObject->convertTableNodeToQueries($node);
+
+        // Assert.
+        $this->assertCount(2, $queries);
+        $this->assertEquals('email:its.inevitable@hotmail.com,name:Abdul', $queries[0]);
+        $this->assertEquals('email:forceedge01@gmail.com,name:Qureshi', $queries[1]);
     }
 }

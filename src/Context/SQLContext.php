@@ -21,6 +21,18 @@ use Behat\Behat\Context\Step\Given;
 class SQLContext extends SQLHandler implements Interfaces\SQLContextInterface
 {
     /**
+     * @Given /^(?:|I )have( an| a)? "([^"]*)" where:$/
+     */
+    public function iHaveWhere($entity, TableNode $nodes)
+    {
+        $queries = $this->convertTableNodeToQueries($nodes);
+
+        foreach ($queries as $query) {
+            $this->iHaveAWhere($entity, $query);
+        }
+    }
+
+    /**
      * @Given /^(?:|I )have an? "([^"]*)" where "([^"]*)"$/
      * @Given /^(?:|I )have an? "([^"]*)" with "([^"]*)"$/
      */
@@ -49,6 +61,18 @@ class SQLContext extends SQLHandler implements Interfaces\SQLContextInterface
         }
 
         return $this;
+    }
+
+    /**
+     * @Given /^(?:|I )do not have( an| a)? "([^"]*)" where:$/
+     */
+    public function iDontHaveWhere($entity, TableNode $nodes)
+    {
+        $queries = $this->convertTableNodeToQueries($nodes);
+
+        foreach ($queries as $query) {
+            $this->iDontHaveAWhere($entity, $query);
+        }
     }
 
     /**
