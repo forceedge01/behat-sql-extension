@@ -10,6 +10,8 @@ interface SQLContextInterface
 
     public function iHaveAnExistingWithWhere($entity, $with, $columns);
 
+    public function iHaveAnExistingWhere($entity, $where);
+
     public function iShouldHaveAWith($entity, $with);
 
     public function iShouldNotHaveAWith($entity, $with);
