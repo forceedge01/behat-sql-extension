@@ -12,6 +12,8 @@ interface SQLContextInterface
 
     public function iShouldHaveAWith($entity, $with);
 
+    public function iShouldNotHaveAWith($entity, $with);
+
     public function iSaveTheIdAs($key);
 
     public function iAmInDebugMode();

@@ -91,6 +91,30 @@ class SQLContextTest extends PHPUnit_Framework_TestCase
     /**
      * @expectedException Exception
      */
+    public function testiShouldNotHaveAWith()
+    {
+        $entity = '';
+        $with = '';
+
+        $this->testObject->iShouldNotHaveAWith($entity, $with);
+    }
+
+    /**
+     * Test that this method works with values provided.
+     */
+    public function testiShouldNotHaveAWithWithValues()
+    {
+        $this->markTestIncomplete('To be implemented');
+
+        $entity = '';
+        $with = '';
+
+        $this->testObject->iShouldNotHaveAWith($entity, $with);
+    }
+
+    /**
+     * @expectedException Exception
+     */
     public function testiShouldHaveAWith()
     {
         $entity = '';

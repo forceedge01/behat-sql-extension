@@ -21,8 +21,8 @@ use Behat\Behat\Context\Step\Given;
 class SQLContext extends SQLHandler implements Interfaces\SQLContextInterface
 {
     /**
-     * @Given /^I have an? "([^"]*)" where "([^"]*)"$/
-     * @Given /^I have an? "([^"]*)" with "([^"]*)"$/
+     * @Given /^(?:|I )have an? "([^"]*)" where "([^"]*)"$/
+     * @Given /^(?:|I )have an? "([^"]*)" with "([^"]*)"$/
      */
     public function iHaveAWhere($entity, $columns)
     {
@@ -52,8 +52,8 @@ class SQLContext extends SQLHandler implements Interfaces\SQLContextInterface
     }
 
     /**
-     * @Given /^I don't have an? "([^"]*)" where "([^"]*)"$/
-     * @Given /^I don't have an? "([^"]*)" with "([^"]*)"$/
+     * @Given /^(?:|I )don't have an? "([^"]*)" where "([^"]*)"$/
+     * @Given /^(?:|I )don't have an? "([^"]*)" with "([^"]*)"$/
      */
     public function iDontHaveAWhere($entity, $columns)
     {
@@ -71,7 +71,7 @@ class SQLContext extends SQLHandler implements Interfaces\SQLContextInterface
     }
 
     /**
-     * @Given /^I have an existing "([^"]*)" with "([^"]*)" where "([^"]*)"$/
+     * @Given /^(?:|I )have an existing "([^"]*)" with "([^"]*)" where "([^"]*)"$/
      */
     public function iHaveAnExistingWithWhere($entity, $with, $columns)
     {
@@ -94,7 +94,7 @@ class SQLContext extends SQLHandler implements Interfaces\SQLContextInterface
     }
 
     /**
-     * @Then /^I should have a "([^"]*)" with "([^"]*)"$/
+     * @Then /^(?:|I )should have a "([^"]*)" with "([^"]*)"$/
      */
     public function iShouldHaveAWith($entity, $with)
     {
@@ -126,7 +126,39 @@ class SQLContext extends SQLHandler implements Interfaces\SQLContextInterface
     }
 
     /**
-     * @Given /^I save the id as "([^"]*)"$/
+     * @Then /^(?:|I )should not have a "([^"]*)" with "([^"]*)"$/
+     */
+    public function iShouldNotHaveAWith($entity, $with)
+    {
+        // Create array out of the with string given.
+        $this->filterAndConvertToArray($with);
+        // Create a usable sql clause.
+        $selectWhereClause = $this->constructClause(' AND ', $this->getColumns());
+
+        // Create the sql to be inserted.
+        $sql = sprintf(
+            'SELECT * FROM %s WHERE %s',
+            $entity,
+            $selectWhereClause
+        );
+
+        // Execute the sql query, if the query throws a generic not found error,
+        // catch it and give it some context.
+        try {
+            $this->execute($sql);
+        } catch (\Exception $e) {
+            if ($this->hasFetchedRows()) {
+                throw new \Exception(sprintf(
+                    'Record not found with "%s" in "%s"',
+                    $selectWhereClause,
+                    $entity
+                ));
+            }
+        }
+    }
+
+    /**
+     * @Given /^(?:|I )save the id as "([^"]*)"$/
      */
     public function iSaveTheIdAs($key)
     {
@@ -136,7 +168,7 @@ class SQLContext extends SQLHandler implements Interfaces\SQLContextInterface
     }
 
     /**
-     * @Given /^I am in debug mode$/
+     * @Given /^(?:|I )am in debug mode$/
      */
     public function iAmInDebugMode()
     {
