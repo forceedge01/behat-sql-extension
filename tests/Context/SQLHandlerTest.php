@@ -77,6 +77,8 @@ class SQLHandlerTest extends PHPUnit_Framework_TestCase
      */
     public function testSetDBParams()
     {
+        putenv('BEHAT_ENV_PARAMS');
+
         // Execute
         $this->testObject->setDBParams();
     }
@@ -341,5 +343,98 @@ class SQLHandlerTest extends PHPUnit_Framework_TestCase
         $this->assertCount(2, $queries);
         $this->assertEquals('email:its.inevitable@hotmail.com,name:Abdul', $queries[0]);
         $this->assertEquals('email:forceedge01@gmail.com,name:Qureshi', $queries[1]);
+    }
+
+    /**
+     * @expectedException \Exception
+     */
+    public function testThrowErrorsIfNoRowsAffectedNoRowsAffected()
+    {
+        $sqlStatementMock = $this->getMockBuilder(\PDOStatement::class)
+            ->disableOriginalConstructor()
+            ->getMock();
+
+        $sqlStatementMock->expects($this->any())
+            ->method('rowCount')
+            ->willReturn(0);
+
+        $this->testObject->throwErrorIfNoRowsAffected($sqlStatementMock);
+    }
+
+    /**
+     * Check if the error is returned when one is found and is a duplicate error.
+     */
+    public function testThrowErrorsIfNoRowsAffectedDuplicateError()
+    {
+        $sqlStatementMock = $this->getMockBuilder(\PDOStatement::class)
+            ->disableOriginalConstructor()
+            ->getMock();
+
+        $sqlStatementMock->expects($this->any())
+            ->method('rowCount')
+            ->willReturn(0);
+
+        $sqlStatementMock->expects($this->exactly(2))
+            ->method('errorInfo')
+            ->willReturn([0 => 'Duplicate error key=asdf']);
+
+        $result = $this->testObject->throwErrorIfNoRowsAffected(
+            $sqlStatementMock,
+            true
+        );
+
+        $this->assertContains('Duplicate', $result[0]);
+    }
+
+    /**
+     * Check if false is returned when rows are affected.
+     */
+    public function testThrowErrorsIfNoRowsAffectedNoException()
+    {
+        $sqlStatementMock = $this->getMockBuilder(\PDOStatement::class)
+            ->disableOriginalConstructor()
+            ->getMock();
+
+        $sqlStatementMock->expects($this->any())
+            ->method('rowCount')
+            ->willReturn(1);
+
+        $result = $this->testObject->throwErrorIfNoRowsAffected($sqlStatementMock);
+
+        $this->assertFalse($result);
+    }
+
+    /**
+     * @expectedException \Exception
+     */
+    public function testThrowExceptionIfErrorsWithErrors()
+    {
+        $sqlStatementMock = $this->getMockBuilder(\PDOStatement::class)
+            ->disableOriginalConstructor()
+            ->getMock();
+
+        $sqlStatementMock->expects($this->once())
+            ->method('errorCode')
+            ->willReturn(234);
+
+        $this->testObject->throwExceptionIfErrors($sqlStatementMock);
+    }
+
+    /**
+     * Check if the method returns false if no errors are found.
+     */
+    public function testThrowExceptionIfErrorsNoErrors()
+    {
+        $sqlStatementMock = $this->getMockBuilder(\PDOStatement::class)
+            ->disableOriginalConstructor()
+            ->getMock();
+
+        $sqlStatementMock->expects($this->once())
+            ->method('errorCode')
+            ->willReturn(null);
+
+        $result = $this->testObject->throwExceptionIfErrors($sqlStatementMock);
+
+        $this->assertFalse($result);
     }
 }

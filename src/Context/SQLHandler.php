@@ -35,14 +35,21 @@ class SQLHandler extends BehatContext
     /**
      * Gets the connection for query execution.
      */
-    private function getConnection()
+    public function getConnection()
     {
         if (! $this->connection) {
             list($dns, $username, $password) = $this->setDBParams()->connectionString();
-            $this->connection = new \PDO($dns, $username, $password);
+            $this->setConnection(new \PDO($dns, $username, $password));
         }
 
         return $this->connection;
+    }
+
+    public function setConnection($connection)
+    {
+        $this->connection = $connection;
+
+        return $this;
     }
 
     /**
@@ -142,7 +149,13 @@ class SQLHandler extends BehatContext
             $this->params['DBSCHEMA']
         );
 
-        $result = $this->execute($sql);
+        $statement = $this->execute($sql);
+        $this->throwExceptionIfErrors($statement);
+        $result = $statement->fetchAll();
+
+        if (! $result) {
+            return [];
+        }
 
         $cols = [];
         foreach ($result as $column) {
@@ -315,7 +328,7 @@ class SQLHandler extends BehatContext
     /**
      * Executes sql command.
      */
-    protected function execute($sql, $ignoreDuplicate = false)
+    protected function execute($sql)
     {
         $this->lastQuery = $sql;
 
@@ -327,25 +340,47 @@ class SQLHandler extends BehatContext
 
         $this->debugLog(sprintf('Last ID fetched: %d', $this->lastId));
 
-        if (! $this->hasFetchedRows()) {
-            $error = print_r($this->connection->errorInfo(), true);
+        return $this->sqlStatement;
+    }
 
-            if ($ignoreDuplicate and strpos($error, 'duplicate key value') !== false) {
-                return $this->connection->errorInfo();
+    /**
+     * Check for any mysql errors.
+     */
+    public function throwErrorIfNoRowsAffected($sqlStatement, $ignoreDuplicate = false)
+    {
+        if (! $this->hasFetchedRows($sqlStatement)) {
+            $error = print_r($sqlStatement->errorInfo(), true);
+
+            if ($ignoreDuplicate and strpos($error, 'Duplicate') !== false) {
+                return $sqlStatement->errorInfo();
             }
 
             throw new \Exception(
                 sprintf(
                     'No rows were effected!%sSQL: "%s",%sError: %s',
                     PHP_EOL,
-                    $sql,
+                    $sqlStatement->queryString,
                     PHP_EOL,
                     $error
                 )
             );
         }
 
-        return $this->sqlStatement->fetchAll();
+        return false;
+    }
+
+    /**
+     * Errors found then throw exception.
+     */
+    public function throwExceptionIfErrors($sqlStatement)
+    {
+        if ($sqlStatement->errorCode()) {
+            throw new \Exception(
+                print_r($sqlStatement->errorInfo(), true)
+            );
+        }
+
+        return false;
     }
 
     /**
@@ -397,7 +432,9 @@ class SQLHandler extends BehatContext
     protected function setLastIdWhere($entity, $criteria)
     {
         $sql = sprintf('SELECT id FROM %s WHERE %s', $entity, $criteria);
-        $result = $this->execute($sql);
+        $statement = $this->execute($sql);
+        $this->throwErrorIfNoRowsAffected($statement);
+        $result = $statement->fetchAll();
 
         if (! isset($result[0]['id'])) {
             throw new \Exception('Id not found in table.');
@@ -406,7 +443,7 @@ class SQLHandler extends BehatContext
         $this->lastId = $result[0]['id'];
         $this->debugLog(sprintf('Last ID fetched: %d', $this->lastId));
 
-        return $this;
+        return $statement;
     }
 
     /**
@@ -471,9 +508,9 @@ class SQLHandler extends BehatContext
     /**
      * Checks if the command executed affected any rows.
      */
-    protected function hasFetchedRows()
+    protected function hasFetchedRows($sqlStatement)
     {
-        return ($this->sqlStatement->rowCount());
+        return ($sqlStatement->rowCount());
     }
 
     /**

@@ -9,20 +9,44 @@ class SQLContextTest extends PHPUnit_Framework_TestCase
 {
     private $testObject;
 
+    const CONNECTION_STRING = 'BEHAT_ENV_PARAMS=DBENGINE:mysql;DBSCHEMA:;DBNAME:abc;DBHOST:localhost;DBUSER:root;DBPASSWORD:toor';
+
     public function __construct()
     {
+        $_SESSION['behat']['GenesisSqlExtension']['notQuotableKeywords'] = [];
+
         $this->testObject = new SQLContext();
+
+        putenv(self::CONNECTION_STRING);
+
+        $pdoConnectionMock = $this->getMockBuilder(\PDO::class)
+            ->disableOriginalConstructor()
+            ->getMock();
+
+        $this->testObject->setConnection($pdoConnectionMock);
     }
 
     /**
-     * @expectedException Exception
+     * Check that the expected sql is generated.
      */
     public function testIHaveAWhere()
     {
-        $entity = '';
-        $column = '';
+        $entity = 'someTable';
+        $column = 'column1:abc,column2:xyz';
 
-        $this->testObject->iHaveAWhere($entity, $column);
+        $this->testObject->getConnection()->expects($this->any())
+            ->method('prepare')
+            ->willReturn($this->getPdoStatementWithRows());
+
+        // This call will return the sql to be executed. While at it,
+        // it will run through the code and check if anything breaks.
+        $result = $this->testObject->iHaveAWhere($entity, $column);
+
+        // Expected SQL.
+        $expectedSQL = "INSERT INTO `someTable` (column1, column2) VALUES ('abc', 'xyz')";
+
+        // Assert.
+        $this->assertEquals($expectedSQL, $result);
     }
 
     /**
@@ -30,12 +54,20 @@ class SQLContextTest extends PHPUnit_Framework_TestCase
      */
     public function testIHaveAWhereWithValues()
     {
-        $this->markTestIncomplete('To be implemented');
+        $entity = 'someTable';
+        $column = 'column1:abc,column2:xyz';
 
-        $entity = '';
-        $column = '';
+        $this->testObject->getConnection()->expects($this->any())
+            ->method('prepare')
+            ->willReturn($this->getPdoStatementWithRows());
 
-        $this->testObject->iHaveAWhere($entity, $column);
+        $result = $this->testObject->iHaveAWhere($entity, $column);
+
+        // Expected SQL.
+        $expectedSQL = "INSERT INTO `someTable` (column1, column2) VALUES ('abc', 'xyz')";
+
+        // Assert.
+        $this->assertEquals($expectedSQL, $result);
     }
 
     /**
@@ -54,12 +86,20 @@ class SQLContextTest extends PHPUnit_Framework_TestCase
      */
     public function testIDontHaveAWhereWithValues()
     {
-        $this->markTestIncomplete('To be implemented');
+        $entity = 'someTable';
+        $column = 'column1:abc,column2:xyz';
 
-        $entity = '';
-        $column = '';
+        $this->testObject->getConnection()->expects($this->any())
+            ->method('prepare')
+            ->willReturn($this->getPdoStatementWithRows());
 
-        $this->testObject->iDontHaveAWhere($entity, $column);
+        $result = $this->testObject->iDontHaveAWhere($entity, $column);
+
+        // Expected SQL.
+        $expectedSQL = "DELETE FROM `someTable` WHERE column1 = 'abc' AND column2 = 'xyz'";
+
+        // Assert.
+        $this->assertEquals($expectedSQL, $result);
     }
 
     /**
@@ -69,7 +109,7 @@ class SQLContextTest extends PHPUnit_Framework_TestCase
     {
         $entity = '';
         $with = '';
-        $columns = [];
+        $columns = '';
 
         $this->testObject->iHaveAnExistingWithWhere($entity, $with, $columns);
     }
@@ -79,13 +119,23 @@ class SQLContextTest extends PHPUnit_Framework_TestCase
      */
     public function testiHaveAnExistingWithWhereWithValues()
     {
-        $this->markTestIncomplete('To be implemented');
+        $entity = 'someTable';
+        $with = 'column1:abc,column2:xyz';
+        $columns = 'id:134';
 
-        $entity = '';
-        $with = '';
-        $columns = [];
+        $this->testObject->getConnection()->expects($this->any())
+            ->method('prepare')
+            ->willReturn($this->getPdoStatementWithRows(1, [
+                ['id' => 1234]
+            ]));
 
-        $this->testObject->iHaveAnExistingWithWhere($entity, $with, $columns);
+        $result = $this->testObject->iHaveAnExistingWithWhere($entity, $with, $columns);
+
+        // Expected SQL.
+        $expectedSQL = "UPDATE `someTable` SET column1 = 'abc', column2 = 'xyz' WHERE id = 134";
+
+        // Assert.
+        $this->assertEquals($expectedSQL, $result);
     }
 
     /**
@@ -104,12 +154,20 @@ class SQLContextTest extends PHPUnit_Framework_TestCase
      */
     public function testiShouldNotHaveAWithWithValues()
     {
-        $this->markTestIncomplete('To be implemented');
+        $entity = 'someTable';
+        $with = 'column1:abc,column2:xyz';
 
-        $entity = '';
-        $with = '';
+        $this->testObject->getConnection()->expects($this->any())
+            ->method('prepare')
+            ->willReturn($this->getPdoStatementWithRows());
 
-        $this->testObject->iShouldNotHaveAWith($entity, $with);
+        $result = $this->testObject->iShouldNotHaveAWith($entity, $with);
+
+        // Expected SQL.
+        $expectedSQL = "SELECT * FROM `someTable` WHERE column1 = 'abc' AND column2 = 'xyz'";
+
+        // Assert.
+        $this->assertEquals($expectedSQL, $result);
     }
 
     /**
@@ -128,12 +186,20 @@ class SQLContextTest extends PHPUnit_Framework_TestCase
      */
     public function testiShouldHaveAWithWithValues()
     {
-        $this->markTestIncomplete('To be implemented');
+        $entity = 'someTable';
+        $with = 'column1:abc,column2:xyz';
 
-        $entity = '';
-        $with = '';
+        $this->testObject->getConnection()->expects($this->any())
+            ->method('prepare')
+            ->willReturn($this->getPdoStatementWithRows());
 
-        $this->testObject->iShouldHaveAWith($entity, $with);
+        $result = $this->testObject->iShouldHaveAWith($entity, $with);
+
+        // Expected SQL.
+        $expectedSQL = "SELECT * FROM `someTable` WHERE column1 = 'abc' AND column2 = 'xyz'";
+
+        // Assert.
+        $this->assertEquals($expectedSQL, $result);
     }
 
     /**
@@ -144,5 +210,29 @@ class SQLContextTest extends PHPUnit_Framework_TestCase
         $key = 'myval';
 
         $this->testObject->iSaveTheIdAs($key);
+    }
+
+    /**
+     * Get PDO statement with 1 row, used for testing.
+     */
+    private function getPdoStatementWithRows($rowCount = true, $fetchAll = false)
+    {
+        $statementMock = $this->getMockBuilder(\PDOStatement::class)
+            ->disableOriginalConstructor()
+            ->getMock();
+
+        if ($rowCount) {
+            $statementMock->expects($this->any())
+                ->method('rowCount')
+                ->willReturn($rowCount);
+        }
+
+        if ($fetchAll) {
+            $statementMock->expects($this->any())
+                ->method('fetchAll')
+                ->willReturn($fetchAll);
+        }
+
+        return $statementMock;
     }
 }

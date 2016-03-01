@@ -3,6 +3,7 @@
 namespace Genesis\SQLExtension\Context;
 
 use Behat\Behat\Context\Step\Given;
+use Behat\Gherkin\Node\TableNode;
 
 /*
  * This file is part of the Behat\SQLExtension
@@ -41,8 +42,10 @@ class SQLContext extends SQLHandler implements Interfaces\SQLContextInterface
         $this->filterAndConvertToArray($columns);
         list($columnNames, $columnValues) = $this->getTableColumns($entity);
 
-        $sql = sprintf('INSERT INTO %s (%s) VALUES (%s)', $entity, $columnNames, $columnValues);
-        $result = $this->execute($sql, self::IGNORE_DUPLICATE);
+        $sql = sprintf('INSERT INTO `%s` (%s) VALUES (%s)', $entity, $columnNames, $columnValues);
+        $statement = $this->execute($sql);
+        $this->throwErrorIfNoRowsAffected($statement, self::IGNORE_DUPLICATE);
+        $result = $statement->fetchAll();
 
         // Extract duplicate key and run update using it
         if ($key = $this->getKeyFromDuplicateError($result)) {
@@ -60,7 +63,7 @@ class SQLContext extends SQLHandler implements Interfaces\SQLContextInterface
             );
         }
 
-        return $this;
+        return $sql;
     }
 
     /**
@@ -88,10 +91,11 @@ class SQLContext extends SQLHandler implements Interfaces\SQLContextInterface
         $this->filterAndConvertToArray($columns);
         $whereClause = $this->constructClause(' AND ', $this->getColumns());
 
-        $sql = sprintf('DELETE FROM %s WHERE %s', $entity, $whereClause);
-        $this->execute($sql);
+        $sql = sprintf('DELETE FROM `%s` WHERE %s', $entity, $whereClause);
+        $statement = $this->execute($sql);
+        $this->throwExceptionIfErrors($statement);
 
-        return $this;
+        return $sql;
     }
 
     /**
@@ -108,17 +112,20 @@ class SQLContext extends SQLHandler implements Interfaces\SQLContextInterface
         $this->filterAndConvertToArray($columns);
         $whereClause = $this->constructClause(' AND ', $this->getColumns());
 
-        $sql = sprintf('UPDATE %s SET %s WHERE %s', $entity, $updateClause, $whereClause);
-        $this->execute($sql, self::IGNORE_DUPLICATE);
+        $sql = sprintf('UPDATE `%s` SET %s WHERE %s', $entity, $updateClause, $whereClause);
+        $statement = $this->execute($sql);
+        $this->throwErrorIfNoRowsAffected($statement, self::IGNORE_DUPLICATE);
 
         $this->setLastIdWhere(
             $entity,
             $whereClause
         );
+
+        return $sql;
     }
 
     /**
-     * @Given /^I have an existing "([^"]*)" where "([^"]*)"$/
+     * @Given /^(?:|I )have an existing "([^"]*)" where "([^"]*)"$/
      */
     public function iHaveAnExistingWhere($entity, $where)
     {
@@ -127,7 +134,7 @@ class SQLContext extends SQLHandler implements Interfaces\SQLContextInterface
         // Create a usable sql clause.
         $selectWhereClause = $this->constructClause(' AND ', $this->getColumns());
 
-        $this->setLastIdWhere(
+        return $this->setLastIdWhere(
             $entity,
             $selectWhereClause
         );
@@ -145,7 +152,7 @@ class SQLContext extends SQLHandler implements Interfaces\SQLContextInterface
 
         // Create the sql to be inserted.
         $sql = sprintf(
-            'SELECT * FROM %s WHERE %s',
+            'SELECT * FROM `%s` WHERE %s',
             $entity,
             $selectWhereClause
         );
@@ -153,9 +160,10 @@ class SQLContext extends SQLHandler implements Interfaces\SQLContextInterface
         // Execute the sql query, if the query throws a generic not found error,
         // catch it and give it some context.
         try {
-            $this->execute($sql);
+            $statement = $this->execute($sql);
+            $this->throwErrorIfNoRowsAffected($statement);
         } catch (\Exception $e) {
-            if (! $this->hasFetchedRows()) {
+            if (! $this->hasFetchedRows($statement)) {
                 throw new \Exception(sprintf(
                     'Record not found with "%s" in "%s"',
                     $selectWhereClause,
@@ -163,6 +171,8 @@ class SQLContext extends SQLHandler implements Interfaces\SQLContextInterface
                 ));
             }
         }
+
+        return $sql;
     }
 
     /**
@@ -177,7 +187,7 @@ class SQLContext extends SQLHandler implements Interfaces\SQLContextInterface
 
         // Create the sql to be inserted.
         $sql = sprintf(
-            'SELECT * FROM %s WHERE %s',
+            'SELECT * FROM `%s` WHERE %s',
             $entity,
             $selectWhereClause
         );
@@ -185,9 +195,10 @@ class SQLContext extends SQLHandler implements Interfaces\SQLContextInterface
         // Execute the sql query, if the query throws a generic not found error,
         // catch it and give it some context.
         try {
-            $this->execute($sql);
+            $statement = $this->execute($sql);
+            $this->throwErrorIfNoRowsAffected($statement);
         } catch (\Exception $e) {
-            if ($this->hasFetchedRows()) {
+            if ($this->hasFetchedRows($statement)) {
                 throw new \Exception(sprintf(
                     'Record not found with "%s" in "%s"',
                     $selectWhereClause,
@@ -195,6 +206,8 @@ class SQLContext extends SQLHandler implements Interfaces\SQLContextInterface
                 ));
             }
         }
+
+        return $sql;
     }
 
     /**
