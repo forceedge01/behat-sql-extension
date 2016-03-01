@@ -520,4 +520,16 @@ class SQLHandler extends BehatContext
     {
         return $this->columns;
     }
+
+    /**
+     * Make a string SQL safe.
+     */
+    public function makeSQLSafe($string)
+    {
+        $string = str_replace('`', '', $string);
+
+        $chunks = explode('.', $string);
+
+        return '`' . implode('`.`', $chunks) . '`';
+    }
 }

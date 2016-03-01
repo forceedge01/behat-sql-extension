@@ -437,4 +437,16 @@ class SQLHandlerTest extends PHPUnit_Framework_TestCase
 
         $this->assertFalse($result);
     }
+
+    /**
+     * Test that this method works as expected.
+     */
+    public function testMakeSQLSafe()
+    {
+        $string = 'databaseName.tableName.more';
+
+        $result = $this->testObject->makeSQLSafe($string);
+
+        $this->assertEquals('`databaseName`.`tableName`.`more`', $result);
+    }
 }
