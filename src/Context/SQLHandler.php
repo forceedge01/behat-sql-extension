@@ -334,13 +334,35 @@ class SQLHandler extends BehatContext
 
         $this->debugLog(sprintf('Executing SQL: %s', $sql));
 
-        $this->sqlStatement = $this->getConnection()->prepare($sql);
+        $this->sqlStatement = $this->getConnection()->prepare($sql, []);
         $this->sqlStatement->execute();
         $this->lastId = $this->connection->lastInsertId(sprintf('%s_id_seq', $this->entity));
-
-        $this->debugLog(sprintf('Last ID fetched: %d', $this->lastId));
+        $this->saveLastId($this->entity, $this->lastId);
+        $this->setKeyword($this->entity . '_id', $this->lastId);
 
         return $this->sqlStatement;
+    }
+
+    /**
+     * Save the last insert id in the session for later retrieval.
+     */
+    protected function saveLastId($entity, $id)
+    {
+        $this->debugLog(sprintf('Last ID fetched: %d', $id));
+
+        $_SESSION['behat']['GenesisSqlExtension']['last_id'][$entity][] = $id;
+    }
+
+    /**
+     * Get all id's inserted for an entity.
+     */
+    protected function getLastIds($entity)
+    {
+        if (isset($_SESSION['behat']['GenesisSqlExtension']['last_id'][$entity])) {
+            return $_SESSION['behat']['GenesisSqlExtension']['last_id'][$entity];
+        }
+
+        return false;
     }
 
     /**
@@ -440,8 +462,9 @@ class SQLHandler extends BehatContext
             throw new \Exception('Id not found in table.');
         }
 
+        $this->debugLog(sprintf('Last ID fetched: %d', $result[0]['id']));
         $this->lastId = $result[0]['id'];
-        $this->debugLog(sprintf('Last ID fetched: %d', $this->lastId));
+        $this->saveLastId($entity, $result[0]['id']);
 
         return $statement;
     }

@@ -21,50 +21,55 @@ class SQLContextTest extends PHPUnit_Framework_TestCase
 
         $pdoConnectionMock = $this->getMockBuilder(\PDO::class)
             ->disableOriginalConstructor()
+            ->setMethods(array('prepare', 'lastInsertId', 'execute'))
             ->getMock();
 
         $this->testObject->setConnection($pdoConnectionMock);
     }
 
     /**
-     * Check that the expected sql is generated.
+     * Test that this method works with values provided.
      */
-    public function testIHaveAWhere()
+    public function testIHaveAWhereWithValuesRecordAlreadyExists()
     {
-        $entity = 'database.someTable';
+        $entity = 'database.unique';
         $column = 'column1:abc,column2:xyz';
 
         $this->testObject->getConnection()->expects($this->any())
             ->method('prepare')
-            ->willReturn($this->getPdoStatementWithRows());
+            ->willReturn($this->getPdoStatementWithRows(1, [['id' => 234324]]));
 
-        // This call will return the sql to be executed. While at it,
-        // it will run through the code and check if anything breaks.
         $result = $this->testObject->iHaveAWhere($entity, $column);
 
         // Expected SQL.
-        $expectedSQL = "INSERT INTO `database`.`someTable` (column1, column2) VALUES ('abc', 'xyz')";
+        $expectedSQL = "SELECT * FROM `database`.`unique` WHERE column1 = 'abc' AND column2 = 'xyz'";
 
         // Assert.
         $this->assertEquals($expectedSQL, $result);
     }
 
     /**
+     * @group test
      * Test that this method works with values provided.
      */
-    public function testIHaveAWhereWithValues()
+    public function testIHaveAWhereWithValuesRecordDoesNotExists()
     {
-        $entity = 'database.someTable';
+        $entity = 'database.unique';
         $column = 'column1:abc,column2:xyz';
 
         $this->testObject->getConnection()->expects($this->any())
             ->method('prepare')
-            ->willReturn($this->getPdoStatementWithRows());
+            ->with($this->isType('string'))
+            ->will($this->onConsecutiveCalls(
+                $this->getPdoStatementWithRows(0),
+                $this->getPdoStatementWithRows(1),
+                $this->getPdoStatementWithRows(1, [['id' => 237463]])
+            ));
 
         $result = $this->testObject->iHaveAWhere($entity, $column);
 
         // Expected SQL.
-        $expectedSQL = "INSERT INTO `database`.`someTable` (column1, column2) VALUES ('abc', 'xyz')";
+        $expectedSQL = "INSERT INTO `database`.`unique` (column1, column2) VALUES ('abc', 'xyz')";
 
         // Assert.
         $this->assertEquals($expectedSQL, $result);
@@ -232,6 +237,10 @@ class SQLContextTest extends PHPUnit_Framework_TestCase
                 ->method('fetchAll')
                 ->willReturn($fetchAll);
         }
+
+        $statementMock->expects($this->any())
+            ->method('execute')
+            ->willReturn(true);
 
         return $statementMock;
     }

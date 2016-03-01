@@ -34,15 +34,62 @@ class SQLContext extends SQLHandler implements Interfaces\SQLContextInterface
     }
 
     /**
+     * @Given /^(?:|I )have:$/
+     */
+    public function iHave(TableNode $nodes)
+    {
+        $nodes = $nodes->getRows();
+        unset($nodes[0]);
+
+        // Loop through all nodes and try inserting values.
+        foreach ($nodes as $node) {
+            $this->iHaveWhere($node[0], $node[1]);
+        }
+    }
+
+    /**
+     * @Given /^(?:|I )don't have:$/
+     * @Given /^(?:|I )do not have:$/
+     */
+    public function iDontHave(TableNode $nodes)
+    {
+        $nodes = $nodes->getRows();
+        unset($nodes[0]);
+
+        // Loop through all nodes and try inserting values.
+        foreach ($nodes as $node) {
+            $this->iDontHaveAWhere($node[0], $node[1]);
+        }
+    }
+
+    /**
      * @Given /^(?:|I )have an? "([^"]*)" where "([^"]*)"$/
      * @Given /^(?:|I )have an? "([^"]*)" with "([^"]*)"$/
      */
     public function iHaveAWhere($entity, $columns)
     {
+        // Normalize data.
         $entity = $this->makeSQLSafe($entity);
         $this->filterAndConvertToArray($columns);
-        list($columnNames, $columnValues) = $this->getTableColumns($entity);
 
+        // Check if the record exists.
+        $whereClause = $this->constructClause(' AND ', $this->getColumns());
+        $sql = sprintf('SELECT * FROM %s WHERE %s', $entity, $whereClause);
+        $statement = $this->execute($sql);
+
+        // If it does, set the last id and return.
+        if ($this->hasFetchedRows($statement)) {
+            // Set the last id to use from this.
+            $statement = $this->setLastIdWhere(
+                $entity,
+                $whereClause
+            );
+
+            return $sql;
+        }
+
+        // If the record does not already exist, create it.
+        list($columnNames, $columnValues) = $this->getTableColumns($entity);
         $sql = sprintf('INSERT INTO %s (%s) VALUES (%s)', $entity, $columnNames, $columnValues);
         $statement = $this->execute($sql);
         $this->throwErrorIfNoRowsAffected($statement, self::IGNORE_DUPLICATE);
