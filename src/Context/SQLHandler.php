@@ -338,9 +338,13 @@ class SQLHandler extends BehatContext
         $this->sqlStatement = $this->getConnection()->prepare($sql, []);
         $this->sqlStatement->execute();
         $this->lastId = $this->connection->lastInsertId(sprintf('%s_id_seq', $this->entity));
-        $entity = $this->makeSQLUnsafe($this->entity);
-        $this->saveLastId($entity, $this->lastId);
-        $this->setKeyword($entity . '_id', $this->lastId);
+
+        // If their is an id, save it!
+        if ($this->lastId) {
+            $entity = $this->makeSQLUnsafe($this->entity);
+            $this->saveLastId($entity, $this->lastId);
+            $this->setKeyword($entity . '_id', $this->lastId);
+        }
 
         return $this->sqlStatement;
     }
