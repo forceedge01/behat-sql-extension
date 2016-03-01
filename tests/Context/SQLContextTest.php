@@ -2,6 +2,7 @@
 
 namespace Genesis\SQLExtension\Tests\Context;
 
+use Behat\Gherkin\Node\TableNode;
 use Genesis\SQLExtension\Context\SQLContext;
 use PHPUnit_Framework_TestCase;
 
@@ -29,6 +30,132 @@ class SQLContextTest extends PHPUnit_Framework_TestCase
             ->willReturn(5);
 
         $this->testObject->setConnection($pdoConnectionMock);
+    }
+
+    public function testIHaveWhere()
+    {
+        $entity = 'database.unique';
+        $node = new TableNode();
+        // Add title row.
+        $node->addRow([
+            'email',
+            'name'
+        ]);
+
+        // Add data.
+        $node->addRow([
+            'its.inevitable@hotmail.com',
+            'Abdul'
+        ]);
+
+        // Add more data.
+        $node->addRow([
+            'forceedge01@gmail.com',
+            'Qureshi'
+        ]);
+
+        $this->testObject->getConnection()->expects($this->any())
+            ->method('prepare')
+            ->with($this->isType('string'))
+            ->willReturn($this->getPdoStatementWithRows(1, [['id' => 234324]]));
+
+        $sqls = $this->testObject->iHaveWhere($entity, $node);
+
+        $this->assertCount(2, $sqls);
+    }
+
+    public function testIHave()
+    {
+        $node = new TableNode();
+        // Add title row.
+        $node->addRow([
+            'table',
+            'values'
+        ]);
+
+        // Add data.
+        $node->addRow([
+            'table1',
+            'id:34234, name:abdul'
+        ]);
+
+        // Add more data.
+        $node->addRow([
+            'table2',
+            'id:34234, name:Jenkins'
+        ]);
+
+        $this->testObject->getConnection()->expects($this->any())
+            ->method('prepare')
+            ->with($this->isType('string'))
+            ->willReturn($this->getPdoStatementWithRows(1, [['id' => 234324]]));
+
+        $sqls = $this->testObject->iHave($node);
+
+        $this->assertCount(2, $sqls);
+    }
+
+    public function testIDontHaveWhere()
+    {
+        $entity = 'database.unique';
+        $node = new TableNode();
+        // Add title row.
+        $node->addRow([
+            'email',
+            'name'
+        ]);
+
+        // Add data.
+        $node->addRow([
+            'its.inevitable@hotmail.com',
+            'Abdul'
+        ]);
+
+        // Add more data.
+        $node->addRow([
+            'forceedge01@gmail.com',
+            'Qureshi'
+        ]);
+
+        $this->testObject->getConnection()->expects($this->any())
+            ->method('prepare')
+            ->with($this->isType('string'))
+            ->willReturn($this->getPdoStatementWithRows(1, [['id' => 234324]]));
+
+        $sqls = $this->testObject->iDontHaveWhere($entity, $node);
+
+        $this->assertCount(2, $sqls);
+    }
+
+    public function testIDontHave()
+    {
+        $node = new TableNode();
+        // Add title row.
+        $node->addRow([
+            'table',
+            'values'
+        ]);
+
+        // Add data.
+        $node->addRow([
+            'table1',
+            'id:34234, name:abdul'
+        ]);
+
+        // Add more data.
+        $node->addRow([
+            'table2',
+            'id:34234, name:Jenkins'
+        ]);
+
+        $this->testObject->getConnection()->expects($this->any())
+            ->method('prepare')
+            ->with($this->isType('string'))
+            ->willReturn($this->getPdoStatementWithRows(1, [['id' => 234324]]));
+
+        $sqls = $this->testObject->iDontHave($node);
+
+        $this->assertCount(2, $sqls);
     }
 
     /**

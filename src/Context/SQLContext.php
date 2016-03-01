@@ -27,10 +27,13 @@ class SQLContext extends SQLHandler implements Interfaces\SQLContextInterface
     public function iHaveWhere($entity, TableNode $nodes)
     {
         $queries = $this->convertTableNodeToQueries($nodes);
+        $sqls = [];
 
         foreach ($queries as $query) {
-            $this->iHaveAWhere($entity, $query);
+            $sqls[] = $this->iHaveAWhere($entity, $query);
         }
+
+        return $sqls;
     }
 
     /**
@@ -40,11 +43,14 @@ class SQLContext extends SQLHandler implements Interfaces\SQLContextInterface
     {
         $nodes = $nodes->getRows();
         unset($nodes[0]);
+        $sqls = [];
 
         // Loop through all nodes and try inserting values.
         foreach ($nodes as $node) {
-            $this->iHaveWhere($node[0], $node[1]);
+            $sqls[] = $this->iHaveAWhere($node[0], $node[1]);
         }
+
+        return $sqls;
     }
 
     /**
@@ -108,11 +114,14 @@ class SQLContext extends SQLHandler implements Interfaces\SQLContextInterface
     {
         $nodes = $nodes->getRows();
         unset($nodes[0]);
+        $sqls = [];
 
         // Loop through all nodes and try inserting values.
         foreach ($nodes as $node) {
-            $this->iDontHaveAWhere($node[0], $node[1]);
+            $sqls[] = $this->iDontHaveAWhere($node[0], $node[1]);
         }
+
+        return $sqls;
     }
 
     /**
@@ -121,10 +130,13 @@ class SQLContext extends SQLHandler implements Interfaces\SQLContextInterface
     public function iDontHaveWhere($entity, TableNode $nodes)
     {
         $queries = $this->convertTableNodeToQueries($nodes);
+        $sqls = [];
 
         foreach ($queries as $query) {
-            $this->iDontHaveAWhere($entity, $query);
+            $sqls[] = $this->iDontHaveAWhere($entity, $query);
         }
+
+        return $sqls;
     }
 
     /**
