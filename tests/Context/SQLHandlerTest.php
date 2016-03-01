@@ -452,6 +452,18 @@ class SQLHandlerTest extends PHPUnit_Framework_TestCase
     }
 
     /**
+     * Test that this method works as expected.
+     */
+    public function testMakeSQLUnsafe()
+    {
+        $string = '`databaseName`.`tableName`.`more`';
+
+        $result = $this->testObject->makeSQLUnsafe($string);
+
+        $this->assertEquals('databaseName.tableName.more', $result);
+    }
+
+    /**
      * Test that the entity can be set using the setter.
      */
     public function testSetEntity()
