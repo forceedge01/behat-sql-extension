@@ -179,7 +179,7 @@ class SQLContextTest extends PHPUnit_Framework_TestCase
         // Assert.
         $this->assertEquals($expectedSQL, $result);
         $this->assertNotNull($this->testObject->getEntity());
-        $this->assertEquals(5, $this->testObject->getKeyword('database.unique_id'));
+        $this->assertEquals(234324, $this->testObject->getKeyword('database.unique_id'));
     }
 
     /**
@@ -282,7 +282,7 @@ class SQLContextTest extends PHPUnit_Framework_TestCase
         // Assert.
         $this->assertEquals($expectedSQL, $result);
         $this->assertNotNull($this->testObject->getEntity());
-        $this->assertEquals(5, $this->testObject->getKeyword('database.someTable2_id'));
+        $this->assertEquals(1234, $this->testObject->getKeyword('database.someTable2_id'));
     }
 
     /**

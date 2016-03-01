@@ -341,9 +341,7 @@ class SQLHandler extends BehatContext
 
         // If their is an id, save it!
         if ($this->lastId) {
-            $entity = $this->makeSQLUnsafe($this->entity);
-            $this->saveLastId($entity, $this->lastId);
-            $this->setKeyword($entity . '_id', $this->lastId);
+            $this->handleLastId($this->entity, $this->lastId);
         }
 
         return $this->sqlStatement;
@@ -469,10 +467,20 @@ class SQLHandler extends BehatContext
         }
 
         $this->debugLog(sprintf('Last ID fetched: %d', $result[0]['id']));
-        $this->lastId = $result[0]['id'];
-        $this->saveLastId($entity, $result[0]['id']);
+        $this->handleLastId($entity, $result[0]['id']);
 
         return $statement;
+    }
+
+    /**
+     * Do what needs to be done with the last insert id.
+     */
+    protected function handleLastId($entity, $id)
+    {
+        $this->lastId = $id;
+        $entity = $this->makeSQLUnsafe($entity);
+        $this->saveLastId($entity, $this->lastId);
+        $this->setKeyword($entity . '_id', $this->lastId);
     }
 
     /**
