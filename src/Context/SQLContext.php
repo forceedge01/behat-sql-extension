@@ -48,21 +48,6 @@ class SQLContext extends SQLHandler implements Interfaces\SQLContextInterface
     }
 
     /**
-     * @Given /^(?:|I )don't have:$/
-     * @Given /^(?:|I )do not have:$/
-     */
-    public function iDontHave(TableNode $nodes)
-    {
-        $nodes = $nodes->getRows();
-        unset($nodes[0]);
-
-        // Loop through all nodes and try inserting values.
-        foreach ($nodes as $node) {
-            $this->iDontHaveAWhere($node[0], $node[1]);
-        }
-    }
-
-    /**
      * @Given /^(?:|I )have an? "([^"]*)" where "([^"]*)"$/
      * @Given /^(?:|I )have an? "([^"]*)" with "([^"]*)"$/
      */
@@ -70,6 +55,7 @@ class SQLContext extends SQLHandler implements Interfaces\SQLContextInterface
     {
         // Normalize data.
         $entity = $this->makeSQLSafe($entity);
+        $this->setEntity($entity);
         $this->filterAndConvertToArray($columns);
 
         // Check if the record exists.
@@ -115,6 +101,21 @@ class SQLContext extends SQLHandler implements Interfaces\SQLContextInterface
     }
 
     /**
+     * @Given /^(?:|I )don't have:$/
+     * @Given /^(?:|I )do not have:$/
+     */
+    public function iDontHave(TableNode $nodes)
+    {
+        $nodes = $nodes->getRows();
+        unset($nodes[0]);
+
+        // Loop through all nodes and try inserting values.
+        foreach ($nodes as $node) {
+            $this->iDontHaveAWhere($node[0], $node[1]);
+        }
+    }
+
+    /**
      * @Given /^(?:|I )do not have( an| a)? "([^"]*)" where:$/
      */
     public function iDontHaveWhere($entity, TableNode $nodes)
@@ -137,6 +138,7 @@ class SQLContext extends SQLHandler implements Interfaces\SQLContextInterface
         }
 
         $entity = $this->makeSQLSafe($entity);
+        $this->setEntity($entity);
         $this->filterAndConvertToArray($columns);
         $whereClause = $this->constructClause(' AND ', $this->getColumns());
 
@@ -157,6 +159,7 @@ class SQLContext extends SQLHandler implements Interfaces\SQLContextInterface
         }
 
         $entity = $this->makeSQLSafe($entity);
+        $this->setEntity($entity);
         $this->filterAndConvertToArray($with);
         $updateClause = $this->constructClause(', ', $this->getColumns());
         $this->filterAndConvertToArray($columns);
@@ -180,6 +183,7 @@ class SQLContext extends SQLHandler implements Interfaces\SQLContextInterface
     public function iHaveAnExistingWhere($entity, $where)
     {
         $entity = $this->makeSQLSafe($entity);
+        $this->setEntity($entity);
         // Create array out of the with string given.
         $this->filterAndConvertToArray($where);
         // Create a usable sql clause.
@@ -197,6 +201,7 @@ class SQLContext extends SQLHandler implements Interfaces\SQLContextInterface
     public function iShouldHaveAWith($entity, $with)
     {
         $entity = $this->makeSQLSafe($entity);
+        $this->setEntity($entity);
         // Create array out of the with string given.
         $this->filterAndConvertToArray($with);
         // Create a usable sql clause.
@@ -233,6 +238,7 @@ class SQLContext extends SQLHandler implements Interfaces\SQLContextInterface
     public function iShouldNotHaveAWith($entity, $with)
     {
         $entity = $this->makeSQLSafe($entity);
+        $this->setEntity($entity);
         // Create array out of the with string given.
         $this->filterAndConvertToArray($with);
         // Create a usable sql clause.

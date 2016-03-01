@@ -37,6 +37,7 @@ class SQLContextTest extends PHPUnit_Framework_TestCase
 
         $this->testObject->getConnection()->expects($this->any())
             ->method('prepare')
+            ->with($this->isType('string'))
             ->willReturn($this->getPdoStatementWithRows(1, [['id' => 234324]]));
 
         $result = $this->testObject->iHaveAWhere($entity, $column);
@@ -46,6 +47,7 @@ class SQLContextTest extends PHPUnit_Framework_TestCase
 
         // Assert.
         $this->assertEquals($expectedSQL, $result);
+        $this->assertNotNull($this->testObject->getEntity());
     }
 
     /**
@@ -73,6 +75,7 @@ class SQLContextTest extends PHPUnit_Framework_TestCase
 
         // Assert.
         $this->assertEquals($expectedSQL, $result);
+        $this->assertNotNull($this->testObject->getEntity());
     }
 
     /**
@@ -96,6 +99,7 @@ class SQLContextTest extends PHPUnit_Framework_TestCase
 
         $this->testObject->getConnection()->expects($this->any())
             ->method('prepare')
+            ->with($this->isType('string'))
             ->willReturn($this->getPdoStatementWithRows());
 
         $result = $this->testObject->iDontHaveAWhere($entity, $column);
@@ -105,6 +109,7 @@ class SQLContextTest extends PHPUnit_Framework_TestCase
 
         // Assert.
         $this->assertEquals($expectedSQL, $result);
+        $this->assertNotNull($this->testObject->getEntity());
     }
 
     /**
@@ -130,6 +135,7 @@ class SQLContextTest extends PHPUnit_Framework_TestCase
 
         $this->testObject->getConnection()->expects($this->any())
             ->method('prepare')
+            ->with($this->isType('string'))
             ->willReturn($this->getPdoStatementWithRows(1, [
                 ['id' => 1234]
             ]));
@@ -141,6 +147,7 @@ class SQLContextTest extends PHPUnit_Framework_TestCase
 
         // Assert.
         $this->assertEquals($expectedSQL, $result);
+        $this->assertNotNull($this->testObject->getEntity());
     }
 
     /**
@@ -164,6 +171,7 @@ class SQLContextTest extends PHPUnit_Framework_TestCase
 
         $this->testObject->getConnection()->expects($this->any())
             ->method('prepare')
+            ->with($this->isType('string'))
             ->willReturn($this->getPdoStatementWithRows());
 
         $result = $this->testObject->iShouldNotHaveAWith($entity, $with);
@@ -173,6 +181,7 @@ class SQLContextTest extends PHPUnit_Framework_TestCase
 
         // Assert.
         $this->assertEquals($expectedSQL, $result);
+        $this->assertNotNull($this->testObject->getEntity());
     }
 
     /**
@@ -196,6 +205,7 @@ class SQLContextTest extends PHPUnit_Framework_TestCase
 
         $this->testObject->getConnection()->expects($this->any())
             ->method('prepare')
+            ->with($this->isType('string'))
             ->willReturn($this->getPdoStatementWithRows());
 
         $result = $this->testObject->iShouldHaveAWith($entity, $with);
@@ -205,6 +215,7 @@ class SQLContextTest extends PHPUnit_Framework_TestCase
 
         // Assert.
         $this->assertEquals($expectedSQL, $result);
+        $this->assertNotNull($this->testObject->getEntity());
     }
 
     /**

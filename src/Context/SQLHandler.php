@@ -24,11 +24,12 @@ class SQLHandler extends BehatContext
     const IGNORE_DUPLICATE = true;
     const EXPLODE_MAX_LIMIT = 2;
 
+    protected $entity;
+
     private $lastQuery;
     private $connection;
     private $params;
     private $lastId;
-    private $entity;
     private $sqlStatement;
     private $columns = [];
 
@@ -554,5 +555,23 @@ class SQLHandler extends BehatContext
         $chunks = explode('.', $string);
 
         return '`' . implode('`.`', $chunks) . '`';
+    }
+
+    /**
+     * Set the entity for further processing.
+     */
+    public function setEntity($entity)
+    {
+        $this->entity = $entity;
+
+        return $this;
+    }
+
+    /**
+     * Get the entity on which actions are being performed.
+     */
+    public function getEntity()
+    {
+        return $this->entity;
     }
 }

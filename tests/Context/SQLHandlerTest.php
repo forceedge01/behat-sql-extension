@@ -450,4 +450,14 @@ class SQLHandlerTest extends PHPUnit_Framework_TestCase
 
         $this->assertEquals('`databaseName`.`tableName`.`more`', $result);
     }
+
+    /**
+     * Test that the entity can be set using the setter.
+     */
+    public function testSetEntity()
+    {
+        $this->testObject->setEntity('abc');
+
+        $this->assertEquals('abc', $this->testObject->getEntity());
+    }
 }
