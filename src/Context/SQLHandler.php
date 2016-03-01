@@ -374,7 +374,7 @@ class SQLHandler extends BehatContext
      */
     public function throwExceptionIfErrors($sqlStatement)
     {
-        if ($sqlStatement->errorCode()) {
+        if ((int) $sqlStatement->errorCode()) {
             throw new \Exception(
                 print_r($sqlStatement->errorInfo(), true)
             );

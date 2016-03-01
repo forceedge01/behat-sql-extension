@@ -429,9 +429,10 @@ class SQLHandlerTest extends PHPUnit_Framework_TestCase
             ->disableOriginalConstructor()
             ->getMock();
 
+        // This is the error code returned by mysql if no errors have occurred.
         $sqlStatementMock->expects($this->once())
             ->method('errorCode')
-            ->willReturn(null);
+            ->willReturn('00000');
 
         $result = $this->testObject->throwExceptionIfErrors($sqlStatementMock);
 
