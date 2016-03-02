@@ -46,6 +46,9 @@ class SQLHandler extends BehatContext
         return $this->connection;
     }
 
+    /**
+     * Set the pdo connection.
+     */
     public function setConnection($connection)
     {
         $this->connection = $connection;
@@ -333,7 +336,8 @@ class SQLHandler extends BehatContext
     public function debugLog($log)
     {
         if (defined('DEBUG_MODE') and DEBUG_MODE == 1) {
-            echo 'DEBUG >>> ' . $log . PHP_EOL . PHP_EOL;
+            $log = 'DEBUG >>> ' . $log;
+            echo $log . PHP_EOL . PHP_EOL;
         }
 
         return $this;

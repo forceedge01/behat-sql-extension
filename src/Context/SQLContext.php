@@ -59,12 +59,16 @@ class SQLContext extends SQLHandler implements Interfaces\SQLContextInterface
      */
     public function iHaveAWhere($entity, $columns)
     {
+        $this->debugLog('------- I HAVE WHERE -------');
         // Normalize data.
         $entity = $this->makeSQLSafe($entity);
         $this->setEntity($entity);
         $this->filterAndConvertToArray($columns);
 
+        $this->debugLog('Trying to select existing record.');
+
         // Check if the record exists.
+        // This needs to be done in two ways.
         $whereClause = $this->constructClause(' AND ', $this->getColumns());
         $sql = sprintf('SELECT * FROM %s WHERE %s', $entity, $whereClause);
         $statement = $this->execute($sql);
@@ -73,13 +77,14 @@ class SQLContext extends SQLHandler implements Interfaces\SQLContextInterface
         if ($this->hasFetchedRows($statement)) {
             // Set the last id to use from fetched row.
             $result = $statement->fetchAll();
-
             if (isset($result[0]['id'])) {
                 $this->handleLastId($entity, $result[0]['id']);
             }
 
             return $sql;
         }
+
+        $this->debugLog('No record found, trying to insert.');
 
         // If the record does not already exist, create it.
         list($columnNames, $columnValues) = $this->getTableColumns($entity);
@@ -146,6 +151,8 @@ class SQLContext extends SQLHandler implements Interfaces\SQLContextInterface
      */
     public function iDontHaveAWhere($entity, $columns)
     {
+        $this->debugLog('------- I DONT HAVE WHERE -------');
+
         if (! $columns) {
             throw new \Exception('You must provide a where clause!');
         }
@@ -167,6 +174,8 @@ class SQLContext extends SQLHandler implements Interfaces\SQLContextInterface
      */
     public function iHaveAnExistingWithWhere($entity, $with, $columns)
     {
+        $this->debugLog('------- I HAVE AN EXISTING WITH WHERE -------');
+
         if (! $columns) {
             throw new \Exception('You must provide a where clause!');
         }
@@ -195,6 +204,8 @@ class SQLContext extends SQLHandler implements Interfaces\SQLContextInterface
      */
     public function iHaveAnExistingWhere($entity, $where)
     {
+        $this->debugLog('------- I HAVE AN EXISTING WHERE -------');
+
         $entity = $this->makeSQLSafe($entity);
         $this->setEntity($entity);
         // Create array out of the with string given.
@@ -213,6 +224,8 @@ class SQLContext extends SQLHandler implements Interfaces\SQLContextInterface
      */
     public function iShouldHaveAWith($entity, $with)
     {
+        $this->debugLog('------- I SHOULD HAVE A WHERE -------');
+
         $entity = $this->makeSQLSafe($entity);
         $this->setEntity($entity);
         // Create array out of the with string given.
@@ -250,6 +263,8 @@ class SQLContext extends SQLHandler implements Interfaces\SQLContextInterface
      */
     public function iShouldNotHaveAWith($entity, $with)
     {
+        $this->debugLog('------- I SHOULD NOT HAVE A WHERE -------');
+
         $entity = $this->makeSQLSafe($entity);
         $this->setEntity($entity);
         // Create array out of the with string given.
@@ -287,6 +302,8 @@ class SQLContext extends SQLHandler implements Interfaces\SQLContextInterface
      */
     public function iSaveTheIdAs($key)
     {
+        $this->debugLog('------- I SAVE THE ID -------');
+
         $this->setKeyword($key, $this->getLastInsertId());
 
         return $this;
@@ -297,8 +314,10 @@ class SQLContext extends SQLHandler implements Interfaces\SQLContextInterface
      */
     public function iAmInDebugMode()
     {
-        define('DEBUG_MODE', 1);
+        $this->debugLog('------- I AM IN DEBUG MODE -------');
 
-        $this->debugLog('IN DEBUG MODE NOW');
+        if (! defined('DEBUG_MODE')) {
+            define('DEBUG_MODE', 1);
+        }
     }
 }
