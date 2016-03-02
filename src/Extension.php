@@ -34,6 +34,7 @@ class Extension implements ExtensionInterface
             DEFINE('SQLDBNAME', $config['connection_details']['dbname']);
             DEFINE('SQLDBUSERNAME', $config['connection_details']['username']);
             DEFINE('SQLDBPASSWORD', $config['connection_details']['password']);
+            DEFINE('SQLDBPREFIX', $config['connection_details']['dbprefix']);
             session_start();
             // Store any keywords set in behat.yml file
             if (isset($config['keywords']) and $config['keywords']) {
@@ -78,6 +79,9 @@ class Extension implements ExtensionInterface
                             defaultValue('root')->
                         end()->
                         scalarNode('password')->
+                            defaultValue(null)->
+                        end()->
+                        scalarNode('dbprefix')->
                             defaultValue(null)->
                         end()->
                     end()->

@@ -60,9 +60,11 @@ class SQLContext extends SQLHandler implements Interfaces\SQLContextInterface
     public function iHaveAWhere($entity, $columns)
     {
         $this->debugLog('------- I HAVE WHERE -------');
+
         // Normalize data.
-        $entity = $this->makeSQLSafe($entity);
         $this->setEntity($entity);
+        unset($entity);
+
         $this->filterAndConvertToArray($columns);
 
         $this->debugLog('Trying to select existing record.');
@@ -70,7 +72,7 @@ class SQLContext extends SQLHandler implements Interfaces\SQLContextInterface
         // Check if the record exists.
         // This needs to be done in two ways.
         $whereClause = $this->constructClause(' AND ', $this->getColumns());
-        $sql = sprintf('SELECT * FROM %s WHERE %s', $entity, $whereClause);
+        $sql = sprintf('SELECT * FROM %s WHERE %s', $this->getEntity(), $whereClause);
         $statement = $this->execute($sql);
 
         // If it does, set the last id and return.
@@ -78,7 +80,7 @@ class SQLContext extends SQLHandler implements Interfaces\SQLContextInterface
             // Set the last id to use from fetched row.
             $result = $statement->fetchAll();
             if (isset($result[0]['id'])) {
-                $this->handleLastId($entity, $result[0]['id']);
+                $this->handleLastId($this->getEntity(), $result[0]['id']);
             }
 
             return $sql;
@@ -87,8 +89,8 @@ class SQLContext extends SQLHandler implements Interfaces\SQLContextInterface
         $this->debugLog('No record found, trying to insert.');
 
         // If the record does not already exist, create it.
-        list($columnNames, $columnValues) = $this->getTableColumns($entity);
-        $sql = sprintf('INSERT INTO %s (%s) VALUES (%s)', $entity, $columnNames, $columnValues);
+        list($columnNames, $columnValues) = $this->getTableColumns($this->getEntity());
+        $sql = sprintf('INSERT INTO %s (%s) VALUES (%s)', $this->getEntity(), $columnNames, $columnValues);
         $statement = $this->execute($sql);
         $this->throwErrorIfNoRowsAffected($statement, self::IGNORE_DUPLICATE);
         $result = $statement->fetchAll();
@@ -98,13 +100,13 @@ class SQLContext extends SQLHandler implements Interfaces\SQLContextInterface
             $this->debugLog(sprintf('Duplicate key found, running update using key "%s"', $key));
 
             $this->iHaveAnExistingWithWhere(
-                $entity,
+                $this->getEntity(),
                 $columns,
                 sprintf('%s:%s', $key, $this->getColumns()[$key])
             );
 
             $this->setLastIdWhere(
-                $entity,
+                $this->getEntity(),
                 sprintf('%s = %s', $key, $this->quoteOrNot($this->getColumns()[$key]))
             );
         }
@@ -157,12 +159,13 @@ class SQLContext extends SQLHandler implements Interfaces\SQLContextInterface
             throw new \Exception('You must provide a where clause!');
         }
 
-        $entity = $this->makeSQLSafe($entity);
         $this->setEntity($entity);
+        unset($entity);
+
         $this->filterAndConvertToArray($columns);
         $whereClause = $this->constructClause(' AND ', $this->getColumns());
 
-        $sql = sprintf('DELETE FROM %s WHERE %s', $entity, $whereClause);
+        $sql = sprintf('DELETE FROM %s WHERE %s', $this->getEntity(), $whereClause);
         $statement = $this->execute($sql);
         $this->throwExceptionIfErrors($statement);
 
@@ -180,19 +183,20 @@ class SQLContext extends SQLHandler implements Interfaces\SQLContextInterface
             throw new \Exception('You must provide a where clause!');
         }
 
-        $entity = $this->makeSQLSafe($entity);
         $this->setEntity($entity);
+        unset($entity);
+
         $this->filterAndConvertToArray($with);
         $updateClause = $this->constructClause(', ', $this->getColumns());
         $this->filterAndConvertToArray($columns);
         $whereClause = $this->constructClause(' AND ', $this->getColumns());
 
-        $sql = sprintf('UPDATE %s SET %s WHERE %s', $entity, $updateClause, $whereClause);
+        $sql = sprintf('UPDATE %s SET %s WHERE %s', $this->getEntity(), $updateClause, $whereClause);
         $statement = $this->execute($sql);
         $this->throwErrorIfNoRowsAffected($statement, self::IGNORE_DUPLICATE);
 
         $this->setLastIdWhere(
-            $entity,
+            $this->getEntity(),
             $whereClause
         );
 
@@ -206,15 +210,16 @@ class SQLContext extends SQLHandler implements Interfaces\SQLContextInterface
     {
         $this->debugLog('------- I HAVE AN EXISTING WHERE -------');
 
-        $entity = $this->makeSQLSafe($entity);
         $this->setEntity($entity);
+        unset($entity);
+
         // Create array out of the with string given.
         $this->filterAndConvertToArray($where);
         // Create a usable sql clause.
         $selectWhereClause = $this->constructClause(' AND ', $this->getColumns());
 
         return $this->setLastIdWhere(
-            $entity,
+            $this->getEntity(),
             $selectWhereClause
         );
     }
@@ -226,8 +231,9 @@ class SQLContext extends SQLHandler implements Interfaces\SQLContextInterface
     {
         $this->debugLog('------- I SHOULD HAVE A WHERE -------');
 
-        $entity = $this->makeSQLSafe($entity);
         $this->setEntity($entity);
+        unset($entity);
+
         // Create array out of the with string given.
         $this->filterAndConvertToArray($with);
         // Create a usable sql clause.
@@ -236,7 +242,7 @@ class SQLContext extends SQLHandler implements Interfaces\SQLContextInterface
         // Create the sql to be inserted.
         $sql = sprintf(
             'SELECT * FROM %s WHERE %s',
-            $entity,
+            $this->getEntity(),
             $selectWhereClause
         );
 
@@ -250,7 +256,7 @@ class SQLContext extends SQLHandler implements Interfaces\SQLContextInterface
                 throw new \Exception(sprintf(
                     'Record not found with "%s" in "%s"',
                     $selectWhereClause,
-                    $entity
+                    $this->getEntity()
                 ));
             }
         }
@@ -265,8 +271,9 @@ class SQLContext extends SQLHandler implements Interfaces\SQLContextInterface
     {
         $this->debugLog('------- I SHOULD NOT HAVE A WHERE -------');
 
-        $entity = $this->makeSQLSafe($entity);
         $this->setEntity($entity);
+        unset($entity);
+
         // Create array out of the with string given.
         $this->filterAndConvertToArray($with);
         // Create a usable sql clause.
@@ -275,7 +282,7 @@ class SQLContext extends SQLHandler implements Interfaces\SQLContextInterface
         // Create the sql to be inserted.
         $sql = sprintf(
             'SELECT * FROM %s WHERE %s',
-            $entity,
+            $this->getEntity(),
             $selectWhereClause
         );
 
@@ -289,7 +296,7 @@ class SQLContext extends SQLHandler implements Interfaces\SQLContextInterface
                 throw new \Exception(sprintf(
                     'Record not found with "%s" in "%s"',
                     $selectWhereClause,
-                    $entity
+                    $this->getEntity()
                 ));
             }
         }

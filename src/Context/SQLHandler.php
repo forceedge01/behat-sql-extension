@@ -224,7 +224,6 @@ class SQLHandler extends BehatContext
      */
     protected function getTableColumns($entity)
     {
-        $this->entity = $entity;
         $columnClause = [];
 
         // Get all columns for insertion
@@ -354,11 +353,11 @@ class SQLHandler extends BehatContext
 
         $this->sqlStatement = $this->getConnection()->prepare($sql, []);
         $this->sqlStatement->execute();
-        $this->lastId = $this->connection->lastInsertId(sprintf('%s_id_seq', $this->entity));
+        $this->lastId = $this->connection->lastInsertId(sprintf('%s_id_seq', $this->getEntity()));
 
         // If their is an id, save it!
         if ($this->lastId) {
-            $this->handleLastId($this->entity, $this->lastId);
+            $this->handleLastId($this->getEntity(), $this->lastId);
         }
 
         return $this->sqlStatement;
@@ -494,10 +493,23 @@ class SQLHandler extends BehatContext
      */
     protected function handleLastId($entity, $id)
     {
+        $entity = $this->getUserInputEntity($entity);
         $this->lastId = $id;
         $entity = $this->makeSQLUnsafe($entity);
         $this->saveLastId($entity, $this->lastId);
         $this->setKeyword($entity . '_id', $this->lastId);
+    }
+
+    /**
+     * Get the entity the way the user had inputted it.
+     */
+    private function getUserInputEntity($entity)
+    {
+        // Get rid of any special chars introduced.
+        $entity = $this->makeSQLUnsafe($entity);
+
+        // Only replace first occurrence.
+        return preg_replace('/' . SQLDBPREFIX . '/', '', $entity, 1);
     }
 
     /**
@@ -600,7 +612,12 @@ class SQLHandler extends BehatContext
      */
     public function setEntity($entity)
     {
-        $this->entity = $entity;
+        $expectedEntity = $this->makeSQLSafe(SQLDBPREFIX . $entity);
+
+        // Concatinate the entity with the sqldbprefix value only if not already done.
+        if ($expectedEntity !== $entity) {
+            $this->entity = $expectedEntity;
+        }
 
         return $this;
     }
