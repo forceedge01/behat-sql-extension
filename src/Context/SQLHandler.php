@@ -34,12 +34,21 @@ class SQLHandler extends BehatContext
     private $columns = [];
 
     /**
+     * Construct the object.
+     */
+    public function __construct()
+    {
+        // Set the database creds.
+        $this->setDBParams();
+    }
+
+    /**
      * Gets the connection for query execution.
      */
     public function getConnection()
     {
         if (! $this->connection) {
-            list($dns, $username, $password) = $this->setDBParams()->connectionString();
+            list($dns, $username, $password) = $this->connectionString();
             $this->setConnection(new \PDO($dns, $username, $password));
         }
 
@@ -120,8 +129,6 @@ class SQLHandler extends BehatContext
      */
     protected function requiredTableColumns($table)
     {
-        $this->setDBParams();
-
         // If the DBSCHEMA is not set, try using the database name if provided with the table.
         if (! $this->params['DBSCHEMA']) {
             preg_match('/(.*)\./', $table, $db);

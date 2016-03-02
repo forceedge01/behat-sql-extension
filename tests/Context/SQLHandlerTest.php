@@ -70,19 +70,6 @@ class SQLHandlerTest extends PHPUnit_Framework_TestCase
         $this->testObject = new SQLHandler();
     }
 
-    /**
-     * testSetDBParams Test that setDBParams executes as expected.
-     *
-     * @expectedException Exception
-     */
-    public function testSetDBParams()
-    {
-        putenv('BEHAT_ENV_PARAMS');
-
-        // Execute
-        $this->testObject->setDBParams();
-    }
-
     public function testSetDBParamsFromEnvironmentVariable()
     {
         putenv('BEHAT_ENV_PARAMS=HOST: localhost;username: root;password: abc123');
@@ -90,22 +77,17 @@ class SQLHandlerTest extends PHPUnit_Framework_TestCase
         $result = $this->testObject->setDBParams();
 
         $this->assertInstanceOf(SQLHandler::class, $result);
-        $this->assertEquals($this->testObject->getParams()['HOST'], 'localhost');
-        $this->assertEquals($this->testObject->getParams()['username'], 'root');
-        $this->assertEquals($this->testObject->getParams()['password'], 'abc123');
+        $this->assertEquals($this->testObject->getParams()['DBENGINE'], 'mysql');
+        $this->assertEquals($this->testObject->getParams()['DBHOST'], 'localhost');
+        $this->assertEquals($this->testObject->getParams()['DBUSER'], 'root');
+        $this->assertEquals($this->testObject->getParams()['DBPASSWORD'], 'toor');
+        $this->assertEquals($this->testObject->getParams()['DBPREFIX'], 'dev_');
+        $this->assertEquals($this->testObject->getParams()['DBNAME'], 'mydb');
+        $this->assertEquals($this->testObject->getParams()['DBSCHEMA'], 'myschema');
     }
 
     public function testSetDBParamsWithConstantsDefined()
     {
-        // Mock, values are not real.
-        define('SQLDBENGINE', 'mysql');
-        define('SQLDBHOST', 'mysql');
-        define('SQLDBSCHEMA', 'mysql');
-        define('SQLDBNAME', 'mysql');
-        define('SQLDBUSERNAME', 'mysql');
-        define('SQLDBPASSWORD', 'mysql');
-        define('SQLDBPREFIX', '');
-
         $result = $this->testObject->setDBParams();
 
         $this->assertInstanceOf(SQLHandler::class, $result);
@@ -471,6 +453,6 @@ class SQLHandlerTest extends PHPUnit_Framework_TestCase
     {
         $this->testObject->setEntity('abc');
 
-        $this->assertEquals('`abc`', $this->testObject->getEntity());
+        $this->assertEquals('`dev_abc`', $this->testObject->getEntity());
     }
 }
