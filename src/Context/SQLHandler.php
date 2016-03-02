@@ -283,6 +283,11 @@ class SQLHandler extends BehatContext
      */
     public function getKeyword($key)
     {
+        $this->debugLog(sprintf(
+            'Retrieving keyword "%s"',
+            $key
+        ));
+
         if (! isset($_SESSION['behat']['GenesisSqlExtension']['keywords'][$key])) {
             throw new \Exception(sprintf(
                 'Key "%s" not found in behat store, all keys available: %s',
@@ -291,7 +296,15 @@ class SQLHandler extends BehatContext
             ));
         }
 
-        return $_SESSION['behat']['GenesisSqlExtension']['keywords'][$key];
+        $value = $_SESSION['behat']['GenesisSqlExtension']['keywords'][$key];
+
+        $this->debugLog(sprintf(
+            'Retrieved keyword "%s" with value "%s"',
+            $key,
+            $value
+        ));
+
+        return $value;
     }
 
     /**

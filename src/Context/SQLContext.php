@@ -71,11 +71,12 @@ class SQLContext extends SQLHandler implements Interfaces\SQLContextInterface
 
         // If it does, set the last id and return.
         if ($this->hasFetchedRows($statement)) {
-            // Set the last id to use from this.
-            $statement = $this->setLastIdWhere(
-                $entity,
-                $whereClause
-            );
+            // Set the last id to use from fetched row.
+            $result = $statement->fetchAll();
+
+            if (isset($result[0]['id'])) {
+                $this->handleLastId($entity, $result[0]['id']);
+            }
 
             return $sql;
         }
