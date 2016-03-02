@@ -104,6 +104,7 @@ class SQLHandlerTest extends PHPUnit_Framework_TestCase
         define('SQLDBNAME', 'mysql');
         define('SQLDBUSERNAME', 'mysql');
         define('SQLDBPASSWORD', 'mysql');
+        define('SQLDBPREFIX', '');
 
         $result = $this->testObject->setDBParams();
 
@@ -470,6 +471,6 @@ class SQLHandlerTest extends PHPUnit_Framework_TestCase
     {
         $this->testObject->setEntity('abc');
 
-        $this->assertEquals('abc', $this->testObject->getEntity());
+        $this->assertEquals('`abc`', $this->testObject->getEntity());
     }
 }

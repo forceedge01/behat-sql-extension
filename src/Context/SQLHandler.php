@@ -69,7 +69,8 @@ class SQLHandler extends BehatContext
                 'DBSCHEMA' => SQLDBSCHEMA,
                 'DBNAME' => SQLDBNAME,
                 'DBUSER' => SQLDBUSERNAME,
-                'DBPASSWORD' => SQLDBPASSWORD
+                'DBPASSWORD' => SQLDBPASSWORD,
+                'DBPREFIX' => SQLDBPREFIX
             ];
         } else {
             $params = getenv('BEHAT_ENV_PARAMS');
@@ -509,7 +510,7 @@ class SQLHandler extends BehatContext
         $entity = $this->makeSQLUnsafe($entity);
 
         // Only replace first occurrence.
-        return preg_replace('/' . SQLDBPREFIX . '/', '', $entity, 1);
+        return preg_replace('/' . $this->getParams()['DBPREFIX'] . '/', '', $entity, 1);
     }
 
     /**
@@ -612,7 +613,7 @@ class SQLHandler extends BehatContext
      */
     public function setEntity($entity)
     {
-        $expectedEntity = $this->makeSQLSafe(SQLDBPREFIX . $entity);
+        $expectedEntity = $this->makeSQLSafe($this->getParams()['DBPREFIX'] . $entity);
 
         // Concatinate the entity with the sqldbprefix value only if not already done.
         if ($expectedEntity !== $entity) {
