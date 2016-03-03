@@ -145,6 +145,14 @@ This call will run an update query on the database records matching the @where c
 # Format for @update and @where is "email:its.inevitable.com,id:1,isActive:true"
 Given I have an existing "@table" with "@update" where "@where"
 ```
+### Using the not operator.
+
+You can use the not operator to say a column should not be equal to value as follows:
+```
+Then I should have a "user" where "email:its.inevitable@hotmail.com, active: !null"
+```
+
+This will generate `active is not null`. For a value other than null it would generate`column != value`.
 
 ### Re-using the id from another record
 
