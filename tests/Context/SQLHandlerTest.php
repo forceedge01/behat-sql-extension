@@ -153,6 +153,56 @@ class SQLHandlerTest extends PHPUnit_Framework_TestCase
     }
 
     /**
+     * testConstructClause Test that constructClause executes as expected with a not.
+     */
+    public function testConstructClauseNot()
+    {
+        $_SESSION['behat']['GenesisSqlExtension']['keywords'] = [];
+        $_SESSION['behat']['GenesisSqlExtension']['notQuotableKeywords'] = [];
+
+        // Prepare / Mock
+        $glue = ' - ';
+        $columns = [
+            'firstname' => '!Abdul',
+            'lastname' => 'Qureshi'
+        ];
+
+        // Execute
+        $result = $this->testObject->constructClause($glue, $columns);
+
+        $expected = "firstname != 'Abdul' - lastname = 'Qureshi'";
+
+        // Assert Result
+        $this->assertEquals($expected, $result);
+    }
+
+    /**
+     * testConstructClause Test that constructClause executes as expected with a null.
+     */
+    public function testConstructClauseNullValues()
+    {
+        $_SESSION['behat']['GenesisSqlExtension']['keywords'] = [];
+        $_SESSION['behat']['GenesisSqlExtension']['notQuotableKeywords'] = [];
+
+        // Prepare / Mock
+        $glue = ' AND ';
+        $columns = [
+            'firstname' => 'null',
+            'lastname' => '!null',
+            'postcode' => '!NULL',
+            'address' => 'NULL'
+        ];
+
+        // Execute
+        $result = $this->testObject->constructClause($glue, $columns);
+
+        $expected = "firstname is null AND lastname is not null AND postcode is not NULL AND address is NULL";
+
+        // Assert Result
+        $this->assertEquals($expected, $result);
+    }
+
+    /**
      * testFilterAndConvertToArray Test that filterAndConvertToArray executes as expected.
      */
     public function testFilterAndConvertToArray()

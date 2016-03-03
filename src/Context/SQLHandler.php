@@ -221,7 +221,29 @@ class SQLHandler extends BehatContext
         $whereClause = [];
 
         foreach ($columns as $column => $value) {
-            $whereClause[] = sprintf('%s = %s', $column, $this->quoteOrNot($value));
+            $newValue = ltrim($value, '!');
+            $quotedValue = $this->quoteOrNot($newValue);
+            $comparator = '%s=';
+            $notOperator = '';
+
+            // Check if the supplied value is null, if so change the format.
+            if (strtolower($newValue) == 'null') {
+                $comparator = 'is%s';
+            }
+
+            // Check if a not is applied to the value.
+            if ($newValue !== $value) {
+                if (strtolower($newValue) == 'null') {
+                    $notOperator = ' not';
+                } else {
+                    $notOperator = '!';
+                }
+            }
+
+            // Make up the sql.
+            $comparator = sprintf($comparator, $notOperator);
+
+            $whereClause[] = sprintf('%s %s %s', $column, $comparator, $quotedValue);
         }
 
         return implode($glue, $whereClause);
