@@ -71,7 +71,7 @@ class SQLContext extends SQLHandler implements Interfaces\SQLContextInterface
 
         // Check if the record exists.
         // This needs to be done in two ways.
-        $whereClause = $this->constructClause(' AND ', $this->getColumns());
+        $whereClause = $this->constructSQLClause(' AND ', $this->getColumns());
         $sql = sprintf('SELECT * FROM %s WHERE %s', $this->getEntity(), $whereClause);
         $statement = $this->execute($sql);
 
@@ -163,7 +163,7 @@ class SQLContext extends SQLHandler implements Interfaces\SQLContextInterface
         unset($entity);
 
         $this->filterAndConvertToArray($columns);
-        $whereClause = $this->constructClause(' AND ', $this->getColumns());
+        $whereClause = $this->constructSQLClause(' AND ', $this->getColumns());
 
         $sql = sprintf('DELETE FROM %s WHERE %s', $this->getEntity(), $whereClause);
         $statement = $this->execute($sql);
@@ -187,9 +187,9 @@ class SQLContext extends SQLHandler implements Interfaces\SQLContextInterface
         unset($entity);
 
         $this->filterAndConvertToArray($with);
-        $updateClause = $this->constructClause(', ', $this->getColumns());
+        $updateClause = $this->constructSQLClause(', ', $this->getColumns());
         $this->filterAndConvertToArray($columns);
-        $whereClause = $this->constructClause(' AND ', $this->getColumns());
+        $whereClause = $this->constructSQLClause(' AND ', $this->getColumns());
 
         $sql = sprintf('UPDATE %s SET %s WHERE %s', $this->getEntity(), $updateClause, $whereClause);
         $statement = $this->execute($sql);
@@ -216,7 +216,7 @@ class SQLContext extends SQLHandler implements Interfaces\SQLContextInterface
         // Create array out of the with string given.
         $this->filterAndConvertToArray($where);
         // Create a usable sql clause.
-        $selectWhereClause = $this->constructClause(' AND ', $this->getColumns());
+        $selectWhereClause = $this->constructSQLClause(' AND ', $this->getColumns());
 
         return $this->setLastIdWhere(
             $this->getEntity(),
@@ -225,11 +225,22 @@ class SQLContext extends SQLHandler implements Interfaces\SQLContextInterface
     }
 
     /**
-     * @Then /^(?:|I )should have a "([^"]*)" with "([^"]*)"$/
+     * @Then /^(?:|I )should have an? "([^"]*)" with:$/
+     */
+    public function iShouldHaveAWithTable($entity, TableNode $with)
+    {
+        $clause = $this->convertTableNodeToSingleContextClause($with);
+        $sql = $this->iShouldHaveAWith($entity, $clause);
+
+        return $sql;
+    }
+
+    /**
+     * @Then /^(?:|I )should have an? "([^"]*)" with "([^"]*)"$/
      */
     public function iShouldHaveAWith($entity, $with)
     {
-        $this->debugLog('------- I SHOULD HAVE A WHERE -------');
+        $this->debugLog('------- I SHOULD HAVE A WITH -------');
 
         $this->setEntity($entity);
         unset($entity);
@@ -237,7 +248,7 @@ class SQLContext extends SQLHandler implements Interfaces\SQLContextInterface
         // Create array out of the with string given.
         $this->filterAndConvertToArray($with);
         // Create a usable sql clause.
-        $selectWhereClause = $this->constructClause(' AND ', $this->getColumns());
+        $selectWhereClause = $this->constructSQLClause(' AND ', $this->getColumns());
 
         // Create the sql to be inserted.
         $sql = sprintf(
@@ -265,7 +276,18 @@ class SQLContext extends SQLHandler implements Interfaces\SQLContextInterface
     }
 
     /**
-     * @Then /^(?:|I )should not have a "([^"]*)" with "([^"]*)"$/
+     * @Then /^(?:|I )should not have an? "([^"]*)" with:$/
+     */
+    public function iShouldNotHaveAWithTable($entity, TableNode $with)
+    {
+        $clause = $this->convertTableNodeToSingleContextClause($with);
+        $sql = $this->iShouldNotHaveAWith($entity, $clause);
+
+        return $sql;
+    }
+
+    /**
+     * @Then /^(?:|I )should not have an? "([^"]*)" with "([^"]*)"$/
      */
     public function iShouldNotHaveAWith($entity, $with)
     {
@@ -277,7 +299,7 @@ class SQLContext extends SQLHandler implements Interfaces\SQLContextInterface
         // Create array out of the with string given.
         $this->filterAndConvertToArray($with);
         // Create a usable sql clause.
-        $selectWhereClause = $this->constructClause(' AND ', $this->getColumns());
+        $selectWhereClause = $this->constructSQLClause(' AND ', $this->getColumns());
 
         // Create the sql to be inserted.
         $sql = sprintf(

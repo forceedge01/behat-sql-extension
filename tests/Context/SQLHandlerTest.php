@@ -129,9 +129,9 @@ class SQLHandlerTest extends PHPUnit_Framework_TestCase
     }
 
     /**
-     * testConstructClause Test that constructClause executes as expected.
+     * testconstructSQLClause Test that constructSQLClause executes as expected.
      */
-    public function testConstructClause()
+    public function testconstructSQLClause()
     {
         $_SESSION['behat']['GenesisSqlExtension']['keywords'] = [];
         $_SESSION['behat']['GenesisSqlExtension']['notQuotableKeywords'] = [];
@@ -144,7 +144,7 @@ class SQLHandlerTest extends PHPUnit_Framework_TestCase
         ];
 
         // Execute
-        $result = $this->testObject->constructClause($glue, $columns);
+        $result = $this->testObject->constructSQLClause($glue, $columns);
 
         $expected = "firstname = 'Abdul' - lastname = 'Qureshi'";
 
@@ -153,9 +153,9 @@ class SQLHandlerTest extends PHPUnit_Framework_TestCase
     }
 
     /**
-     * testConstructClause Test that constructClause executes as expected with a not.
+     * testconstructSQLClause Test that constructSQLClause executes as expected with a not.
      */
-    public function testConstructClauseNot()
+    public function testconstructSQLClauseNot()
     {
         $_SESSION['behat']['GenesisSqlExtension']['keywords'] = [];
         $_SESSION['behat']['GenesisSqlExtension']['notQuotableKeywords'] = [];
@@ -168,7 +168,7 @@ class SQLHandlerTest extends PHPUnit_Framework_TestCase
         ];
 
         // Execute
-        $result = $this->testObject->constructClause($glue, $columns);
+        $result = $this->testObject->constructSQLClause($glue, $columns);
 
         $expected = "firstname != 'Abdul' - lastname = 'Qureshi'";
 
@@ -177,9 +177,9 @@ class SQLHandlerTest extends PHPUnit_Framework_TestCase
     }
 
     /**
-     * testConstructClause Test that constructClause executes as expected with a null.
+     * testconstructSQLClause Test that constructSQLClause executes as expected with a null.
      */
-    public function testConstructClauseNullValues()
+    public function testconstructSQLClauseNullValues()
     {
         $_SESSION['behat']['GenesisSqlExtension']['keywords'] = [];
         $_SESSION['behat']['GenesisSqlExtension']['notQuotableKeywords'] = [];
@@ -194,7 +194,7 @@ class SQLHandlerTest extends PHPUnit_Framework_TestCase
         ];
 
         // Execute
-        $result = $this->testObject->constructClause($glue, $columns);
+        $result = $this->testObject->constructSQLClause($glue, $columns);
 
         $expected = "firstname is null AND lastname is not null AND postcode is not NULL AND address is NULL";
 
@@ -504,5 +504,33 @@ class SQLHandlerTest extends PHPUnit_Framework_TestCase
         $this->testObject->setEntity('abc');
 
         $this->assertEquals('`dev_abc`', $this->testObject->getEntity());
+    }
+
+    /**
+     * Test that convertTableNodeToSingleContextClause works as expected.
+     */
+    public function testConvertTableNodeToSingleContextClauseTableNode()
+    {
+        $node = new TableNode();
+        $node->addRow([
+            'title',
+            'value'
+        ]);
+        $node->addRow([
+            'email',
+            'its.inevitable@hotmail'
+        ]);
+        $node->addRow([
+            'name',
+            'Abdul'
+        ]);
+        $node->addRow([
+            'age',
+            26
+        ]);
+
+        $result = $this->testObject->convertTableNodeToSingleContextClause($node);
+
+        $this->assertEquals('email:its.inevitable@hotmail,name:Abdul,age:26', $result);
     }
 }

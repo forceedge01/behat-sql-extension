@@ -216,7 +216,7 @@ class SQLHandler extends BehatContext
     /**
      * Constructs a clause based on the glue, to be used for where and update clause.
      */
-    public function constructClause($glue, array $columns)
+    public function constructSQLClause($glue, array $columns)
     {
         $whereClause = [];
 
@@ -599,6 +599,31 @@ class SQLHandler extends BehatContext
         }
 
         return $queries;
+    }
+
+    /**
+     * @param  TableNode $node The node with all fields and data.
+     *
+     * @return array The queries built of the TableNode.
+     */
+    public function convertTableNodeToSingleContextClause(TableNode $node)
+    {
+        // Get all rows and extract the heading.
+        $rows = $node->getRows();
+        // Get rid of the top row as its just represents the title.
+        unset($rows[0]);
+
+        if (! $rows) {
+            throw new \Exception('No data provided to loop through.');
+        }
+
+        $clauseArray = [];
+        // Loop through the rest of the rows and form up the queries.
+        foreach ($rows as $row) {
+            $clauseArray[] = implode(':', $row);
+        }
+
+        return implode(',', $clauseArray);
     }
 
     /**

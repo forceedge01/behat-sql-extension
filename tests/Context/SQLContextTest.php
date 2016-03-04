@@ -321,6 +321,42 @@ class SQLContextTest extends PHPUnit_Framework_TestCase
     }
 
     /**
+     * Test that this method works with values provided.
+     */
+    public function testiShouldNotHaveAWithWithTableNode()
+    {
+        $entity = 'database.someTable3';
+        $with = new TableNode();
+        $with->addRow([
+            'title',
+            'value'
+        ]);
+        $with->addRow([
+            'column1',
+            'abc'
+        ]);
+        $with->addRow([
+            'column2',
+            'xyz'
+        ]);
+
+        $this->testObject->getConnection()->expects($this->any())
+            ->method('prepare')
+            ->with($this->isType('string'))
+            ->willReturn($this->getPdoStatementWithRows());
+
+        $result = $this->testObject->iShouldNotHaveAWithTable($entity, $with);
+
+        // Expected SQL.
+        $expectedSQL = "SELECT * FROM `dev_database`.`someTable3` WHERE column1 = 'abc' AND column2 = 'xyz'";
+
+        // Assert.
+        $this->assertEquals($expectedSQL, $result);
+        $this->assertNotNull($this->testObject->getEntity());
+        $this->assertEquals(5, $this->testObject->getKeyword('database.someTable3_id'));
+    }
+
+    /**
      * @expectedException Exception
      */
     public function testiShouldHaveAWith()
@@ -329,6 +365,42 @@ class SQLContextTest extends PHPUnit_Framework_TestCase
         $with = '';
 
         $this->testObject->iShouldHaveAWith($entity, $with);
+    }
+
+    /**
+     * Test that this method works with values provided.
+     */
+    public function testiShouldHaveAWithTableNode()
+    {
+        $entity = 'database.someTable4';
+        $with = new TableNode();
+        $with->addRow([
+            'title',
+            'value'
+        ]);
+        $with->addRow([
+            'column1',
+            'abc'
+        ]);
+        $with->addRow([
+            'column2',
+            'xyz'
+        ]);
+
+        $this->testObject->getConnection()->expects($this->any())
+            ->method('prepare')
+            ->with($this->isType('string'))
+            ->willReturn($this->getPdoStatementWithRows());
+
+        $result = $this->testObject->iShouldHaveAWithTable($entity, $with);
+
+        // Expected SQL.
+        $expectedSQL = "SELECT * FROM `dev_database`.`someTable4` WHERE column1 = 'abc' AND column2 = 'xyz'";
+
+        // Assert.
+        $this->assertEquals($expectedSQL, $result);
+        $this->assertNotNull($this->testObject->getEntity());
+        $this->assertEquals(5, $this->testObject->getKeyword('database.someTable4_id'));
     }
 
     /**

@@ -149,10 +149,19 @@ Given I have an existing "@table" with "@update" where "@where"
 
 You can use the not operator to say a column should not be equal to value as follows:
 ```
-Then I should have a "user" where "email:its.inevitable@hotmail.com, active: !null"
+Then I should have a "user" with "email:its.inevitable@hotmail.com, active: !null"
 ```
 
 This will generate `active is not null`. For a value other than null it would generate`column != value`.
+
+The same can be written as:
+```
+Then I should have a "user" with:
+    | column | value                      |
+    | email  | its.inevitable@hotmail.com |
+    | active | !null                      |
+```
+Note the top row is just explanatory, it will not be used as part of the query.
 
 ### Re-using the id from another record
 
