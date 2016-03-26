@@ -429,7 +429,7 @@ class SQLHandler extends BehatContext
 
             throw new \Exception(
                 sprintf(
-                    'No rows were effected!%sSQL: "%s",%sError: %s',
+                    'No rows were affected!%sSQL: "%s",%sError: %s',
                     PHP_EOL,
                     $sqlStatement->queryString,
                     PHP_EOL,
