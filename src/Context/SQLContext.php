@@ -63,7 +63,6 @@ class SQLContext extends SQLHandler implements Interfaces\SQLContextInterface
 
         // Normalize data.
         $this->setEntity($entity);
-        unset($entity);
 
         $this->filterAndConvertToArray($columns);
 
@@ -160,7 +159,6 @@ class SQLContext extends SQLHandler implements Interfaces\SQLContextInterface
         }
 
         $this->setEntity($entity);
-        unset($entity);
 
         $this->filterAndConvertToArray($columns);
         $whereClause = $this->constructSQLClause(' AND ', $this->getColumns());
@@ -184,7 +182,6 @@ class SQLContext extends SQLHandler implements Interfaces\SQLContextInterface
         }
 
         $this->setEntity($entity);
-        unset($entity);
 
         $this->filterAndConvertToArray($with);
         $updateClause = $this->constructSQLClause(', ', $this->getColumns());
@@ -211,7 +208,6 @@ class SQLContext extends SQLHandler implements Interfaces\SQLContextInterface
         $this->debugLog('------- I HAVE AN EXISTING WHERE -------');
 
         $this->setEntity($entity);
-        unset($entity);
 
         // Create array out of the with string given.
         $this->filterAndConvertToArray($where);
@@ -243,7 +239,6 @@ class SQLContext extends SQLHandler implements Interfaces\SQLContextInterface
         $this->debugLog('------- I SHOULD HAVE A WITH -------');
 
         $this->setEntity($entity);
-        unset($entity);
 
         // Create array out of the with string given.
         $this->filterAndConvertToArray($with);
@@ -294,7 +289,6 @@ class SQLContext extends SQLHandler implements Interfaces\SQLContextInterface
         $this->debugLog('------- I SHOULD NOT HAVE A WHERE -------');
 
         $this->setEntity($entity);
-        unset($entity);
 
         // Create array out of the with string given.
         $this->filterAndConvertToArray($with);

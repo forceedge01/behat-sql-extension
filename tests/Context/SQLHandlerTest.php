@@ -481,7 +481,7 @@ class SQLHandlerTest extends PHPUnit_Framework_TestCase
 
         $result = $this->testObject->makeSQLSafe($string);
 
-        $this->assertEquals('`databaseName`.`tableName`.`more`', $result);
+        $this->assertEquals('databaseName.tableName.more', $result);
     }
 
     /**
@@ -503,7 +503,7 @@ class SQLHandlerTest extends PHPUnit_Framework_TestCase
     {
         $this->testObject->setEntity('abc');
 
-        $this->assertEquals('`dev_abc`', $this->testObject->getEntity());
+        $this->assertEquals('dev_abc', $this->testObject->getEntity());
     }
 
     /**

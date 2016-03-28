@@ -49,6 +49,7 @@ class SQLHandler extends BehatContext
     {
         if (! $this->connection) {
             list($dns, $username, $password) = $this->connectionString();
+
             $this->setConnection(new \PDO($dns, $username, $password));
         }
 
@@ -140,6 +141,7 @@ class SQLHandler extends BehatContext
 
         // Parse out the table name.
         $table = preg_replace('/(.*\.)/', '', $table);
+        $table = trim($table, '`');
 
         // Statement to extract all required columns for a table.
         $sqlStatement = "
@@ -148,9 +150,9 @@ class SQLHandler extends BehatContext
             FROM 
                 information_schema.columns 
             WHERE 
-                is_nullable = 'NO' 
+                is_nullable = 'NO'
             AND 
-                table_name = '%s' 
+                table_name = '%s'
             AND 
                 table_schema = '%s';";
 
@@ -429,7 +431,7 @@ class SQLHandler extends BehatContext
 
             throw new \Exception(
                 sprintf(
-                    'No rows were affected!%sSQL: "%s",%sError: %s',
+                    'No rows were effected!%sSQL: "%s",%sError: %s',
                     PHP_EOL,
                     $sqlStatement->queryString,
                     PHP_EOL,
@@ -647,11 +649,11 @@ class SQLHandler extends BehatContext
      */
     public function makeSQLSafe($string)
     {
-        $string = str_replace('`', '', $string);
+        $string = str_replace('', '', $string);
 
         $chunks = explode('.', $string);
 
-        return '`' . implode('`.`', $chunks) . '`';
+        return implode('.', $chunks);
     }
 
     /**
@@ -669,8 +671,10 @@ class SQLHandler extends BehatContext
     {
         $expectedEntity = $this->makeSQLSafe($this->getParams()['DBPREFIX'] . $entity);
 
+        $this->debugLog(sprintf('SET ENTITY: %s', $expectedEntity));
+
         // Concatinate the entity with the sqldbprefix value only if not already done.
-        if ($expectedEntity !== $entity) {
+        if ($expectedEntity !== $this->entity) {
             $this->entity = $expectedEntity;
         }
 
