@@ -425,7 +425,7 @@ class SQLHandler extends BehatContext
         if (! $this->hasFetchedRows($sqlStatement)) {
             $error = print_r($sqlStatement->errorInfo(), true);
 
-            if ($ignoreDuplicate and strpos($error, 'Duplicate') !== false) {
+            if ($ignoreDuplicate and preg_match('/duplicate/i', $error)) {
                 return $sqlStatement->errorInfo();
             }
 
@@ -669,6 +669,8 @@ class SQLHandler extends BehatContext
      */
     public function setEntity($entity)
     {
+        $this->debugLog(sprintf('ENTITY: %s', $entity));
+
         $expectedEntity = $this->makeSQLSafe($this->getParams()['DBPREFIX'] . $entity);
 
         $this->debugLog(sprintf('SET ENTITY: %s', $expectedEntity));
