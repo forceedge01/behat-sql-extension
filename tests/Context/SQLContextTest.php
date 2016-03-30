@@ -35,23 +35,17 @@ class SQLContextTest extends PHPUnit_Framework_TestCase
     public function testIHaveWhere()
     {
         $entity = 'database.unique';
-        $node = new TableNode();
-        // Add title row.
-        $node->addRow([
-            'email',
-            'name'
-        ]);
-
-        // Add data.
-        $node->addRow([
-            'its.inevitable@hotmail.com',
-            'Abdul'
-        ]);
-
-        // Add more data.
-        $node->addRow([
-            'forceedge01@gmail.com',
-            'Qureshi'
+        $node = new TableNode([
+            [
+                'email',
+                'name'
+            ], [
+                'its.inevitable@hotmail.com',
+                'Abdul'
+            ], [
+                'forceedge01@gmail.com',
+                'Qureshi'
+            ]
         ]);
 
         $this->testObject->getConnection()->expects($this->any())
@@ -66,23 +60,17 @@ class SQLContextTest extends PHPUnit_Framework_TestCase
 
     public function testIHave()
     {
-        $node = new TableNode();
-        // Add title row.
-        $node->addRow([
-            'table',
-            'values'
-        ]);
-
-        // Add data.
-        $node->addRow([
-            'table1',
-            'id:34234, name:abdul'
-        ]);
-
-        // Add more data.
-        $node->addRow([
-            'table2',
-            'id:34234, name:Jenkins'
+        $node = new TableNode([
+            [
+                'table',
+                'values'
+            ], [
+                'table1',
+                'id:34234, name:abdul'
+            ], [
+                'table2',
+                'id:34234, name:Jenkins'
+            ]
         ]);
 
         $this->testObject->getConnection()->expects($this->any())
@@ -98,23 +86,17 @@ class SQLContextTest extends PHPUnit_Framework_TestCase
     public function testIDontHaveWhere()
     {
         $entity = 'database.unique';
-        $node = new TableNode();
-        // Add title row.
-        $node->addRow([
-            'email',
-            'name'
-        ]);
-
-        // Add data.
-        $node->addRow([
-            'its.inevitable@hotmail.com',
-            'Abdul'
-        ]);
-
-        // Add more data.
-        $node->addRow([
-            'forceedge01@gmail.com',
-            'Qureshi'
+        $node = new TableNode([
+            [
+                'email',
+                'name'
+            ], [
+                'its.inevitable@hotmail.com',
+                'Abdul'
+            ], [
+                'forceedge01@gmail.com',
+                'Qureshi'
+            ]
         ]);
 
         $this->testObject->getConnection()->expects($this->any())
@@ -129,23 +111,17 @@ class SQLContextTest extends PHPUnit_Framework_TestCase
 
     public function testIDontHave()
     {
-        $node = new TableNode();
-        // Add title row.
-        $node->addRow([
-            'table',
-            'values'
-        ]);
-
-        // Add data.
-        $node->addRow([
-            'table1',
-            'id:34234, name:abdul'
-        ]);
-
-        // Add more data.
-        $node->addRow([
-            'table2',
-            'id:34234, name:Jenkins'
+        $node = new TableNode([
+            [
+                'table',
+                'values'
+            ], [
+                'table1',
+                'id:34234, name:abdul'
+            ], [
+                'table2',
+                'id:34234, name:Jenkins'
+            ]
         ]);
 
         $this->testObject->getConnection()->expects($this->any())
@@ -326,18 +302,17 @@ class SQLContextTest extends PHPUnit_Framework_TestCase
     public function testiShouldNotHaveAWithWithTableNode()
     {
         $entity = 'database.someTable3';
-        $with = new TableNode();
-        $with->addRow([
-            'title',
-            'value'
-        ]);
-        $with->addRow([
-            'column1',
-            'abc'
-        ]);
-        $with->addRow([
-            'column2',
-            'xyz'
+        $with = new TableNode([
+            [
+                'title',
+                'value'
+            ], [
+                'column1',
+                'abc'
+            ], [
+                'column2',
+                'xyz'
+            ]
         ]);
 
         $this->testObject->getConnection()->expects($this->any())
@@ -373,18 +348,17 @@ class SQLContextTest extends PHPUnit_Framework_TestCase
     public function testiShouldHaveAWithTableNode()
     {
         $entity = 'database.someTable4';
-        $with = new TableNode();
-        $with->addRow([
-            'title',
-            'value'
-        ]);
-        $with->addRow([
-            'column1',
-            'abc'
-        ]);
-        $with->addRow([
-            'column2',
-            'xyz'
+        $with = new TableNode([
+            [
+                'title',
+                'value'
+            ], [
+                'column1',
+                'abc'
+            ], [
+                'column2',
+                'xyz'
+            ]
         ]);
 
         $this->testObject->getConnection()->expects($this->any())
