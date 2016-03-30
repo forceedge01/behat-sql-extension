@@ -2,7 +2,7 @@
 
 namespace Genesis\SQLExtension\Context;
 
-use Behat\Behat\Context\BehatContext;
+use Behat\Behat\Context\Context;
 use Behat\Gherkin\Node\TableNode;
 
 /*
@@ -19,7 +19,7 @@ use Behat\Gherkin\Node\TableNode;
  *
  * @author Abdul Wahab Qureshi <its.inevitable@hotmail.com>
  */
-class SQLHandler extends BehatContext
+class SQLHandler implements Context
 {
     const IGNORE_DUPLICATE = true;
     const EXPLODE_MAX_LIMIT = 2;
