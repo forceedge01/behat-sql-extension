@@ -83,7 +83,7 @@ class ExtensionTest extends PHPUnit_Framework_TestCase
     {
         $result = $this->extension->getConfigKey();
 
-        $this->assertEquals('genesis-sql', $result);
+        $this->assertEquals('genesissql', $result);
     }
 
     /**

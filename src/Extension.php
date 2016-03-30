@@ -101,7 +101,7 @@ class Extension implements ExtensionInterface
      */
     public function getConfigKey()
     {
-        return 'genesis-sql';
+        return 'genesissql';
     }
 
     /**
@@ -116,7 +116,6 @@ class Extension implements ExtensionInterface
      */
     public function process(ContainerBuilder $container)
     {
-        $this->processSelectors($container);
     }
 
     /**
