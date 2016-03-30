@@ -219,3 +219,28 @@ public function __construct(array $parameters) {
     $this->useContext('genesis_sql_context', new SQLContext());
 }
 ```
+
+### Overriding database params.
+
+Override database params by passing credentials in to the constructor of the SQLContext.
+
+```php
+# file: FeatureContext.php
+<?php
+
+use Genesis\SQLExtension\Context\SQLContext;
+
+public function __construct(array $parameters) {
+    $this->parameters = $parameters;
+
+    $databaseCredentials = [
+      'engine' => 'mysql',
+      'host' => 'localhost',
+      'username' => 'root',
+      'password' => ''
+    ];
+
+    // Load Context Class
+    $this->useContext('genesis_sql_context', new SQLContext($databaseCredentials));
+}
+```
