@@ -2,7 +2,8 @@
 
 namespace Genesis\SQLExtension;
 
-use Behat\Behat\Extension\ExtensionInterface;
+use Behat\Testwork\ServiceContainer\Extension as ExtensionInterface;
+use Behat\Testwork\ServiceContainer\ExtensionManager;
 use Symfony\Component\Config\Definition\Builder\ArrayNodeDefinition;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 
@@ -25,7 +26,7 @@ class Extension implements ExtensionInterface
     /**
      * Load and set the configuration options.
      */
-    public function load(array $config, ContainerBuilder $container)
+    public function load(ContainerBuilder $container, array $config)
     {
         if (isset($config['connection_details'])) {
             DEFINE('SQLDBENGINE', $config['connection_details']['engine']);
@@ -57,7 +58,7 @@ class Extension implements ExtensionInterface
      *
      * @param ArrayNodeDefinition $builder
      */
-    public function getConfig(ArrayNodeDefinition $builder)
+    public function configure(ArrayNodeDefinition $builder)
     {
         $builder->
             children()->
@@ -91,6 +92,31 @@ class Extension implements ExtensionInterface
                 end()->
             end()->
         end();
+
+        return $builder;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function getConfigKey()
+    {
+        return 'genesis-sql';
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function initialize(ExtensionManager $extensionManager)
+    {
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function process(ContainerBuilder $container)
+    {
+        $this->processSelectors($container);
     }
 
     /**
