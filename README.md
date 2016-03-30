@@ -1,5 +1,5 @@
 # genesis-behat-sql-extension
-Provides easy data manipulation with any pdo enabled database
+Provides easy data manipulation with any pdo enabled database for behat 3.0
 
 Installation
 ------------
@@ -17,24 +17,30 @@ After composer has installed the extension you would need to setup the connectio
 In addition to the usual mink-extension parameters, you can pass in a `connection_details` parameter as follows:
 ```yaml
 default:
-    extensions:
-        Genesis\SQLExtension\Extension:
-          goutte: ~
-          ...
-          # Database connection details
-          connection_details:
-            engine: pgsql
-            host: 127.0.0.1
-            schema: ...
-            dbname: ...
-            username: ...
-            password: ...
-            dbprefix: ...
-          # Keywords to be used with the sql extension steps
-          keywords:
-            ...
-          notQuotableKeywords:
-            ...
+  suites:
+    default:
+      ...
+      contexts:
+        - FeatureContext
+        - Genesis\SQLExtension\Context\SQLContext
+      ...
+  extensions:
+    Genesis\SQLExtension\Extension:
+      # Database connection details
+      connection_details:
+        engine: pgsql
+        host: 127.0.0.1
+        schema: ...
+        dbname: ...
+        username: ...
+        password: ...
+        dbprefix: ...
+      # Keywords to be expanded with the sql extension steps.
+      keywords:
+        ...
+      # Keywords that do not need quoting when querying the database.
+      notQuotableKeywords:
+        ...
 ```
 
 In the above example, the `keywords` section provides injection of keywords. For example you can have:
@@ -212,10 +218,21 @@ Registering SQL context additionally to an existing context can be done as follo
 
 use Genesis\SQLExtension\Context\SQLContext;
 
-public function __construct(array $parameters) {
-    $this->parameters = $parameters;
+class FeatureContext implements Context, SnippetAcceptingContext
+{
+    /**
+     * @var SQLContext
+     */
+    private $sqlContext;
 
-    // Load Context Class
-    $this->useContext('genesis_sql_context', new SQLContext());
+    /**
+     * @BeforeScenario
+     */
+    public function gatherContexts(BeforeScenarioScope $scope)
+    {
+        $environment = $scope->getEnvironment();
+
+        $this->sqlContext = $environment->getContext(SQLContext::class);
+    }
 }
 ```
