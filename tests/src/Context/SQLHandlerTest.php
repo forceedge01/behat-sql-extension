@@ -86,6 +86,33 @@ class SQLHandlerTest extends PHPUnit_Framework_TestCase
         $this->assertEquals($this->testObject->getParams()['DBSCHEMA'], 'myschema');
     }
 
+    public function testSetDBParamsFromPassedInParams()
+    {
+        $params = [
+            'host' => 12456789,
+            'username' => 'abdul',
+            'password' => 'mypassword',
+            'engine' => 'mysql',
+            'dbname' => 'something',
+            'dbprefix' => 'abc_',
+            'dbschema' => 'not_changed'
+        ];
+
+        $result = $this->testObject->setDBParams($params);
+
+        // Expecting these to have changed.
+        $this->assertInstanceOf(SQLHandler::class, $result);
+        $this->assertEquals($this->testObject->getParams()['DBENGINE'], 'mysql');
+        $this->assertEquals($this->testObject->getParams()['DBHOST'], 12456789);
+        $this->assertEquals($this->testObject->getParams()['DBUSER'], 'abdul');
+        $this->assertEquals($this->testObject->getParams()['DBPASSWORD'], 'mypassword');
+
+        // Expecting these not to change.
+        $this->assertEquals($this->testObject->getParams()['DBPREFIX'], 'dev_');
+        $this->assertEquals($this->testObject->getParams()['DBNAME'], 'mydb');
+        $this->assertEquals($this->testObject->getParams()['DBSCHEMA'], 'myschema');
+    }
+
     public function testSetDBParamsWithConstantsDefined()
     {
         $result = $this->testObject->setDBParams();

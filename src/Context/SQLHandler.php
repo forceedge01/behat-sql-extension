@@ -36,10 +36,10 @@ class SQLHandler implements Context
     /**
      * Construct the object.
      */
-    public function __construct()
+    public function __construct(array $dbParams = array())
     {
         // Set the database creds.
-        $this->setDBParams();
+        $this->setDBParams($dbParams);
     }
 
     /**
@@ -70,18 +70,20 @@ class SQLHandler implements Context
      * Sets the database param from either the environment variable or params
      * passed in by behat.yml, params have precedence over env variable.
      */
-    public function setDBParams()
+    public function setDBParams(array $dbParams = array())
     {
         if (defined('SQLDBENGINE')) {
             $this->params = [
-                'DBENGINE' => SQLDBENGINE,
-                'DBHOST' => SQLDBHOST,
                 'DBSCHEMA' => SQLDBSCHEMA,
                 'DBNAME' => SQLDBNAME,
-                'DBUSER' => SQLDBUSERNAME,
-                'DBPASSWORD' => SQLDBPASSWORD,
                 'DBPREFIX' => SQLDBPREFIX
             ];
+
+            // Allow params to be over-ridable.
+            $this->params['DBHOST'] = (isset($dbParams['host']) ? $dbParams['host'] : SQLDBHOST);
+            $this->params['DBUSER'] = (isset($dbParams['username']) ? $dbParams['username'] : SQLDBUSERNAME);
+            $this->params['DBPASSWORD'] = (isset($dbParams['password']) ? $dbParams['password'] : SQLDBPASSWORD);
+            $this->params['DBENGINE'] = (isset($dbParams['engine']) ? $dbParams['engine'] : SQLDBENGINE);
         } else {
             $params = getenv('BEHAT_ENV_PARAMS');
 
