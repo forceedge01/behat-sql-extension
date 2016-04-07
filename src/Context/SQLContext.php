@@ -22,7 +22,7 @@ use Behat\Gherkin\Node\TableNode;
 class SQLContext extends SQLHandler implements Interfaces\SQLContextInterface
 {
     /**
-     * @Given /^(?:|I )have( an| a)? "([^"]*)" where:$/
+     * @Given /^(?:|I )have(?:| an| a) "([^"]*)" where:$/
      */
     public function iHaveWhere($entity, TableNode $nodes)
     {
@@ -54,8 +54,8 @@ class SQLContext extends SQLHandler implements Interfaces\SQLContextInterface
     }
 
     /**
-     * @Given /^(?:|I )have an? "([^"]*)" where "([^"]*)"$/
-     * @Given /^(?:|I )have an? "([^"]*)" with "([^"]*)"$/
+     * @Given /^(?:|I )have(?:| an| a) "([^"]*)" where "([^"]*)"$/
+     * @Given /^(?:|I )have(?:| an| a) "([^"]*)" with "([^"]*)"$/
      */
     public function iHaveAWhere($entity, $columns)
     {
@@ -114,41 +114,8 @@ class SQLContext extends SQLHandler implements Interfaces\SQLContextInterface
     }
 
     /**
-     * @Given /^(?:|I )don't have:$/
-     * @Given /^(?:|I )do not have:$/
-     */
-    public function iDontHave(TableNode $nodes)
-    {
-        $nodes = $nodes->getRows();
-        unset($nodes[0]);
-        $sqls = [];
-
-        // Loop through all nodes and try inserting values.
-        foreach ($nodes as $node) {
-            $sqls[] = $this->iDontHaveAWhere($node[0], $node[1]);
-        }
-
-        return $sqls;
-    }
-
-    /**
-     * @Given /^(?:|I )do not have( an| a)? "([^"]*)" where:$/
-     */
-    public function iDontHaveWhere($entity, TableNode $nodes)
-    {
-        $queries = $this->convertTableNodeToQueries($nodes);
-        $sqls = [];
-
-        foreach ($queries as $query) {
-            $sqls[] = $this->iDontHaveAWhere($entity, $query);
-        }
-
-        return $sqls;
-    }
-
-    /**
-     * @Given /^(?:|I )don't have an? "([^"]*)" where "([^"]*)"$/
-     * @Given /^(?:|I )don't have an? "([^"]*)" with "([^"]*)"$/
+     * @Given /^(?:|I )dont have(?:| an| a) "([^"]*)" where "([^"]*)"$/
+     * @Given /^(?:|I )dont have(?:| an| a) "([^"]*)" with "([^"]*)"$/
      */
     public function iDontHaveAWhere($entity, $columns)
     {
@@ -168,6 +135,39 @@ class SQLContext extends SQLHandler implements Interfaces\SQLContextInterface
         $this->throwExceptionIfErrors($statement);
 
         return $sql;
+    }
+
+    /**
+     * @Given /^(?:|I )don't have:$/
+     * @Given /^(?:|I )do not have:$/
+     */
+    public function iDontHave(TableNode $nodes)
+    {
+        $nodes = $nodes->getRows();
+        unset($nodes[0]);
+        $sqls = [];
+
+        // Loop through all nodes and try inserting values.
+        foreach ($nodes as $node) {
+            $sqls[] = $this->iDontHaveAWhere($node[0], $node[1]);
+        }
+
+        return $sqls;
+    }
+
+    /**
+     * @Given /^(?:|I )do not have(?:| an| a) "([^"]*)" where:$/
+     */
+    public function iDontHaveWhere($entity, TableNode $nodes)
+    {
+        $queries = $this->convertTableNodeToQueries($nodes);
+        $sqls = [];
+
+        foreach ($queries as $query) {
+            $sqls[] = $this->iDontHaveAWhere($entity, $query);
+        }
+
+        return $sqls;
     }
 
     /**
@@ -201,7 +201,7 @@ class SQLContext extends SQLHandler implements Interfaces\SQLContextInterface
     }
 
     /**
-     * @Given /^(?:|I )have an existing "([^"]*)" where "([^"]*)"$/
+     * @Given /^(?:|I )have(?:| an| a) existing "([^"]*)" where "([^"]*)"$/
      */
     public function iHaveAnExistingWhere($entity, $where)
     {
@@ -221,7 +221,7 @@ class SQLContext extends SQLHandler implements Interfaces\SQLContextInterface
     }
 
     /**
-     * @Then /^(?:|I )should have an? "([^"]*)" with:$/
+     * @Then /^(?:|I )should have(?:| an| a) "([^"]*)" with:$/
      */
     public function iShouldHaveAWithTable($entity, TableNode $with)
     {
@@ -232,7 +232,7 @@ class SQLContext extends SQLHandler implements Interfaces\SQLContextInterface
     }
 
     /**
-     * @Then /^(?:|I )should have an? "([^"]*)" with "([^"]*)"$/
+     * @Then /^(?:|I )should have(?:| an| a) "([^"]*)" with "([^"]*)"$/
      */
     public function iShouldHaveAWith($entity, $with)
     {
@@ -271,7 +271,7 @@ class SQLContext extends SQLHandler implements Interfaces\SQLContextInterface
     }
 
     /**
-     * @Then /^(?:|I )should not have an? "([^"]*)" with:$/
+     * @Then /^(?:|I )should not have(?:| an| a) "([^"]*)" with:$/
      */
     public function iShouldNotHaveAWithTable($entity, TableNode $with)
     {
@@ -282,7 +282,7 @@ class SQLContext extends SQLHandler implements Interfaces\SQLContextInterface
     }
 
     /**
-     * @Then /^(?:|I )should not have an? "([^"]*)" with "([^"]*)"$/
+     * @Then /^(?:|I )should not have(?:| an| a) "([^"]*)" with "([^"]*)"$/
      */
     public function iShouldNotHaveAWith($entity, $with)
     {
