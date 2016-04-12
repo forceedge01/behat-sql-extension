@@ -72,6 +72,7 @@ class SQLContext extends SQLHandler implements Interfaces\SQLContextInterface
         // This needs to be done in two ways.
         $whereClause = $this->constructSQLClause(' AND ', $this->getColumns());
         $sql = sprintf('SELECT * FROM %s WHERE %s', $this->getEntity(), $whereClause);
+        $this->setClauseType('select');
         $statement = $this->execute($sql);
 
         // If it does, set the last id and return.
@@ -90,6 +91,7 @@ class SQLContext extends SQLHandler implements Interfaces\SQLContextInterface
         // If the record does not already exist, create it.
         list($columnNames, $columnValues) = $this->getTableColumns($this->getEntity());
         $sql = sprintf('INSERT INTO %s (%s) VALUES (%s)', $this->getEntity(), $columnNames, $columnValues);
+        $this->setClauseType('insert');
         $statement = $this->execute($sql);
         $this->throwErrorIfNoRowsAffected($statement, self::IGNORE_DUPLICATE);
         $result = $statement->fetchAll();
@@ -131,6 +133,7 @@ class SQLContext extends SQLHandler implements Interfaces\SQLContextInterface
         $whereClause = $this->constructSQLClause(' AND ', $this->getColumns());
 
         $sql = sprintf('DELETE FROM %s WHERE %s', $this->getEntity(), $whereClause);
+        $this->setClauseType('delete');
         $statement = $this->execute($sql);
         $this->throwExceptionIfErrors($statement);
 
@@ -189,6 +192,7 @@ class SQLContext extends SQLHandler implements Interfaces\SQLContextInterface
         $whereClause = $this->constructSQLClause(' AND ', $this->getColumns());
 
         $sql = sprintf('UPDATE %s SET %s WHERE %s', $this->getEntity(), $updateClause, $whereClause);
+        $this->setClauseType('update');
         $statement = $this->execute($sql);
         $this->throwErrorIfNoRowsAffected($statement, self::IGNORE_DUPLICATE);
 
@@ -251,6 +255,7 @@ class SQLContext extends SQLHandler implements Interfaces\SQLContextInterface
             $this->getEntity(),
             $selectWhereClause
         );
+        $this->setClauseType('select');
 
         // Execute the sql query, if the query throws a generic not found error,
         // catch it and give it some context.
@@ -301,6 +306,7 @@ class SQLContext extends SQLHandler implements Interfaces\SQLContextInterface
             $this->getEntity(),
             $selectWhereClause
         );
+        $this->setClauseType('select');
 
         // Execute the sql query, if the query throws a generic not found error,
         // catch it and give it some context.

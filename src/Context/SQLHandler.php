@@ -4,6 +4,7 @@ namespace Genesis\SQLExtension\Context;
 
 use Behat\Behat\Context\BehatContext;
 use Behat\Gherkin\Node\TableNode;
+use Exception;
 
 /*
  * This file is part of the Behat\SQLExtension
@@ -32,6 +33,7 @@ class SQLHandler extends BehatContext
     private $lastId;
     private $sqlStatement;
     private $columns = [];
+    private $clauseType;
 
     /**
      * Construct the object.
@@ -88,7 +90,7 @@ class SQLHandler extends BehatContext
             $params = getenv('BEHAT_ENV_PARAMS');
 
             if (! $params) {
-                throw new \Exception('"BEHAT_ENV_PARAMS" environment variable was not found.');
+                throw new Exception('"BEHAT_ENV_PARAMS" environment variable was not found.');
             }
 
             $params = explode(';', $params);
@@ -218,6 +220,35 @@ class SQLHandler extends BehatContext
     }
 
     /**
+     * Get the clause type.
+     */
+    public function getClauseType()
+    {
+        return $this->clauseType;
+    }
+
+    /**
+     * Set the clause type.
+     */
+    public function setClauseType($clauseType)
+    {
+        $allowedClauseTypes = ['select', 'insert', 'update', 'delete'];
+
+        // Check if the clause given is one of the allowed ones.
+        if (! in_array($clauseType, $allowedClauseTypes)) {
+            throw new Exception(sprintf(
+                'Invalid clause type provided "%s", clause type must be one of "%s"',
+                $clauseType,
+                implode(', ', $allowedClauseTypes)
+            ));
+        }
+
+        $this->clauseType = $clauseType;
+
+        return $this;
+    }
+
+    /**
      * Constructs a clause based on the glue, to be used for where and update clause.
      */
     public function constructSQLClause($glue, array $columns)
@@ -230,14 +261,19 @@ class SQLHandler extends BehatContext
             $comparator = '%s=';
             $notOperator = '';
 
-            // Check if the supplied value is null, if so change the format.
-            if (strtolower($newValue) == 'null') {
+            // Check if the supplied value is null and that the construct is not for insert and update,
+            // if so change the format.
+            if (strtolower($newValue) == 'null' and
+                trim($glue) != ',' and
+                in_array($this->getClauseType(), ['update', 'select', 'delete'])) {
                 $comparator = 'is%s';
             }
 
             // Check if a not is applied to the value.
             if ($newValue !== $value) {
-                if (strtolower($newValue) == 'null') {
+                if (strtolower($newValue) == 'null' and
+                trim($glue) != ',' and
+                in_array($this->getClauseType(), ['update', 'select', 'delete'])) {
                     $notOperator = ' not';
                 } else {
                     $notOperator = '!';
@@ -287,8 +323,8 @@ class SQLHandler extends BehatContext
         foreach ($columns as $column) {
             try {
                 list($col, $val) = explode(':', $column, self::EXPLODE_MAX_LIMIT);
-            } catch (\Exception $e) {
-                throw new \Exception('Unable to explode columns based on ":" separator');
+            } catch (Exception $e) {
+                throw new Exception('Unable to explode columns based on ":" separator');
             }
 
             $val = $this->checkForKeyword(trim($val));
@@ -325,7 +361,7 @@ class SQLHandler extends BehatContext
         ));
 
         if (! isset($_SESSION['behat']['GenesisSqlExtension']['keywords'][$key])) {
-            throw new \Exception(sprintf(
+            throw new Exception(sprintf(
                 'Key "%s" not found in behat store, all keys available: %s',
                 $key,
                 print_r($_SESSION['behat']['GenesisSqlExtension']['keywords'], true)
@@ -431,7 +467,7 @@ class SQLHandler extends BehatContext
                 return $sqlStatement->errorInfo();
             }
 
-            throw new \Exception(
+            throw new Exception(
                 sprintf(
                     'No rows were effected!%sSQL: "%s",%sError: %s',
                     PHP_EOL,
@@ -451,7 +487,7 @@ class SQLHandler extends BehatContext
     public function throwExceptionIfErrors($sqlStatement)
     {
         if ((int) $sqlStatement->errorCode()) {
-            throw new \Exception(
+            throw new Exception(
                 print_r($sqlStatement->errorInfo(), true)
             );
         }
@@ -465,7 +501,7 @@ class SQLHandler extends BehatContext
     protected function getLastInsertId()
     {
         if (! $this->lastId) {
-            throw new \Exception('Could not get last id');
+            throw new Exception('Could not get last id');
         }
 
         return $this->lastId;
@@ -513,7 +549,7 @@ class SQLHandler extends BehatContext
         $result = $statement->fetchAll();
 
         if (! isset($result[0]['id'])) {
-            throw new \Exception('Id not found in table.');
+            throw new Exception('Id not found in table.');
         }
 
         $this->debugLog(sprintf('Last ID fetched: %d', $result[0]['id']));
@@ -588,7 +624,7 @@ class SQLHandler extends BehatContext
         unset($rows[0]);
 
         if (! $rows) {
-            throw new \Exception('No data provided to loop through.');
+            throw new Exception('No data provided to loop through.');
         }
 
         $queries = [];
@@ -618,7 +654,7 @@ class SQLHandler extends BehatContext
         unset($rows[0]);
 
         if (! $rows) {
-            throw new \Exception('No data provided to loop through.');
+            throw new Exception('No data provided to loop through.');
         }
 
         $clauseArray = [];

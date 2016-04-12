@@ -185,7 +185,6 @@ class SQLHandlerTest extends PHPUnit_Framework_TestCase
         $_SESSION['behat']['GenesisSqlExtension']['notQuotableKeywords'] = [];
 
         // Prepare / Mock
-        $glue = ' AND ';
         $columns = [
             'firstname' => 'null',
             'lastname' => '!null',
@@ -194,10 +193,23 @@ class SQLHandlerTest extends PHPUnit_Framework_TestCase
         ];
 
         // Execute
-        $result = $this->testObject->constructSQLClause($glue, $columns);
-
+        $this->testObject->setClauseType('select');
+        $result = $this->testObject->constructSQLClause(' AND ', $columns);
         $expected = "firstname is null AND lastname is not null AND postcode is not NULL AND address is NULL";
+        // Assert Result
+        $this->assertEquals($expected, $result);
 
+        // Execute
+        $this->testObject->setClauseType('update');
+        $result = $this->testObject->constructSQLClause(' AND ', $columns);
+        $expected = "firstname is null AND lastname is not null AND postcode is not NULL AND address is NULL";
+        // Assert Result
+        $this->assertEquals($expected, $result);
+
+        // Execute
+        $this->testObject->setClauseType('delete');
+        $result = $this->testObject->constructSQLClause(' AND ', $columns);
+        $expected = "firstname is null AND lastname is not null AND postcode is not NULL AND address is NULL";
         // Assert Result
         $this->assertEquals($expected, $result);
     }
@@ -532,5 +544,29 @@ class SQLHandlerTest extends PHPUnit_Framework_TestCase
         $result = $this->testObject->convertTableNodeToSingleContextClause($node);
 
         $this->assertEquals('email:its.inevitable@hotmail,name:Abdul,age:26', $result);
+    }
+
+    /**
+     * Test that setClauseType works as expected.
+     *
+     * @expectedException Exception
+     */
+    public function testSetClauseType()
+    {
+        $this->testObject->setClauseType('random');
+    }
+
+    /**
+     * Test that setClauseType works as expected.
+     */
+    public function testSetClauseTypeWithValidValues()
+    {
+        $clauseTypes = ['update', 'insert', 'select', 'delete'];
+
+        foreach ($clauseTypes as $clauseType) {
+            $this->testObject->setClauseType($clauseType);
+
+            $this->assertEquals($clauseType, $this->testObject->getClauseType());
+        }
     }
 }
