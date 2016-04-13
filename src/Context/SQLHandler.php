@@ -232,6 +232,9 @@ class SQLHandler extends BehatContext
      */
     public function setClauseType($clauseType)
     {
+        // Set the clause type debug message.
+        $this->debugLog(sprintf('Clause type set to: %s', $clauseType));
+
         $allowedClauseTypes = ['select', 'insert', 'update', 'delete'];
 
         // Check if the clause given is one of the allowed ones.
