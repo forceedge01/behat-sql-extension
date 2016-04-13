@@ -60,19 +60,22 @@ class SQLContext extends SQLHandler implements Interfaces\SQLContextInterface
     public function iHaveAWhere($entity, $columns)
     {
         $this->debugLog('------- I HAVE WHERE -------');
+        $this->debugLog('Trying to select existing record.');
 
         // Normalize data.
         $this->setEntity($entity);
-
         $this->setClauseType('select');
+
+        // Convert columns given to an array.
         $this->filterAndConvertToArray($columns);
 
-        $this->debugLog('Trying to select existing record.');
-
         // Check if the record exists.
-        // This needs to be done in two ways.
         $whereClause = $this->constructSQLClause(' AND ', $this->getColumns());
+
+        // Build up the sql command.
         $sql = sprintf('SELECT * FROM %s WHERE %s', $this->getEntity(), $whereClause);
+
+        // Execute statement.
         $statement = $this->execute($sql);
 
         // If it does, set the last id and return.
@@ -89,10 +92,15 @@ class SQLContext extends SQLHandler implements Interfaces\SQLContextInterface
         $this->debugLog('No record found, trying to insert.');
 
         $this->setClauseType('insert');
+
         // If the record does not already exist, create it.
         list($columnNames, $columnValues) = $this->getTableColumns($this->getEntity());
+
+        // Build up the sql.
         $sql = sprintf('INSERT INTO %s (%s) VALUES (%s)', $this->getEntity(), $columnNames, $columnValues);
         $statement = $this->execute($sql);
+
+        // Throw exception if no rows were effected.
         $this->throwErrorIfNoRowsAffected($statement, self::IGNORE_DUPLICATE);
         $result = $statement->fetchAll();
 
@@ -128,13 +136,19 @@ class SQLContext extends SQLHandler implements Interfaces\SQLContextInterface
         }
 
         $this->setEntity($entity);
-
         $this->setClauseType('delete');
+
+        // Construct the where clause.
         $this->filterAndConvertToArray($columns);
         $whereClause = $this->constructSQLClause(' AND ', $this->getColumns());
 
+        // Construct the delete statement.
         $sql = sprintf('DELETE FROM %s WHERE %s', $this->getEntity(), $whereClause);
+
+        // Execute statement.
         $statement = $this->execute($sql);
+
+        // Throw an exception if errors are found.
         $this->throwExceptionIfErrors($statement);
 
         return $sql;
@@ -146,7 +160,10 @@ class SQLContext extends SQLHandler implements Interfaces\SQLContextInterface
      */
     public function iDontHave(TableNode $nodes)
     {
+        // Get all table node rows.
         $nodes = $nodes->getRows();
+
+        // Get rid of first row as its just for readability.
         unset($nodes[0]);
         $sqls = [];
 
@@ -163,9 +180,11 @@ class SQLContext extends SQLHandler implements Interfaces\SQLContextInterface
      */
     public function iDontHaveWhere($entity, TableNode $nodes)
     {
+        // Convert table node to parse able string.
         $queries = $this->convertTableNodeToQueries($nodes);
         $sqls = [];
 
+        // Run through the dontHave step definition for each query.
         foreach ($queries as $query) {
             $sqls[] = $this->iDontHaveAWhere($entity, $query);
         }
@@ -185,17 +204,26 @@ class SQLContext extends SQLHandler implements Interfaces\SQLContextInterface
         }
 
         $this->setEntity($entity);
-
         $this->setClauseType('update');
+
+        // Build up the update clause.
         $this->filterAndConvertToArray($with);
         $updateClause = $this->constructSQLClause(', ', $this->getColumns());
+
+        // Build up the where clause.
         $this->filterAndConvertToArray($columns);
         $whereClause = $this->constructSQLClause(' AND ', $this->getColumns());
 
+        // Build up the update statement.
         $sql = sprintf('UPDATE %s SET %s WHERE %s', $this->getEntity(), $updateClause, $whereClause);
+
+        // Execute statement.
         $statement = $this->execute($sql);
+
+        // Throw an exception if no rows are effected.
         $this->throwErrorIfNoRowsAffected($statement, self::IGNORE_DUPLICATE);
 
+        // If no exception is throw, save the last id.
         $this->setLastIdWhere(
             $this->getEntity(),
             $whereClause
@@ -215,9 +243,11 @@ class SQLContext extends SQLHandler implements Interfaces\SQLContextInterface
 
         // Create array out of the with string given.
         $this->filterAndConvertToArray($where);
+
         // Create a usable sql clause.
         $selectWhereClause = $this->constructSQLClause(' AND ', $this->getColumns());
 
+        // Execute sql for setting last id.
         return $this->setLastIdWhere(
             $this->getEntity(),
             $selectWhereClause
@@ -229,7 +259,10 @@ class SQLContext extends SQLHandler implements Interfaces\SQLContextInterface
      */
     public function iShouldHaveAWithTable($entity, TableNode $with)
     {
+        // Convert the table node to parse able string.
         $clause = $this->convertTableNodeToSingleContextClause($with);
+
+        // Run through the shouldHaveWith step definition.
         $sql = $this->iShouldHaveAWith($entity, $clause);
 
         return $sql;
@@ -283,7 +316,10 @@ class SQLContext extends SQLHandler implements Interfaces\SQLContextInterface
      */
     public function iShouldNotHaveAWithTable($entity, TableNode $with)
     {
+        // Convert the table node to parse able string.
         $clause = $this->convertTableNodeToSingleContextClause($with);
+
+        // Run through the shouldNotHave step definition.
         $sql = $this->iShouldNotHaveAWith($entity, $clause);
 
         return $sql;
