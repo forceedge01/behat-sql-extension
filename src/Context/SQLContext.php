@@ -124,8 +124,9 @@ class SQLContext extends SQLHandler implements Interfaces\SQLContextInterface
     }
 
     /**
-     * @Given /^(?:|I )dont have(?:| an| a) "([^"]*)" where "([^"]*)"$/
-     * @Given /^(?:|I )dont have(?:| an| a) "([^"]*)" with "([^"]*)"$/
+     * @Given /^(?:|I )don't have(?:| an| a) "([^"]*)" where "([^"]*)"$/
+     * @Given /^(?:|I )don't have(?:| an| a) "([^"]*)" with "([^"]*)"$/
+     * @Given /^(?:|I )do not have(?:| an| a) "([^"]*)" where "([^"]*)"$/
      */
     public function iDontHaveAWhere($entity, $columns)
     {
