@@ -57,6 +57,42 @@ class SQLHandler implements Context
     }
 
     /**
+     * @param string $username
+     *
+     * @return this
+     */
+    public function setUsername($username)
+    {
+        $this->params['DBUSER'] = $username;
+
+        return $this;
+    }
+
+    /**
+     * @param string $password
+     *
+     * @return this
+     */
+    public function setPassword($password)
+    {
+        $this->params['DBPASSWORD'] = $password;
+
+        return $this;
+    }
+
+    /**
+     * @param string $engine
+     *
+     * @return this
+     */
+    public function setEngine($engine)
+    {
+        $this->params['DBENGINE'] = $engine;
+
+        return $this;
+    }
+
+    /**
      * Set the pdo connection.
      */
     public function setConnection($connection)
