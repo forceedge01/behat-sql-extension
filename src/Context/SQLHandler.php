@@ -273,7 +273,7 @@ class SQLHandler extends BehatContext
             }
 
             // Check if a not is applied to the value.
-            if ($newValue !== $value) {
+            if (strpos($value, '!') === 0) {
                 if (strtolower($newValue) == 'null' and
                 trim($glue) != ',' and
                 in_array($this->getClauseType(), ['update', 'select', 'delete'])) {
@@ -285,8 +285,9 @@ class SQLHandler extends BehatContext
 
             // Make up the sql.
             $comparator = sprintf($comparator, $notOperator);
+            $clause = sprintf('%s %s %s', $column, $comparator, $quotedValue);
 
-            $whereClause[] = sprintf('%s %s %s', $column, $comparator, $quotedValue);
+            $whereClause[] = $clause;
         }
 
         return implode($glue, $whereClause);
@@ -515,7 +516,16 @@ class SQLHandler extends BehatContext
      */
     public function quoteOrNot($val)
     {
-        return ((is_string($val) || is_numeric($val)) and !$this->isNotQuotable($val)) ? sprintf("'%s'", $val) : $val;
+        return ((is_string($val) || is_numeric($val)) and !$this->isNotQuotable($val)) ?
+            sprintf(
+                "'%s'",
+                str_replace(
+                    ['\\', "'"],
+                    ['', "\\'"],
+                    $val
+                )
+            ) :
+            $val;
     }
 
     /**
