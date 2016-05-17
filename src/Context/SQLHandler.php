@@ -259,7 +259,7 @@ class SQLHandler extends BehatContext
         $whereClause = [];
 
         foreach ($columns as $column => $value) {
-            $newValue = str_replace("'", "\\'", ltrim($value, '!'));
+            $newValue = ltrim($value, '!');
             $quotedValue = $this->quoteOrNot($newValue);
             $comparator = '%s=';
             $notOperator = '';
@@ -306,7 +306,7 @@ class SQLHandler extends BehatContext
         // Set values for columns
         foreach ($allColumns as $col => $type) {
             $columnClause[$col] = isset($this->columns[$col]) ?
-                $this->quoteOrNot(str_replace("'", "\\'", $this->columns[$col])) :
+                $this->quoteOrNot($this->columns[$col]) :
                 $this->sampleData($type);
         }
 
@@ -516,7 +516,16 @@ class SQLHandler extends BehatContext
      */
     public function quoteOrNot($val)
     {
-        return ((is_string($val) || is_numeric($val)) and !$this->isNotQuotable($val)) ? sprintf("'%s'", $val) : $val;
+        return ((is_string($val) || is_numeric($val)) and !$this->isNotQuotable($val)) ?
+            sprintf(
+                "'%s'",
+                str_replace(
+                    ['\\', "'"],
+                    ['', "\\'"],
+                    $val
+                )
+            ) :
+            $val;
     }
 
     /**

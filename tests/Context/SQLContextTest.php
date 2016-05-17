@@ -164,7 +164,7 @@ class SQLContextTest extends PHPUnit_Framework_TestCase
     public function testIHaveAWhereWithValuesRecordAlreadyExists()
     {
         $entity = 'database.unique';
-        $column = "column1:abc,column2:xyz,column3:NULL, column4:what's up doc";
+        $column = "column1:abc,column2:xyz,column3:NULL, column4:what\'s up doc";
 
         $this->testObject->getConnection()->expects($this->any())
             ->method('prepare')
