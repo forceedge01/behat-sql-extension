@@ -259,7 +259,7 @@ class SQLHandler extends BehatContext
         $whereClause = [];
 
         foreach ($columns as $column => $value) {
-            $newValue = ltrim($value, '!');
+            $newValue = str_replace("'", "\\'", ltrim($value, '!'));
             $quotedValue = $this->quoteOrNot($newValue);
             $comparator = '%s=';
             $notOperator = '';
@@ -273,7 +273,7 @@ class SQLHandler extends BehatContext
             }
 
             // Check if a not is applied to the value.
-            if ($newValue !== $value) {
+            if (strpos($value, '!') === 0) {
                 if (strtolower($newValue) == 'null' and
                 trim($glue) != ',' and
                 in_array($this->getClauseType(), ['update', 'select', 'delete'])) {
@@ -285,8 +285,9 @@ class SQLHandler extends BehatContext
 
             // Make up the sql.
             $comparator = sprintf($comparator, $notOperator);
+            $clause = sprintf('%s %s %s', $column, $comparator, $quotedValue);
 
-            $whereClause[] = sprintf('%s %s %s', $column, $comparator, $quotedValue);
+            $whereClause[] = $clause;
         }
 
         return implode($glue, $whereClause);
@@ -305,7 +306,7 @@ class SQLHandler extends BehatContext
         // Set values for columns
         foreach ($allColumns as $col => $type) {
             $columnClause[$col] = isset($this->columns[$col]) ?
-                $this->quoteOrNot($this->columns[$col]) :
+                $this->quoteOrNot(str_replace("'", "\\'", $this->columns[$col])) :
                 $this->sampleData($type);
         }
 

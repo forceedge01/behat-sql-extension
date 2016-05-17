@@ -76,7 +76,7 @@ class SQLContextTest extends PHPUnit_Framework_TestCase
         // Add data.
         $node->addRow([
             'table1',
-            'id:34234, name:abdul'
+            "id:34234, name:abdul"
         ]);
 
         // Add more data.
@@ -164,7 +164,7 @@ class SQLContextTest extends PHPUnit_Framework_TestCase
     public function testIHaveAWhereWithValuesRecordAlreadyExists()
     {
         $entity = 'database.unique';
-        $column = 'column1:abc,column2:xyz,column3:NULL';
+        $column = "column1:abc,column2:xyz,column3:NULL, column4:what's up doc";
 
         $this->testObject->getConnection()->expects($this->any())
             ->method('prepare')
@@ -174,7 +174,7 @@ class SQLContextTest extends PHPUnit_Framework_TestCase
         $result = $this->testObject->iHaveAWhere($entity, $column);
 
         // Expected SQL.
-        $expectedSQL = "SELECT * FROM dev_database.unique WHERE column1 = 'abc' AND column2 = 'xyz' AND column3 is NULL";
+        $expectedSQL = "SELECT * FROM dev_database.unique WHERE column1 = 'abc' AND column2 = 'xyz' AND column3 is NULL AND column4 = 'what\'s up doc'";
 
         // Assert.
         $this->assertEquals($expectedSQL, $result);
@@ -190,7 +190,7 @@ class SQLContextTest extends PHPUnit_Framework_TestCase
     public function testIHaveAWhereWithValuesRecordDoesNotExists()
     {
         $entity = 'database.unique1';
-        $column = 'column1:abc,column2:xyz,column3:NULL';
+        $column = "column1:abc,column2:xyz,column3:NULL,column4:what's up doc";
 
         $this->testObject->getConnection()->expects($this->any())
             ->method('prepare')
@@ -204,7 +204,7 @@ class SQLContextTest extends PHPUnit_Framework_TestCase
         $result = $this->testObject->iHaveAWhere($entity, $column);
 
         // Expected SQL.
-        $expectedSQL = "INSERT INTO dev_database.unique1 (column1, column2, column3) VALUES ('abc', 'xyz', NULL)";
+        $expectedSQL = "INSERT INTO dev_database.unique1 (column1, column2, column3, column4) VALUES ('abc', 'xyz', NULL, 'what\'s up doc')";
 
         // Assert.
         $this->assertEquals($expectedSQL, $result);
@@ -230,7 +230,7 @@ class SQLContextTest extends PHPUnit_Framework_TestCase
     public function testIDontHaveAWhereWithValues()
     {
         $entity = 'database.someTable';
-        $column = 'column1:abc,column2:xyz,column3:NULL';
+        $column = "column1:abc,column2:xyz,column3:NULL,column4:what's up doc";
 
         $this->testObject->getConnection()->expects($this->any())
             ->method('prepare')
@@ -240,7 +240,7 @@ class SQLContextTest extends PHPUnit_Framework_TestCase
         $result = $this->testObject->iDontHaveAWhere($entity, $column);
 
         // Expected SQL.
-        $expectedSQL = "DELETE FROM dev_database.someTable WHERE column1 = 'abc' AND column2 = 'xyz' AND column3 is NULL";
+        $expectedSQL = "DELETE FROM dev_database.someTable WHERE column1 = 'abc' AND column2 = 'xyz' AND column3 is NULL AND column4 = 'what\'s up doc'";
 
         // Assert.
         $this->assertEquals($expectedSQL, $result);
@@ -267,8 +267,8 @@ class SQLContextTest extends PHPUnit_Framework_TestCase
     public function testiHaveAnExistingWithWhereWithValues()
     {
         $entity = 'database.someTable2';
-        $with = 'column1:abc,column2:xyz,column3:NULL';
-        $columns = 'id:134,photo:!NULL';
+        $with = "column1:abc,column2:xyz,column3:NULL,column4:what's up doc";
+        $columns = "id:134,photo:!NULL,column:what's up doc";
 
         $this->testObject->getConnection()->expects($this->any())
             ->method('prepare')
@@ -280,7 +280,7 @@ class SQLContextTest extends PHPUnit_Framework_TestCase
         $result = $this->testObject->iHaveAnExistingWithWhere($entity, $with, $columns);
 
         // Expected SQL.
-        $expectedSQL = "UPDATE dev_database.someTable2 SET column1 = 'abc', column2 = 'xyz', column3 = NULL WHERE id = 134 AND photo is not NULL";
+        $expectedSQL = "UPDATE dev_database.someTable2 SET column1 = 'abc', column2 = 'xyz', column3 = NULL, column4 = 'what\'s up doc' WHERE id = 134 AND photo is not NULL AND column = 'what\'s up doc'";
 
         // Assert.
         $this->assertEquals($expectedSQL, $result);
@@ -306,7 +306,7 @@ class SQLContextTest extends PHPUnit_Framework_TestCase
     public function testiShouldNotHaveAWithWithValues()
     {
         $entity = 'database.someTable3';
-        $with = 'column1:abc,column2:xyz';
+        $with = "column1:abc,column2:xyz,column3:what's up doc";
 
         $this->testObject->getConnection()->expects($this->any())
             ->method('prepare')
@@ -316,7 +316,7 @@ class SQLContextTest extends PHPUnit_Framework_TestCase
         $result = $this->testObject->iShouldNotHaveAWith($entity, $with);
 
         // Expected SQL.
-        $expectedSQL = "SELECT * FROM dev_database.someTable3 WHERE column1 = 'abc' AND column2 = 'xyz'";
+        $expectedSQL = "SELECT * FROM dev_database.someTable3 WHERE column1 = 'abc' AND column2 = 'xyz' AND column3 = 'what\'s up doc'";
 
         // Assert.
         $this->assertEquals($expectedSQL, $result);
@@ -420,7 +420,7 @@ class SQLContextTest extends PHPUnit_Framework_TestCase
     public function testiShouldHaveAWithWithValues()
     {
         $entity = 'database.someTable4';
-        $with = 'column1:abc,column2:xyz,column3:NULL,column4:!NULL';
+        $with = "column1:abc,column2:xyz,column3:NULL,column4:!NULL,column5:what's up doc";
 
         $this->testObject->getConnection()->expects($this->any())
             ->method('prepare')
@@ -430,7 +430,7 @@ class SQLContextTest extends PHPUnit_Framework_TestCase
         $result = $this->testObject->iShouldHaveAWith($entity, $with);
 
         // Expected SQL.
-        $expectedSQL = "SELECT * FROM dev_database.someTable4 WHERE column1 = 'abc' AND column2 = 'xyz' AND column3 is NULL AND column4 is not NULL";
+        $expectedSQL = "SELECT * FROM dev_database.someTable4 WHERE column1 = 'abc' AND column2 = 'xyz' AND column3 is NULL AND column4 is not NULL AND column5 = 'what\'s up doc'";
 
         // Assert.
         $this->assertEquals($expectedSQL, $result);
