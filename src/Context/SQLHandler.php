@@ -286,7 +286,6 @@ class SQLHandler extends BehatContext
             // Make up the sql.
             $comparator = sprintf($comparator, $notOperator);
             $clause = sprintf('%s %s %s', $column, $comparator, $quotedValue);
-
             $whereClause[] = $clause;
         }
 
@@ -556,13 +555,13 @@ class SQLHandler extends BehatContext
      */
     protected function setLastIdWhere($entity, $criteria)
     {
-        $sql = sprintf('SELECT id FROM %s WHERE %s', $entity, $criteria);
+        $sql = sprintf('SELECT * FROM %s WHERE %s', $entity, $criteria);
         $statement = $this->execute($sql);
         $this->throwErrorIfNoRowsAffected($statement);
         $result = $statement->fetchAll();
 
         if (! isset($result[0]['id'])) {
-            throw new Exception('Id not found in table.');
+            throw new Exception(sprintf('Id not found in table, cannot set last id for entity "%s"', $entity));
         }
 
         $this->debugLog(sprintf('Last ID fetched: %d', $result[0]['id']));
