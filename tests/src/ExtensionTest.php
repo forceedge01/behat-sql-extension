@@ -6,7 +6,7 @@ use Genesis\SQLExtension\Extension;
 use PHPUnit_Framework_TestCase;
 use Symfony\Component\Config\Definition\Builder\ArrayNodeDefinition;
 use Symfony\Component\Config\Definition\Builder\NodeBuilder;
-use Symfony\Component\Config\Definition\ScalarNode;
+use Symfony\Component\DependencyInjection\ContainerBuilder;
 
 class ExtensionTest extends PHPUnit_Framework_TestCase
 {
