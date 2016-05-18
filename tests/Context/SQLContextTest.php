@@ -440,6 +440,30 @@ class SQLContextTest extends PHPUnit_Framework_TestCase
     }
 
     /**
+     * Test that this method works with values containing wildcards for a LIKE search.
+     */
+    public function testiShouldHaveAWithWithLikeValues()
+    {
+        $entity = 'database.someTable4';
+        $with = 'column1:abc,column2:%xyz%';
+
+        $this->testObject->getConnection()->expects($this->any())
+                         ->method('prepare')
+                         ->with($this->isType('string'))
+                         ->willReturn($this->getPdoStatementWithRows());
+
+        $result = $this->testObject->iShouldHaveAWith($entity, $with);
+
+        // Expected SQL.
+        $expectedSQL = "SELECT * FROM dev_database.someTable4 WHERE column1 = 'abc' AND column2 LIKE '%xyz%'";
+
+        // Assert.
+        $this->assertEquals($expectedSQL, $result);
+        $this->assertNotNull($this->testObject->getEntity());
+        $this->assertEquals(5, $this->testObject->getKeyword('database.someTable4_id'));
+    }
+
+    /**
      * @expectedException Exception
      */
     public function testISaveTheIdAs()

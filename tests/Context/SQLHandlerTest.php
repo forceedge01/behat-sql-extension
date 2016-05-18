@@ -215,6 +215,30 @@ class SQLHandlerTest extends PHPUnit_Framework_TestCase
     }
 
     /**
+     * Tests that constructSQLClause executes as expected with LIKE values.
+     */
+    public function testConstructSQLClauseLikeValues()
+    {
+        $_SESSION['behat']['GenesisSqlExtension']['keywords'] = [];
+        $_SESSION['behat']['GenesisSqlExtension']['notQuotableKeywords'] = [];
+
+        // Prepare / Mock
+        $glue = ' AND ';
+        $columns = [
+            'firstname' => 'Bob',
+            'user_agent' => '%Firefox%'
+        ];
+
+        // Execute
+        $result = $this->testObject->constructSQLClause($glue, $columns);
+
+        $expected = "firstname = 'Bob' AND user_agent LIKE '%Firefox%'";
+
+        // Assert Result
+        $this->assertEquals($expected, $result);
+    }
+
+    /**
      * testFilterAndConvertToArray Test that filterAndConvertToArray executes as expected.
      */
     public function testFilterAndConvertToArray()
