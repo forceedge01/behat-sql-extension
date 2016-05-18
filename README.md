@@ -163,6 +163,14 @@ Then I should have a "user" with:
 ```
 Note the top row is just explanatory, it will not be used as part of the query.
 
+### Performing a LIKE search.
+
+You can perform a LIKE clause with the following format:
+
+```
+Then I should have a "user" with "user_agent:%Firefox%"
+```
+
 ### Re-using the id from another record
 
 After creating or updating data you can assign the record's id to a keyword with the following clause

@@ -283,6 +283,11 @@ class SQLHandler extends BehatContext
                 }
             }
 
+            // Check if the value is surrounded by wildcards. If so, we'll want to use a LIKE comparator.
+            if (preg_match('/^%.+%$/', $value)) {
+                $comparator = 'LIKE';
+            }
+
             // Make up the sql.
             $comparator = sprintf($comparator, $notOperator);
             $clause = sprintf('%s %s %s', $column, $comparator, $quotedValue);
