@@ -130,7 +130,7 @@ This will run a delete query against the database using the @where/@with criteri
 # file: delete.feature
 
 # @with/@where are used synonymously in this call
-Given I dont have a "@table" where "@where"
+Given I do not have a "@table" where "@where"
 ```
 
 ### Updating data in a table
