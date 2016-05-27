@@ -32,6 +32,9 @@ class SQLContextTest extends PHPUnit_Framework_TestCase
         $this->testObject->setConnection($pdoConnectionMock);
     }
 
+    /**
+     * @group test
+     */
     public function testIHaveWhere()
     {
         $entity = 'database.unique';
@@ -57,11 +60,14 @@ class SQLContextTest extends PHPUnit_Framework_TestCase
         $this->testObject->getConnection()->expects($this->any())
             ->method('prepare')
             ->with($this->isType('string'))
-            ->willReturn($this->getPdoStatementWithRows(1, [['id' => 234324]]));
+            ->willReturn($this->getPdoStatementWithRows(1, [['id' => 234324, 'name' => 'Abdul', 'email' => 'its.inevitable@hotmail.com']]));
 
         $sqls = $this->testObject->iHaveWhere($entity, $node);
 
         $this->assertCount(2, $sqls);
+        $this->assertEquals(234324, $this->testObject->getKeyword(sprintf('%s_id', $entity)));
+        $this->assertEquals('its.inevitable@hotmail.com', $this->testObject->getKeyword(sprintf('%s_email', $entity)));
+        $this->assertEquals('Abdul', $this->testObject->getKeyword(sprintf('%s_name', $entity)));
     }
 
     public function testIHave()
@@ -184,7 +190,6 @@ class SQLContextTest extends PHPUnit_Framework_TestCase
     }
 
     /**
-     * @group test
      * Test that this method works with values provided.
      */
     public function testIHaveAWhereWithValuesRecordDoesNotExists()
@@ -274,7 +279,7 @@ class SQLContextTest extends PHPUnit_Framework_TestCase
             ->method('prepare')
             ->with($this->isType('string'))
             ->willReturn($this->getPdoStatementWithRows(1, [
-                ['id' => 1234]
+                ['id' => 1234, 'name' => 'Abdul']
             ]));
 
         $result = $this->testObject->iHaveAnExistingWithWhere($entity, $with, $columns);
@@ -286,6 +291,7 @@ class SQLContextTest extends PHPUnit_Framework_TestCase
         $this->assertEquals($expectedSQL, $result);
         $this->assertNotNull($this->testObject->getEntity());
         $this->assertEquals(1234, $this->testObject->getKeyword('database.someTable2_id'));
+        $this->assertEquals('Abdul', $this->testObject->getKeyword('database.someTable2_name'));
         $this->assertEquals('update', $this->testObject->getClauseType());
     }
 

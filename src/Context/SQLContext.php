@@ -82,6 +82,9 @@ class SQLContext extends SQLHandler implements Interfaces\SQLContextInterface
         if ($this->hasFetchedRows($statement)) {
             // Set the last id to use from fetched row.
             $result = $statement->fetchAll();
+
+            $this->setKeywordsFromRecord($this->getEntity(), $result[0]);
+
             if (isset($result[0]['id'])) {
                 $this->handleLastId($this->getEntity(), $result[0]['id']);
             }
@@ -114,10 +117,9 @@ class SQLContext extends SQLHandler implements Interfaces\SQLContextInterface
                 sprintf('%s:%s', $key, $this->getColumns()[$key])
             );
 
-            $this->setLastIdWhere(
-                $this->getEntity(),
-                sprintf('%s = %s', $key, $this->quoteOrNot($this->getColumns()[$key]))
-            );
+            $whereClause = sprintf('%s = %s', $key, $this->quoteOrNot($this->getColumns()[$key]));
+
+            $this->setKeywordsFromCriteria($this->getEntity(), $whereClause);
         }
 
         return $sql;
@@ -225,7 +227,7 @@ class SQLContext extends SQLHandler implements Interfaces\SQLContextInterface
         $this->throwErrorIfNoRowsAffected($statement, self::IGNORE_DUPLICATE);
 
         // If no exception is throw, save the last id.
-        $this->setLastIdWhere(
+        $this->setKeywordsFromCriteria(
             $this->getEntity(),
             $whereClause
         );
@@ -249,7 +251,7 @@ class SQLContext extends SQLHandler implements Interfaces\SQLContextInterface
         $selectWhereClause = $this->constructSQLClause(' AND ', $this->getColumns());
 
         // Execute sql for setting last id.
-        return $this->setLastIdWhere(
+        return $this->setKeywordsFromCriteria(
             $this->getEntity(),
             $selectWhereClause
         );
@@ -275,7 +277,6 @@ class SQLContext extends SQLHandler implements Interfaces\SQLContextInterface
     public function iShouldHaveAWith($entity, $with)
     {
         $this->debugLog('------- I SHOULD HAVE A WITH -------');
-
         $this->setEntity($entity);
 
         // Create array out of the with string given.

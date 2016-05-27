@@ -556,23 +556,61 @@ class SQLHandler extends BehatContext
     }
 
     /**
-     * Sets the last id by executing a select on the id column.
+     * Set all keys from the current entity.
+     * 
+     * @param string $entity
+     * @param string $criteria
      */
-    protected function setLastIdWhere($entity, $criteria)
+    protected function setKeywordsFromCriteria($entity, $criteria)
+    {
+        $result = $this->fetchByCriteria(
+            $entity,
+            $criteria
+        );
+
+        $this->setKeywordsFromRecord(
+            $entity,
+            $result[0]
+        );
+    }
+
+    /**
+     * Get a record by a criteria.
+     * 
+     * @param string $entity
+     * @param string $criteria
+     */
+    protected function fetchByCriteria($entity, $criteria)
     {
         $sql = sprintf('SELECT * FROM %s WHERE %s', $entity, $criteria);
         $statement = $this->execute($sql);
         $this->throwErrorIfNoRowsAffected($statement);
         $result = $statement->fetchAll();
 
-        if (! isset($result[0]['id'])) {
-            throw new Exception(sprintf('Id not found in table, cannot set last id for entity "%s"', $entity));
+        if (! $result[0]) {
+            throw new Exception('Unable to fetch result');
         }
 
-        $this->debugLog(sprintf('Last ID fetched: %d', $result[0]['id']));
-        $this->handleLastId($entity, $result[0]['id']);
+        return $result;
+    }
 
-        return $statement;
+    /**
+     * Set the record as keywords for re-use.
+     * 
+     * @param string $entity
+     * @param array $record
+     */
+    protected function setKeywordsFromRecord($entity, array $record)
+    {
+        // Normalise the entity.
+        $entity = $this->getUserInputEntity($entity);
+
+        // Set all columns as reusable.
+        foreach ($record as $column => $value) {
+            $this->setKeyword(sprintf('%s_%s', $entity, $column), $value);
+        }
+
+        return $record;
     }
 
     /**
