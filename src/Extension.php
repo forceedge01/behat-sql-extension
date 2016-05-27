@@ -90,8 +90,8 @@ class Extension implements ExtensionInterface
                     ignoreExtraKeys(false)->
                 end()->
                 arrayNode('notQuotableKeywords')->
-                    ignoreExtraKeys(false)->
-                end()->
+                    ignoreExtraKeys(false)->
+                end()->
             end()->
         end();
     }
