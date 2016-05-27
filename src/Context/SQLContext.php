@@ -377,7 +377,7 @@ class SQLContext extends SQLHandler implements Interfaces\SQLContextInterface
     {
         $this->debugLog('------- I SAVE THE ID -------');
 
-        $this->setKeyword($key, $this->getLastInsertId());
+        $this->setKeyword($key, $this->getLastId());
 
         return $this;
     }

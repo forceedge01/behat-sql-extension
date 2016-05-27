@@ -369,6 +369,10 @@ class SQLHandler extends BehatContext
         ));
 
         if (! isset($_SESSION['behat']['GenesisSqlExtension']['keywords'][$key])) {
+            if (! isset($_SESSION['behat']['GenesisSqlExtension']['keywords'])) {
+                throw new Exception('No keywords found.');
+            }
+
             throw new Exception(sprintf(
                 'Key "%s" not found in behat store, all keys available: %s',
                 $key,
@@ -506,13 +510,11 @@ class SQLHandler extends BehatContext
     /**
      * Gets the last insert id.
      */
-    protected function getLastInsertId()
+    protected function getLastId()
     {
-        if (! $this->lastId) {
-            throw new Exception('Could not get last id');
-        }
+        $entity = $this->getUserInputEntity($this->getEntity());
 
-        return $this->lastId;
+        return $this->getKeyword($entity . '_id');
     }
 
     /**
