@@ -2,7 +2,6 @@
 
 namespace Genesis\SQLExtension\Context;
 
-use Behat\Behat\Context\BehatContext;
 use Behat\Gherkin\Node\TableNode;
 use Exception;
 
@@ -20,7 +19,7 @@ use Exception;
  *
  * @author Abdul Wahab Qureshi <its.inevitable@hotmail.com>
  */
-class SQLHandler extends BehatContext
+class SQLHandler
 {
     /**
      * Will ignore duplicate inserts.
@@ -477,7 +476,7 @@ class SQLHandler extends BehatContext
      * 
      * @param string $sql
      */
-    protected function execute($sql)
+    public function execute($sql)
     {
         $this->lastQuery = $sql;
 
@@ -564,7 +563,7 @@ class SQLHandler extends BehatContext
     /**
      * Gets the last insert id.
      */
-    protected function getLastId()
+    public function getLastId()
     {
         $entity = $this->getUserInputEntity($this->getEntity());
 
@@ -617,7 +616,7 @@ class SQLHandler extends BehatContext
      * @param string $entity
      * @param string $criteria
      */
-    protected function setKeywordsFromCriteria($entity, $criteria)
+    public function setKeywordsFromCriteria($entity, $criteria)
     {
         $result = $this->fetchByCriteria(
             $entity,
@@ -636,7 +635,7 @@ class SQLHandler extends BehatContext
      * @param string $entity
      * @param string $criteria
      */
-    protected function fetchByCriteria($entity, $criteria)
+    public function fetchByCriteria($entity, $criteria)
     {
         $sql = sprintf('SELECT * FROM %s WHERE %s', $entity, $criteria);
         $statement = $this->execute($sql);
@@ -656,7 +655,7 @@ class SQLHandler extends BehatContext
      * @param string $entity
      * @param array $record
      */
-    protected function setKeywordsFromRecord($entity, array $record)
+    public function setKeywordsFromRecord($entity, array $record)
     {
         // Normalise the entity.
         $entity = $this->getUserInputEntity($entity);
@@ -780,7 +779,7 @@ class SQLHandler extends BehatContext
     /**
      * Checks if the command executed affected any rows.
      */
-    protected function hasFetchedRows($sqlStatement)
+    public function hasFetchedRows($sqlStatement)
     {
         return ($sqlStatement->rowCount());
     }

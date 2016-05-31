@@ -2,6 +2,7 @@
 
 namespace Genesis\SQLExtension\Context;
 
+use Behat\Behat\Context\BehatContext;
 use Behat\Behat\Context\Step\Given;
 use Behat\Gherkin\Node\TableNode;
 
@@ -19,14 +20,21 @@ use Behat\Gherkin\Node\TableNode;
  *
  * @author Abdul Wahab Qureshi <its.inevitable@hotmail.com>
  */
-class SQLContext extends SQLHandler implements Interfaces\SQLContextInterface
+class SQLContext extends BehatContext implements Interfaces\SQLContextInterface
 {
+    private $sqlHandler;
+
+    public function __construct(array $params)
+    {
+        $this->sqlHandler = new SQLHandler($params);
+    }
+
     /**
      * @Given /^(?:|I )have(?:| an| a) "([^"]*)" where:$/
      */
     public function iHaveWhere($entity, TableNode $nodes)
     {
-        $queries = $this->convertTableNodeToQueries($nodes);
+        $queries = $this->sqlHandler->convertTableNodeToQueries($nodes);
         $sqls = [];
 
         foreach ($queries as $query) {
@@ -104,7 +112,7 @@ class SQLContext extends SQLHandler implements Interfaces\SQLContextInterface
         $statement = $this->execute($sql);
 
         // Throw exception if no rows were effected.
-        $this->throwErrorIfNoRowsAffected($statement, self::IGNORE_DUPLICATE);
+        $this->throwErrorIfNoRowsAffected($statement, SQLHandler::IGNORE_DUPLICATE);
         $result = $statement->fetchAll();
 
         // Extract duplicate key and run update using it
@@ -184,7 +192,7 @@ class SQLContext extends SQLHandler implements Interfaces\SQLContextInterface
     public function iDontHaveWhere($entity, TableNode $nodes)
     {
         // Convert table node to parse able string.
-        $queries = $this->convertTableNodeToQueries($nodes);
+        $queries = $this->sqlHandler->convertTableNodeToQueries($nodes);
         $sqls = [];
 
         // Run through the dontHave step definition for each query.
@@ -224,7 +232,7 @@ class SQLContext extends SQLHandler implements Interfaces\SQLContextInterface
         $statement = $this->execute($sql);
 
         // Throw an exception if no rows are effected.
-        $this->throwErrorIfNoRowsAffected($statement, self::IGNORE_DUPLICATE);
+        $this->throwErrorIfNoRowsAffected($statement, SQLHandler::IGNORE_DUPLICATE);
 
         // If no exception is throw, save the last id.
         $this->setKeywordsFromCriteria(
@@ -392,5 +400,95 @@ class SQLContext extends SQLHandler implements Interfaces\SQLContextInterface
         if (! defined('DEBUG_MODE')) {
             define('DEBUG_MODE', 1);
         }
+    }
+
+    public function getSQLHandler()
+    {
+        return $this->sqlHandler;
+    }
+
+    public function getConnection()
+    {
+        return $this->sqlHandler->getConnection();
+    }
+
+    private function debugLog($message)
+    {
+        return $this->sqlHandler->debugLog($message);
+    }
+
+    private function setEntity($entity)
+    {
+        return $this->sqlHandler->setEntity($entity);
+    }
+
+    private function getEntity()
+    {
+        return $this->sqlHandler->getEntity();
+    }
+
+    private function setCommandType($command)
+    {
+        return $this->sqlHandler->setCommandType($command);
+    }
+
+    private function filterAndConvertToArray($command)
+    {
+        return $this->sqlHandler->filterAndConvertToArray($command);
+    }
+
+    private function constructSQLClause($command, array $clause)
+    {
+        return $this->sqlHandler->constructSQLClause($command, $clause);
+    }
+
+    private function getColumns()
+    {
+        return $this->sqlHandler->getColumns();
+    }
+
+    private function convertTableNodeToSingleContextClause($tableNode)
+    {
+        return $this->sqlHandler->convertTableNodeToSingleContextClause($tableNode);
+    }
+
+    private function setKeyword($key, $value)
+    {
+        return $this->sqlHandler->setKeyword($key, $value);
+    }
+
+    private function getLastId()
+    {
+        return $this->sqlHandler->getLastId();
+    }
+
+    private function execute($sql)
+    {
+        return $this->sqlHandler->execute($sql);
+    }
+
+    private function hasFetchedRows()
+    {
+        return $this->sqlHandler->hasFetchedRows();
+    }
+
+    private function throwExceptionIfErrors()
+    {
+        return $this->sqlHandler->throwExceptionIfErrors();
+    }
+
+    private function throwErrorIfNoRowsAffected($statement, $ignoreDuplicate)
+    {
+        return $this->sqlHandler->throwErrorIfNoRowsAffected($statement, $ignoreDuplicate);
+    }
+
+    private function setKeywordsFromCriteria($entity, $criteria)
+    {
+        return $this->setKeywordsFromCriteria($entity, $criteria);
+    }
+
+    private function handleLastId($entity, $id)
+    {
+        return $this->sqlHandler->handleLastId($entity, $id);
     }
 }

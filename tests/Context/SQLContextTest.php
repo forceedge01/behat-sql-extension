@@ -16,7 +16,7 @@ class SQLContextTest extends PHPUnit_Framework_TestCase
     {
         $_SESSION['behat']['GenesisSqlExtension']['notQuotableKeywords'] = [];
 
-        $this->testObject = new SQLContext();
+        $this->testObject = new SQLContext(array());
 
         putenv(self::CONNECTION_STRING);
 
@@ -29,7 +29,7 @@ class SQLContextTest extends PHPUnit_Framework_TestCase
             ->method('lastInsertId')
             ->willReturn(5);
 
-        $this->testObject->setConnection($pdoConnectionMock);
+        $this->testObject->getSQLHandler()->setConnection($pdoConnectionMock);
     }
 
     /**
