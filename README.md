@@ -177,6 +177,14 @@ You can perform a LIKE clause with the following format:
 Then I should have a "user" with "user_agent:%Firefox%"
 ```
 
+### Re-using the id from another record
+
+You can perform a LIKE clause with the following format:
+
+```
+Then I should have a "user" with "user_agent:%Firefox%"
+```
+
 ### Re-using values from another record
 
 After creating or updating data you can assign the record's values to a keyword with the following clause
@@ -261,3 +269,8 @@ class FeatureContext implements Context, SnippetAcceptingContext
     }
 }
 ```
+
+Contributing to this extension
+==============================
+
+We are supporting two different versions of the sql extension at the moment. For contributing to the branch that supports behat 2.5 please branch of `version/1.x`, for behat 3.0 branch off `version/2.x`.
