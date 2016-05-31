@@ -169,19 +169,44 @@ Then I should have a "user" with:
 ```
 Note the top row is just explanatory, it will not be used as part of the query.
 
-### Re-using the id from another record
+### Performing a LIKE search.
 
-After creating or updating data you can assign the record's id to a keyword with the following clause
+You can perform a LIKE clause with the following format:
+
+```
+Then I should have a "user" with "user_agent:%Firefox%"
+```
+
+### Re-using values from another record
+
+After creating or updating data you can assign the record's values to a keyword with the following clause
 ```gherkin
 # file: reuse.feature
 
+# Create a new user.
 Given I have a "user" where "email:its.inevitable@hotmail.com"
+# The table needs to have the column 'id' for this to work
 And I save the id as "user_id"
 
 # With the above command you can use "some_id" as follows
 # Note the use of "some_id" keyword in the following statement
 Given I have an "account" where "title:my account, user_id:{user_id}"
 ```
+
+The `Given I have ...` command will do two things for you:
+  - Attempt to create a new record if it doesn't exist.
+  - Save all columns of that new record for re-usability in its keywords store. These are accessible like so: {table_column}
+  Example:
+    - Consider a table user with the following columns:
+      - id
+      - name
+      - email
+      - role_id
+    - This `Given I have a "user" where "email: its.inevitable@hotmail.com"` will give you the following keywords:
+      - {user_id}
+      - {user_name}
+      - {user_email}
+      - {user_role_id}
 
 ### Verifying data in the database
 
