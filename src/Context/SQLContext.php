@@ -422,7 +422,7 @@ class SQLContext extends BehatContext implements Interfaces\SQLContextInterface
         return $this->sqlHandler->setEntity($entity);
     }
 
-    private function getEntity()
+    public function getEntity()
     {
         return $this->sqlHandler->getEntity();
     }
@@ -467,14 +467,14 @@ class SQLContext extends BehatContext implements Interfaces\SQLContextInterface
         return $this->sqlHandler->execute($sql);
     }
 
-    private function hasFetchedRows()
+    private function hasFetchedRows($result)
     {
-        return $this->sqlHandler->hasFetchedRows();
+        return $this->sqlHandler->hasFetchedRows($result);
     }
 
-    private function throwExceptionIfErrors()
+    private function throwExceptionIfErrors($statement)
     {
-        return $this->sqlHandler->throwExceptionIfErrors();
+        return $this->sqlHandler->throwExceptionIfErrors($statement);
     }
 
     private function throwErrorIfNoRowsAffected($statement, $ignoreDuplicate)
@@ -484,11 +484,36 @@ class SQLContext extends BehatContext implements Interfaces\SQLContextInterface
 
     private function setKeywordsFromCriteria($entity, $criteria)
     {
-        return $this->setKeywordsFromCriteria($entity, $criteria);
+        return $this->sqlHandler->setKeywordsFromCriteria($entity, $criteria);
     }
 
     private function handleLastId($entity, $id)
     {
         return $this->sqlHandler->handleLastId($entity, $id);
+    }
+
+    public function getKeyword($key)
+    {
+        return $this->sqlHandler->getKeyword($key);
+    }
+
+    public function getCommandType()
+    {
+        return $this->sqlHandler->getCommandType();
+    }
+
+    private function setKeywordsFromRecord($entity, $record)
+    {
+        return $this->sqlHandler->setKeywordsFromRecord($entity, $record);
+    }
+
+    private function getTableColumns($entity)
+    {
+        return $this->sqlHandler->getTableColumns($entity);
+    }
+
+    private function getKeyFromDuplicateError($result)
+    {
+        return $this->sqlHandler->getKeyFromDuplicateError($result);
     }
 }

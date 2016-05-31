@@ -347,7 +347,7 @@ class SQLHandler
     /**
      * Gets table columns and its values, returns array.
      */
-    protected function getTableColumns($entity)
+    public function getTableColumns($entity)
     {
         $columnClause = [];
 
@@ -671,7 +671,7 @@ class SQLHandler
     /**
      * Do what needs to be done with the last insert id.
      */
-    protected function handleLastId($entity, $id)
+    public function handleLastId($entity, $id)
     {
         $entity = $this->getUserInputEntity($entity);
         $this->lastId = $id;
