@@ -22,18 +22,65 @@ use Exception;
  */
 class SQLHandler extends BehatContext
 {
+    /**
+     * Will ignore duplicate inserts.
+     */
     const IGNORE_DUPLICATE = true;
+
+    /**
+     * Will explode resulting in max 2 values.
+     */
     const EXPLODE_MAX_LIMIT = 2;
 
+    /**
+     * Entity being worked on.
+     */
     protected $entity;
 
+    /**
+     * Last query executed.
+     */
     private $lastQuery;
+
+    /**
+     * The db connection in use.
+     */
     private $connection;
+
+    /**
+     * Params passed to this extension.
+     */
     private $params;
+
+    /**
+     * The id of the last sql statement executed.
+     */
     private $lastId;
+
+    /**
+     * The last sqlStatement.
+     */
     private $sqlStatement;
+
+    /**
+     * Columns exploded.
+     */
     private $columns = [];
-    private $clauseType;
+
+    /**
+     * The clause type being executed.
+     */
+    private $commandType;
+
+    /**
+     * The allowed command types to be executed.
+     */
+    private $allowedCommandTypes = [
+        'select',
+        'insert',
+        'delete',
+        'update'
+    ];
 
     /**
      * Construct the object.
@@ -222,37 +269,38 @@ class SQLHandler extends BehatContext
     /**
      * Get the clause type.
      */
-    public function getClauseType()
+    public function getCommandType()
     {
-        return $this->clauseType;
+        return $this->commandType;
     }
 
     /**
      * Set the clause type.
      */
-    public function setClauseType($clauseType)
+    public function setCommandType($commandType)
     {
         // Set the clause type debug message.
-        $this->debugLog(sprintf('Clause type set to: %s', $clauseType));
-
-        $allowedClauseTypes = ['select', 'insert', 'update', 'delete'];
+        $this->debugLog(sprintf('Command type set to: %s', $commandType));
 
         // Check if the clause given is one of the allowed ones.
-        if (! in_array($clauseType, $allowedClauseTypes)) {
+        if (! in_array($commandType, $this->allowedCommandTypes)) {
             throw new Exception(sprintf(
-                'Invalid clause type provided "%s", clause type must be one of "%s"',
-                $clauseType,
-                implode(', ', $allowedClauseTypes)
+                'Invalid command type provided "%s", command type must be one of "%s"',
+                $commandType,
+                implode(', ', $this->allowedCommandTypes)
             ));
         }
 
-        $this->clauseType = $clauseType;
+        $this->commandType = $commandType;
 
         return $this;
     }
 
     /**
      * Constructs a clause based on the glue, to be used for where and update clause.
+     * 
+     * @param string $glue
+     * @param array $columns
      */
     public function constructSQLClause($glue, array $columns)
     {
@@ -268,7 +316,7 @@ class SQLHandler extends BehatContext
             // if so change the format.
             if (strtolower($newValue) == 'null' and
                 trim($glue) != ',' and
-                in_array($this->getClauseType(), ['update', 'select', 'delete'])) {
+                in_array($this->getCommandType(), ['update', 'select', 'delete'])) {
                 $comparator = 'is%s';
             }
 
@@ -276,7 +324,7 @@ class SQLHandler extends BehatContext
             if (strpos($value, '!') === 0) {
                 if (strtolower($newValue) == 'null' and
                 trim($glue) != ',' and
-                in_array($this->getClauseType(), ['update', 'select', 'delete'])) {
+                in_array($this->getCommandType(), ['update', 'select', 'delete'])) {
                     $notOperator = ' not';
                 } else {
                     $notOperator = '!';
@@ -426,6 +474,8 @@ class SQLHandler extends BehatContext
 
     /**
      * Executes sql command.
+     * 
+     * @param string $sql
      */
     protected function execute($sql)
     {
@@ -452,19 +502,23 @@ class SQLHandler extends BehatContext
     {
         $this->debugLog(sprintf('Last ID fetched: %d', $id));
 
-        $_SESSION['behat']['GenesisSqlExtension']['last_id'][$entity][] = $id;
+        $_SESSION['behat']['GenesisSqlExtension']['last_id'][$entity][$this->getCommandType()][] = $id;
     }
 
     /**
      * Get all id's inserted for an entity.
      */
-    protected function getLastIds($entity)
+    public function getLastIds($entity = null)
     {
-        if (isset($_SESSION['behat']['GenesisSqlExtension']['last_id'][$entity])) {
-            return $_SESSION['behat']['GenesisSqlExtension']['last_id'][$entity];
+        if ($entity) {
+            if (isset($_SESSION['behat']['GenesisSqlExtension']['last_id'][$entity])) {
+                return $_SESSION['behat']['GenesisSqlExtension']['last_id'][$entity];
+            }
+
+            return false;
         }
 
-        return false;
+        return $_SESSION['behat']['GenesisSqlExtension']['last_id'];
     }
 
     /**

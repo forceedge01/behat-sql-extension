@@ -193,21 +193,21 @@ class SQLHandlerTest extends PHPUnit_Framework_TestCase
         ];
 
         // Execute
-        $this->testObject->setClauseType('select');
+        $this->testObject->setCommandType('select');
         $result = $this->testObject->constructSQLClause(' AND ', $columns);
         $expected = "firstname is null AND lastname is not null AND postcode is not NULL AND address is NULL";
         // Assert Result
         $this->assertEquals($expected, $result);
 
         // Execute
-        $this->testObject->setClauseType('update');
+        $this->testObject->setCommandType('update');
         $result = $this->testObject->constructSQLClause(' AND ', $columns);
         $expected = "firstname is null AND lastname is not null AND postcode is not NULL AND address is NULL";
         // Assert Result
         $this->assertEquals($expected, $result);
 
         // Execute
-        $this->testObject->setClauseType('delete');
+        $this->testObject->setCommandType('delete');
         $result = $this->testObject->constructSQLClause(' AND ', $columns);
         $expected = "firstname is null AND lastname is not null AND postcode is not NULL AND address is NULL";
         // Assert Result
@@ -571,26 +571,26 @@ class SQLHandlerTest extends PHPUnit_Framework_TestCase
     }
 
     /**
-     * Test that setClauseType works as expected.
+     * Test that setCommandType works as expected.
      *
      * @expectedException Exception
      */
     public function testSetClauseType()
     {
-        $this->testObject->setClauseType('random');
+        $this->testObject->setCommandType('random');
     }
 
     /**
-     * Test that setClauseType works as expected.
+     * Test that setCommandType works as expected.
      */
     public function testSetClauseTypeWithValidValues()
     {
         $clauseTypes = ['update', 'insert', 'select', 'delete'];
 
         foreach ($clauseTypes as $clauseType) {
-            $this->testObject->setClauseType($clauseType);
+            $this->testObject->setCommandType($clauseType);
 
-            $this->assertEquals($clauseType, $this->testObject->getClauseType());
+            $this->assertEquals($clauseType, $this->testObject->getCommandType());
         }
     }
 }

@@ -64,7 +64,7 @@ class SQLContext extends SQLHandler implements Interfaces\SQLContextInterface
 
         // Normalize data.
         $this->setEntity($entity);
-        $this->setClauseType('select');
+        $this->setCommandType('select');
 
         // Convert columns given to an array.
         $this->filterAndConvertToArray($columns);
@@ -94,7 +94,7 @@ class SQLContext extends SQLHandler implements Interfaces\SQLContextInterface
 
         $this->debugLog('No record found, trying to insert.');
 
-        $this->setClauseType('insert');
+        $this->setCommandType('insert');
 
         // If the record does not already exist, create it.
         list($columnNames, $columnValues) = $this->getTableColumns($this->getEntity());
@@ -139,7 +139,7 @@ class SQLContext extends SQLHandler implements Interfaces\SQLContextInterface
         }
 
         $this->setEntity($entity);
-        $this->setClauseType('delete');
+        $this->setCommandType('delete');
 
         // Construct the where clause.
         $this->filterAndConvertToArray($columns);
@@ -207,7 +207,7 @@ class SQLContext extends SQLHandler implements Interfaces\SQLContextInterface
         }
 
         $this->setEntity($entity);
-        $this->setClauseType('update');
+        $this->setCommandType('update');
 
         // Build up the update clause.
         $this->filterAndConvertToArray($with);
@@ -283,7 +283,7 @@ class SQLContext extends SQLHandler implements Interfaces\SQLContextInterface
         $this->filterAndConvertToArray($with);
 
         // Set the clause type.
-        $this->setClauseType('select');
+        $this->setCommandType('select');
 
         // Create a usable sql clause.
         $selectWhereClause = $this->constructSQLClause(' AND ', $this->getColumns());
@@ -340,7 +340,7 @@ class SQLContext extends SQLHandler implements Interfaces\SQLContextInterface
         $this->filterAndConvertToArray($with);
 
         // Set clause type.
-        $this->setClauseType('select');
+        $this->setCommandType('select');
 
         // Create a usable sql clause.
         $selectWhereClause = $this->constructSQLClause(' AND ', $this->getColumns());

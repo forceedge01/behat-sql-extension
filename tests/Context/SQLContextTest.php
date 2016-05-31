@@ -186,7 +186,7 @@ class SQLContextTest extends PHPUnit_Framework_TestCase
         $this->assertEquals($expectedSQL, $result);
         $this->assertNotNull($this->testObject->getEntity());
         $this->assertEquals(234324, $this->testObject->getKeyword('database.unique_id'));
-        $this->assertEquals('select', $this->testObject->getClauseType());
+        $this->assertEquals('select', $this->testObject->getCommandType());
     }
 
     /**
@@ -215,7 +215,7 @@ class SQLContextTest extends PHPUnit_Framework_TestCase
         $this->assertEquals($expectedSQL, $result);
         $this->assertNotNull($this->testObject->getEntity());
         $this->assertEquals(5, $this->testObject->getKeyword('database.unique1_id'));
-        $this->assertEquals('insert', $this->testObject->getClauseType());
+        $this->assertEquals('insert', $this->testObject->getCommandType());
     }
 
     /**
@@ -251,7 +251,7 @@ class SQLContextTest extends PHPUnit_Framework_TestCase
         $this->assertEquals($expectedSQL, $result);
         $this->assertNotNull($this->testObject->getEntity());
         $this->assertEquals(5, $this->testObject->getKeyword('database.someTable_id'));
-        $this->assertEquals('delete', $this->testObject->getClauseType());
+        $this->assertEquals('delete', $this->testObject->getCommandType());
     }
 
     /**
@@ -292,7 +292,7 @@ class SQLContextTest extends PHPUnit_Framework_TestCase
         $this->assertNotNull($this->testObject->getEntity());
         $this->assertEquals(1234, $this->testObject->getKeyword('database.someTable2_id'));
         $this->assertEquals('Abdul', $this->testObject->getKeyword('database.someTable2_name'));
-        $this->assertEquals('update', $this->testObject->getClauseType());
+        $this->assertEquals('update', $this->testObject->getCommandType());
     }
 
     /**
@@ -328,7 +328,7 @@ class SQLContextTest extends PHPUnit_Framework_TestCase
         $this->assertEquals($expectedSQL, $result);
         $this->assertNotNull($this->testObject->getEntity());
         $this->assertEquals(5, $this->testObject->getKeyword('database.someTable3_id'));
-        $this->assertEquals('select', $this->testObject->getClauseType());
+        $this->assertEquals('select', $this->testObject->getCommandType());
     }
 
     /**
@@ -365,7 +365,7 @@ class SQLContextTest extends PHPUnit_Framework_TestCase
         $this->assertEquals($expectedSQL, $result);
         $this->assertNotNull($this->testObject->getEntity());
         $this->assertEquals(5, $this->testObject->getKeyword('database.someTable3_id'));
-        $this->assertEquals('select', $this->testObject->getClauseType());
+        $this->assertEquals('select', $this->testObject->getCommandType());
     }
 
     /**
@@ -417,7 +417,7 @@ class SQLContextTest extends PHPUnit_Framework_TestCase
         $this->assertEquals($expectedSQL, $result);
         $this->assertNotNull($this->testObject->getEntity());
         $this->assertEquals(5, $this->testObject->getKeyword('database.someTable4_id'));
-        $this->assertEquals('select', $this->testObject->getClauseType());
+        $this->assertEquals('select', $this->testObject->getCommandType());
     }
 
     /**
@@ -442,7 +442,7 @@ class SQLContextTest extends PHPUnit_Framework_TestCase
         $this->assertEquals($expectedSQL, $result);
         $this->assertNotNull($this->testObject->getEntity());
         $this->assertEquals(5, $this->testObject->getKeyword('database.someTable4_id'));
-        $this->assertEquals('select', $this->testObject->getClauseType());
+        $this->assertEquals('select', $this->testObject->getCommandType());
     }
 
     /**
