@@ -136,7 +136,7 @@ This will run a delete query against the database using the @where/@with criteri
 # file: delete.feature
 
 # @with/@where are used synonymously in this call
-Given I dont have a "@table" where "@where"
+Given I do not have a "@table" where "@where"
 ```
 
 ### Updating data in a table
@@ -154,14 +154,14 @@ Given I have an existing "@table" with "@update" where "@where"
 ### Using the not operator.
 
 You can use the not operator to say a column should not be equal to value as follows:
-```
+```gherkin
 Then I should have a "user" with "email:its.inevitable@hotmail.com, active: !null"
 ```
 
 This will generate `active is not null`. For a value other than null it would generate`column != value`.
 
 The same can be written as:
-```
+```gherkin
 Then I should have a "user" with:
     | column | value                      |
     | email  | its.inevitable@hotmail.com |
@@ -173,7 +173,7 @@ Note the top row is just explanatory, it will not be used as part of the query.
 
 You can perform a LIKE clause with the following format:
 
-```
+```gherkin
 Then I should have a "user" with "user_agent:%Firefox%"
 ```
 
@@ -181,7 +181,7 @@ Then I should have a "user" with "user_agent:%Firefox%"
 
 You can perform a LIKE clause with the following format:
 
-```
+```gherkin
 Then I should have a "user" with "user_agent:%Firefox%"
 ```
 
