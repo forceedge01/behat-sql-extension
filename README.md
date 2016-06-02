@@ -149,7 +149,7 @@ Given I have an existing "@table" with "@update" where "@where"
 
 You can use the not operator to say a column should not be equal to value as follows:
 ```
-Then I should have a "user" with "email:its.inevitable@hotmail.com, active: !null"
+Then I should have a "user" with "email:its.inevitable@hotmail.com, active: !null" in the database
 ```
 
 This will generate `active is not null`. For a value other than null it would generate`column != value`.
@@ -168,7 +168,7 @@ Note the top row is just explanatory, it will not be used as part of the query.
 You can perform a LIKE clause with the following format:
 
 ```
-Then I should have a "user" with "user_agent:%Firefox%"
+Then I should have a "user" with "user_agent:%Firefox%" in the database
 ```
 
 ### Re-using values from another record
@@ -206,8 +206,10 @@ The `Given I have ...` command will do two things for you:
 
 Verify the database records as follows:
 ```gherkin
-Then I should have a "user" with "email:its.inevitable@hotmail.com,status:1"
+Then I should have a "user" with "email:its.inevitable@hotmail.com,status:1" in the database
 ```
+
+Note: the 'in the database' part of the step definition is optional and is only for clarity of the step definition.
 
 ### Debug mode
 

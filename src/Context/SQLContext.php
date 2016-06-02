@@ -272,7 +272,7 @@ class SQLContext extends SQLHandler implements Interfaces\SQLContextInterface
     }
 
     /**
-     * @Then /^(?:|I )should have(?:| an| a) "([^"]*)" with "([^"]*)"$/
+     * @Then /^(?:|I )should have(?:| an| a) "([^"]*)" with "([^"]*)"(?:| in the database)$/
      */
     public function iShouldHaveAWith($entity, $with)
     {
@@ -328,7 +328,7 @@ class SQLContext extends SQLHandler implements Interfaces\SQLContextInterface
     }
 
     /**
-     * @Then /^(?:|I )should not have(?:| an| a) "([^"]*)" with "([^"]*)"$/
+     * @Then /^(?:|I )should not have(?:| an| a) "([^"]*)" with "([^"]*)"(?:| in the database)$/
      */
     public function iShouldNotHaveAWith($entity, $with)
     {
