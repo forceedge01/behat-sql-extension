@@ -21,18 +21,8 @@ use Traversable;
  *
  * @author Abdul Wahab Qureshi <its.inevitable@hotmail.com>
  */
-class SQLHandler extends BehatContext
+class SQLHandler extends BehatContext implements Interfaces\SQLHandlerInterface
 {
-    /**
-     * Will ignore duplicate inserts.
-     */
-    const IGNORE_DUPLICATE = true;
-
-    /**
-     * Will explode resulting in max 2 values.
-     */
-    const EXPLODE_MAX_LIMIT = 2;
-
     /**
      * Entity being worked on.
      */
@@ -85,6 +75,8 @@ class SQLHandler extends BehatContext
 
     private $dbManager;
 
+    private $keyStore;
+
     /**
      * Construct the object.
      * 
@@ -93,9 +85,11 @@ class SQLHandler extends BehatContext
      * @param array $params
      */
     public function __construct(
-        DBManager $dbManager
+        Interfaces\DBManagerInterface $dbManager,
+        Interfaces\KeyStoreInterface $keyStore
     ) {
         $this->dbManager = $dbManager;
+        $this->keyStore = $keyStore;
     }
 
     /**
@@ -211,7 +205,9 @@ class SQLHandler extends BehatContext
     }
 
     /**
-     * Gets table columns and its values, returns array.
+     * Gets table columns and its values.
+     * 
+     * @return array
      */
     protected function getTableColumns($entity)
     {
@@ -235,6 +231,10 @@ class SQLHandler extends BehatContext
 
     /**
      * Converts the incoming string param from steps to array.
+     * 
+     * @param string $columns
+     * 
+     * @return array
      */
     public function filterAndConvertToArray($columns)
     {
@@ -257,6 +257,9 @@ class SQLHandler extends BehatContext
 
     /**
      * Sets a behat keyword.
+     * 
+     * @param string $key
+     * @param mixed $value
      */
     public function setKeyword($key, $value)
     {
@@ -266,13 +269,13 @@ class SQLHandler extends BehatContext
             $value
         ));
 
-        $_SESSION['behat']['GenesisSqlExtension']['keywords'][$key] = $value;
-
-        return $this;
+        return $this->keyStore->setKeyword($key, $value);
     }
 
     /**
      * Fetches a specific keyword from the behat keywords store.
+     * 
+     * @param string $key
      */
     public function getKeyword($key)
     {
@@ -281,19 +284,7 @@ class SQLHandler extends BehatContext
             $key
         ));
 
-        if (! isset($_SESSION['behat']['GenesisSqlExtension']['keywords'][$key])) {
-            if (! isset($_SESSION['behat']['GenesisSqlExtension']['keywords'])) {
-                throw new Exception('No keywords found.');
-            }
-
-            throw new Exception(sprintf(
-                'Key "%s" not found in behat store, all keys available: %s',
-                $key,
-                print_r($_SESSION['behat']['GenesisSqlExtension']['keywords'], true)
-            ));
-        }
-
-        $value = $_SESSION['behat']['GenesisSqlExtension']['keywords'][$key];
+        $value = $this->keyStore->getKeyword($key);
 
         $this->debugLog(sprintf(
             'Retrieved keyword "%s" with value "%s"',
@@ -306,22 +297,12 @@ class SQLHandler extends BehatContext
 
     /**
      * Checks the value for possible keywords set in behat.yml file.
+     * 
+     * @param string $key
      */
-    private function checkForKeyword($value)
+    public function checkForKeyword($key)
     {
-        if (! isset($_SESSION['behat']['GenesisSqlExtension']['keywords'])) {
-            return $value;
-        }
-
-        foreach ($_SESSION['behat']['GenesisSqlExtension']['keywords'] as $keyword => $val) {
-            $key = sprintf('{%s}', $keyword);
-
-            if ($value == $key) {
-                $value = str_replace($key, $val, $value);
-            }
-        }
-
-        return $value;
+        return $this->keyStore->getKeywordFromConfigForKeyIfExists($key);
     }
 
     /**
@@ -426,7 +407,7 @@ class SQLHandler extends BehatContext
     /**
      * Gets the last insert id.
      */
-    protected function getLastId()
+    public function getLastId()
     {
         $entity = $this->getUserInputEntity($this->getEntity());
 
@@ -479,7 +460,7 @@ class SQLHandler extends BehatContext
      * @param string $entity
      * @param string $criteria
      */
-    protected function setKeywordsFromCriteria($entity, $criteria)
+    public function setKeywordsFromCriteria($entity, $criteria)
     {
         $result = $this->fetchByCriteria(
             $entity,
@@ -498,7 +479,7 @@ class SQLHandler extends BehatContext
      * @param string $entity
      * @param string $criteria
      */
-    protected function fetchByCriteria($entity, $criteria)
+    public function fetchByCriteria($entity, $criteria)
     {
         $sql = sprintf('SELECT * FROM %s WHERE %s', $entity, $criteria);
         $statement = $this->execute($sql);
@@ -518,7 +499,7 @@ class SQLHandler extends BehatContext
      * @param string $entity
      * @param array $record
      */
-    protected function setKeywordsFromRecord($entity, array $record)
+    public function setKeywordsFromRecord($entity, array $record)
     {
         // Normalise the entity.
         $entity = $this->getUserInputEntity($entity);
@@ -534,7 +515,7 @@ class SQLHandler extends BehatContext
     /**
      * Do what needs to be done with the last insert id.
      */
-    protected function handleLastId($entity, $id)
+    public function handleLastId($entity, $id)
     {
         $entity = $this->getUserInputEntity($entity);
         $this->lastId = $id;
@@ -546,7 +527,7 @@ class SQLHandler extends BehatContext
     /**
      * Get the entity the way the user had inputted it.
      */
-    private function getUserInputEntity($entity)
+    public function getUserInputEntity($entity)
     {
         // Get rid of any special chars introduced.
         $entity = $this->makeSQLUnsafe($entity);
@@ -642,7 +623,7 @@ class SQLHandler extends BehatContext
     /**
      * Checks if the command executed affected any rows.
      */
-    protected function hasFetchedRows(Traversable $sqlStatement)
+    public function hasFetchedRows(Traversable $sqlStatement)
     {
         return $this->dbManager->hasFetchedRows($sqlStatement);
     }
@@ -733,7 +714,7 @@ class SQLHandler extends BehatContext
     /**
      * @return array
      */
-    public function getParams()
+    private function getParams()
     {
         return $this->dbManager->getParams();
     }

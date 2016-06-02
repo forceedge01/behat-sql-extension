@@ -2,36 +2,6 @@
 
 namespace Genesis\SQLExtension\Context;
 
-// Mock pdo class for testing.
-class PDO
-{
-    private $dns;
-    private $username;
-    private $password;
-
-    public function __construct($dns, $username, $password)
-    {
-        $this->dns = $dns;
-        $this->username = $username;
-        $this->password = $password;
-    }
-
-    public function getDns()
-    {
-        return $this->dns;
-    }
-
-    public function getUsername()
-    {
-        return $this->username;
-    }
-
-    public function getPassword()
-    {
-        return $this->password;
-    }
-}
-
 // Mock rand method for testing.
 function rand($min = null, $max = null)
 {
@@ -52,6 +22,7 @@ namespace Genesis\SQLExtension\Tests\Context;
 
 use Behat\Gherkin\Node\TableNode;
 use Genesis\SQLExtension\Context\DBManager;
+use Genesis\SQLExtension\Context\LocalKeyStore;
 use Genesis\SQLExtension\Context\SQLHandler;
 use PHPUnit_Framework_TestCase;
 
@@ -89,8 +60,13 @@ class SQLHandlerTest extends PHPUnit_Framework_TestCase
                 ['DBPREFIX' => 'dev_', 'DBNAME' => 'mydb', 'DBSCHEMA' => 'myschema']
             ));
 
+        $this->dependencies['keyStoreMock'] = $this->getMockBuilder(LocalKeyStore::class)
+            ->disableOriginalConstructor()
+            ->getMock();
+
         $this->testObject = new SQLHandler(
-            $this->dependencies['dbHelperMock']
+            $this->dependencies['dbHelperMock'],
+            $this->dependencies['keyStoreMock']
         );
     }
 
@@ -268,10 +244,11 @@ class SQLHandlerTest extends PHPUnit_Framework_TestCase
     public function testFilterAndConvertToArray()
     {
         // Prepare / Mock
-        $columns = 'one:1, two:2, three:ransom, four:{keyword}';
+        $columns = 'one:1, two:2, three:ransom, four:randomness';
 
-        // Set the keyword value.
-        $this->testObject->setKeyword('keyword', '123123');
+        $this->dependencies['keyStoreMock']->expects($this->any())
+            ->method('getKeywordFromConfigForKeyIfExists')
+            ->will($this->returnArgument(0));
 
         // Execute
         $this->testObject->filterAndConvertToArray($columns);
@@ -283,26 +260,7 @@ class SQLHandlerTest extends PHPUnit_Framework_TestCase
         $this->assertEquals($result['one'], 1);
         $this->assertEquals($result['two'], 2);
         $this->assertEquals($result['three'], 'ransom');
-        $this->assertEquals($result['four'], '123123');
-    }
-
-    /**
-     * testSetKeyword Test that setKeyword executes as expected.
-     */
-    public function testSetAndGetKeyword()
-    {
-        $keyword = 'key';
-        $value = 'this should be saved and retrieved';
-
-        // Execute.
-        $this->testObject->setKeyword($keyword, $value);
-
-        // Get the keyword out.
-        $result = $this->testObject->getKeyword($keyword);
-
-        // Assert Result.
-        $this->assertEquals($value, $result);
-        $this->assertEquals($value, $_SESSION['behat']['GenesisSqlExtension']['keywords'][$keyword]);
+        $this->assertEquals($result['four'], 'randomness');
     }
 
     /**

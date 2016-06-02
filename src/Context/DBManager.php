@@ -4,7 +4,7 @@ namespace Genesis\SQLExtension\Context;
 
 use Traversable;
 
-class DBManager
+class DBManager implements Interfaces\DBManagerInterface
 {
     /**
      * The database connection.
@@ -22,7 +22,6 @@ class DBManager
     public function __construct(array $params = array())
     {
         $this->setDBParams($params);
-        $this->connection = $this->getConnection();
     }
 
     /**
@@ -33,6 +32,14 @@ class DBManager
     public function getParams()
     {
         return $this->params;
+    }
+
+    /**
+     * Set the connection.
+     */
+    public function setConnection($connection)
+    {
+        $this->connection = $connection;
     }
 
     /**
@@ -47,59 +54,6 @@ class DBManager
         }
 
         return $this->connection;
-    }
-
-    /**
-     * Creates the connection string for the pdo object.
-     */
-    private function getConnectionString()
-    {
-        return [
-            sprintf(
-                '%s:dbname=%s;host=%s',
-                $this->params['DBENGINE'],
-                $this->params['DBNAME'],
-                $this->params['DBHOST']
-            ),
-            $this->params['DBUSER'],
-            $this->params['DBPASSWORD']
-        ];
-    }
-
-    /**
-     * Sets the database param from either the environment variable or params
-     * passed in by behat.yml, params have precedence over env variable.
-     */
-    public function setDBParams(array $dbParams = array())
-    {
-        if (defined('SQLDBENGINE')) {
-            $this->params = [
-                'DBSCHEMA' => SQLDBSCHEMA,
-                'DBNAME' => SQLDBNAME,
-                'DBPREFIX' => SQLDBPREFIX
-            ];
-
-            // Allow params to be over-ridable.
-            $this->params['DBHOST'] = (isset($dbParams['host']) ? $dbParams['host'] : SQLDBHOST);
-            $this->params['DBUSER'] = (isset($dbParams['username']) ? $dbParams['username'] : SQLDBUSERNAME);
-            $this->params['DBPASSWORD'] = (isset($dbParams['password']) ? $dbParams['password'] : SQLDBPASSWORD);
-            $this->params['DBENGINE'] = (isset($dbParams['engine']) ? $dbParams['engine'] : SQLDBENGINE);
-        } else {
-            $params = getenv('BEHAT_ENV_PARAMS');
-
-            if (! $params) {
-                throw new Exception('"BEHAT_ENV_PARAMS" environment variable was not found.');
-            }
-
-            $params = explode(';', $params);
-
-            foreach ($params as $param) {
-                list($key, $val) = explode(':', $param);
-                $this->params[$key] = trim($val);
-            }
-        }
-
-        return $this;
     }
 
     /**
@@ -119,8 +73,7 @@ class DBManager
             $table
         );
 
-        $statement = $this->connection->prepare($sql);
-        $statement->execute();
+        $statement = $this->execute($sql);
         $this->throwExceptionIfErrors($statement);
         $result = $statement->fetchAll();
 
@@ -210,8 +163,68 @@ class DBManager
         return $cols;
     }
 
+    /**
+     * Get the last insert id.
+     * 
+     * @param string $table For compatibility with postgres.
+     * 
+     * @return int|null
+     */
     public function getLastInsertId($table = null)
     {
         return $this->connection->lastInsertId(sprintf('%s_id_seq', $table));
+    }
+
+    /**
+     * Creates the connection string for the pdo object.
+     */
+    private function getConnectionString()
+    {
+        return [
+            sprintf(
+                '%s:dbname=%s;host=%s',
+                $this->params['DBENGINE'],
+                $this->params['DBNAME'],
+                $this->params['DBHOST']
+            ),
+            $this->params['DBUSER'],
+            $this->params['DBPASSWORD']
+        ];
+    }
+
+    /**
+     * Sets the database param from either the environment variable or params
+     * passed in by behat.yml, params have precedence over env variable.
+     */
+    private function setDBParams(array $dbParams = array())
+    {
+        if (defined('SQLDBENGINE')) {
+            $this->params = [
+                'DBSCHEMA' => SQLDBSCHEMA,
+                'DBNAME' => SQLDBNAME,
+                'DBPREFIX' => SQLDBPREFIX
+            ];
+
+            // Allow params to be over-ridable.
+            $this->params['DBHOST'] = (isset($dbParams['host']) ? $dbParams['host'] : SQLDBHOST);
+            $this->params['DBUSER'] = (isset($dbParams['username']) ? $dbParams['username'] : SQLDBUSERNAME);
+            $this->params['DBPASSWORD'] = (isset($dbParams['password']) ? $dbParams['password'] : SQLDBPASSWORD);
+            $this->params['DBENGINE'] = (isset($dbParams['engine']) ? $dbParams['engine'] : SQLDBENGINE);
+        } else {
+            $params = getenv('BEHAT_ENV_PARAMS');
+
+            if (! $params) {
+                throw new Exception('"BEHAT_ENV_PARAMS" environment variable was not found.');
+            }
+
+            $params = explode(';', $params);
+
+            foreach ($params as $param) {
+                list($key, $val) = explode(':', $param);
+                $this->params[$key] = trim($val);
+            }
+        }
+
+        return $this;
     }
 }
