@@ -93,7 +93,7 @@ The fields needs to be preset but may be left empty.
 
 DB Support
 ----------
-Tested with PostgreSQL. Expected to work with MySQL as well.
+Tested with MySQL.
 
 
 Calls provided by this extension

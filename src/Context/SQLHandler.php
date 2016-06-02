@@ -5,6 +5,7 @@ namespace Genesis\SQLExtension\Context;
 use Behat\Behat\Context\BehatContext;
 use Behat\Gherkin\Node\TableNode;
 use Exception;
+use Traversable;
 
 /*
  * This file is part of the Behat\SQLExtension
@@ -43,29 +44,29 @@ class SQLHandler extends BehatContext
     private $lastQuery;
 
     /**
-     * The db connection in use.
-     */
-    private $connection;
-
-    /**
-     * Params passed to this extension.
-     */
-    private $params;
-
-    /**
      * The id of the last sql statement executed.
      */
     private $lastId;
 
     /**
-     * The last sqlStatement.
-     */
-    private $sqlStatement;
-
-    /**
      * Columns exploded.
      */
     private $columns = [];
+
+    /**
+     * The database name.
+     */
+    private $databaseName;
+
+    /**
+     * The table name.
+     */
+    private $tableName;
+
+    /**
+     * The table's primary key.
+     */
+    private $primaryKey;
 
     /**
      * The clause type being executed.
@@ -82,155 +83,19 @@ class SQLHandler extends BehatContext
         'update'
     ];
 
+    private $dbManager;
+
     /**
      * Construct the object.
+     * 
+     * @param PDO $connection
+     * @param DBManager $dbManager
+     * @param array $params
      */
-    public function __construct(array $dbParams = array())
-    {
-        // Set the database creds.
-        $this->setDBParams($dbParams);
-    }
-
-    /**
-     * Gets the connection for query execution.
-     */
-    public function getConnection()
-    {
-        if (! $this->connection) {
-            list($dns, $username, $password) = $this->connectionString();
-
-            $this->setConnection(new \PDO($dns, $username, $password));
-        }
-
-        return $this->connection;
-    }
-
-    /**
-     * Set the pdo connection.
-     */
-    public function setConnection($connection)
-    {
-        $this->connection = $connection;
-
-        return $this;
-    }
-
-    /**
-     * Sets the database param from either the environment variable or params
-     * passed in by behat.yml, params have precedence over env variable.
-     */
-    public function setDBParams(array $dbParams = array())
-    {
-        if (defined('SQLDBENGINE')) {
-            $this->params = [
-                'DBSCHEMA' => SQLDBSCHEMA,
-                'DBNAME' => SQLDBNAME,
-                'DBPREFIX' => SQLDBPREFIX
-            ];
-
-            // Allow params to be over-ridable.
-            $this->params['DBHOST'] = (isset($dbParams['host']) ? $dbParams['host'] : SQLDBHOST);
-            $this->params['DBUSER'] = (isset($dbParams['username']) ? $dbParams['username'] : SQLDBUSERNAME);
-            $this->params['DBPASSWORD'] = (isset($dbParams['password']) ? $dbParams['password'] : SQLDBPASSWORD);
-            $this->params['DBENGINE'] = (isset($dbParams['engine']) ? $dbParams['engine'] : SQLDBENGINE);
-        } else {
-            $params = getenv('BEHAT_ENV_PARAMS');
-
-            if (! $params) {
-                throw new Exception('"BEHAT_ENV_PARAMS" environment variable was not found.');
-            }
-
-            $params = explode(';', $params);
-
-            foreach ($params as $param) {
-                list($key, $val) = explode(':', $param);
-                $this->params[$key] = trim($val);
-            }
-        }
-
-        return $this;
-    }
-
-    /**
-     * Get db params set.
-     */
-    public function getParams()
-    {
-        return $this->params;
-    }
-
-    /**
-     * Creates the connection string for the pdo object.
-     */
-    private function connectionString()
-    {
-        return [
-            sprintf(
-                '%s:dbname=%s;host=%s',
-                $this->params['DBENGINE'],
-                $this->params['DBNAME'],
-                $this->params['DBHOST']
-            ),
-            $this->params['DBUSER'],
-            $this->params['DBPASSWORD']
-        ];
-    }
-
-    /**
-     * Gets a column list for a table with their type.
-     */
-    protected function requiredTableColumns($table)
-    {
-        // If the DBSCHEMA is not set, try using the database name if provided with the table.
-        if (! $this->params['DBSCHEMA']) {
-            preg_match('/(.*)\./', $table, $db);
-
-            if (isset($db[1])) {
-                $this->params['DBSCHEMA'] = $db[1];
-            }
-        }
-
-        // Parse out the table name.
-        $table = preg_replace('/(.*\.)/', '', $table);
-        $table = trim($table, '`');
-
-        // Statement to extract all required columns for a table.
-        $sqlStatement = "
-            SELECT 
-                column_name, data_type 
-            FROM 
-                information_schema.columns 
-            WHERE 
-                is_nullable = 'NO'
-            AND 
-                table_name = '%s'
-            AND 
-                table_schema = '%s';";
-
-        // Get not null columns
-        $sql = sprintf(
-            $sqlStatement,
-            $table,
-            $this->params['DBSCHEMA']
-        );
-
-        $statement = $this->execute($sql);
-        $this->throwExceptionIfErrors($statement);
-        $result = $statement->fetchAll();
-
-        if (! $result) {
-            return [];
-        }
-
-        $cols = [];
-        foreach ($result as $column) {
-            $cols[$column['column_name']] = $column['data_type'];
-        }
-
-        // Dont populate primary key, let db handle that
-        unset($cols['id']);
-
-        return $cols;
+    public function __construct(
+        DBManager $dbManager
+    ) {
+        $this->dbManager = $dbManager;
     }
 
     /**
@@ -353,7 +218,7 @@ class SQLHandler extends BehatContext
         $columnClause = [];
 
         // Get all columns for insertion
-        $allColumns = array_merge($this->requiredTableColumns($entity), $this->columns);
+        $allColumns = array_merge($this->dbManager->getRequiredTableColumns($entity), $this->columns);
 
         // Set values for columns
         foreach ($allColumns as $col => $type) {
@@ -479,20 +344,17 @@ class SQLHandler extends BehatContext
      */
     protected function execute($sql)
     {
-        $this->lastQuery = $sql;
-
         $this->debugLog(sprintf('Executing SQL: %s', $sql));
-
-        $this->sqlStatement = $this->getConnection()->prepare($sql, []);
-        $this->sqlStatement->execute();
-        $this->lastId = $this->connection->lastInsertId(sprintf('%s_id_seq', $this->getEntity()));
+        $this->lastQuery = $sql;
+        $statement = $this->dbManager->execute($sql);
+        $this->lastId = $this->dbManager->getLastInsertId($this->getEntity());
 
         // If their is an id, save it!
         if ($this->lastId) {
             $this->handleLastId($this->getEntity(), $this->lastId);
         }
 
-        return $this->sqlStatement;
+        return $statement;
     }
 
     /**
@@ -524,7 +386,7 @@ class SQLHandler extends BehatContext
     /**
      * Check for any mysql errors.
      */
-    public function throwErrorIfNoRowsAffected($sqlStatement, $ignoreDuplicate = false)
+    public function throwErrorIfNoRowsAffected(Traversable $sqlStatement, $ignoreDuplicate = false)
     {
         if (! $this->hasFetchedRows($sqlStatement)) {
             $error = print_r($sqlStatement->errorInfo(), true);
@@ -550,7 +412,7 @@ class SQLHandler extends BehatContext
     /**
      * Errors found then throw exception.
      */
-    public function throwExceptionIfErrors($sqlStatement)
+    public function throwExceptionIfErrors(Traversable $sqlStatement)
     {
         if ((int) $sqlStatement->errorCode()) {
             throw new Exception(
@@ -643,7 +505,7 @@ class SQLHandler extends BehatContext
         $this->throwErrorIfNoRowsAffected($statement);
         $result = $statement->fetchAll();
 
-        if (! $result[0]) {
+        if (! $result) {
             throw new Exception('Unable to fetch result');
         }
 
@@ -678,7 +540,7 @@ class SQLHandler extends BehatContext
         $this->lastId = $id;
         $entity = $this->makeSQLUnsafe($entity);
         $this->saveLastId($entity, $this->lastId);
-        $this->setKeyword($entity . '_id', $this->lastId);
+        $this->setKeyword($entity . '_' . $this->primaryKey, $this->lastId);
     }
 
     /**
@@ -780,9 +642,9 @@ class SQLHandler extends BehatContext
     /**
      * Checks if the command executed affected any rows.
      */
-    protected function hasFetchedRows($sqlStatement)
+    protected function hasFetchedRows(Traversable $sqlStatement)
     {
-        return ($sqlStatement->rowCount());
+        return $this->dbManager->hasFetchedRows($sqlStatement);
     }
 
     /**
@@ -829,6 +691,18 @@ class SQLHandler extends BehatContext
             $this->entity = $expectedEntity;
         }
 
+        // Set the database and table name.
+        if (strpos($this->entity, '.') !== false) {
+            list($this->databaseName, $this->tableName) = explode('.', $this->entity, 2);
+        } else {
+            $this->databaseName = $this->getParams()['DBNAME'];
+            $this->tableName = $entity;
+        }
+
+        // Set the primary key for the current table.
+        $this->primaryKey = $this->dbManager->getPrimaryKeyForTable($this->databaseName, $this->tableName);
+        $this->debugLog(sprintf('PRIMARY KEY: %s', $this->primaryKey));
+
         return $this;
     }
 
@@ -838,5 +712,29 @@ class SQLHandler extends BehatContext
     public function getEntity()
     {
         return $this->entity;
+    }
+
+    /**
+     * Get the database name.
+     */
+    public function getDatabaseName()
+    {
+        return $this->databaseName;
+    }
+
+    /**
+     * Get the table name.
+     */
+    public function getTableName()
+    {
+        return $this->tableName;
+    }
+
+    /**
+     * @return array
+     */
+    public function getParams()
+    {
+        return $this->dbManager->getParams();
     }
 }

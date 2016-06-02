@@ -51,6 +51,7 @@ function time()
 namespace Genesis\SQLExtension\Tests\Context;
 
 use Behat\Gherkin\Node\TableNode;
+use Genesis\SQLExtension\Context\DBManager;
 use Genesis\SQLExtension\Context\SQLHandler;
 use PHPUnit_Framework_TestCase;
 
@@ -62,36 +63,59 @@ class SQLHandlerTest extends PHPUnit_Framework_TestCase
 
     private $testObject;
 
-    public function __construct()
+    private $dependencies;
+
+    public function setup()
     {
         ini_set('error_reporting', E_ALL | E_STRICT);
         error_reporting(E_ALL | E_STRICT);
         ini_set('display_errors', 'On');
-        $this->testObject = new SQLHandler();
+
+        $this->dependencies['dbHelperMock'] = $this->getMockBuilder(DBManager::class)
+            ->disableOriginalConstructor()
+            ->getMock();
+
+        $this->dependencies['dbHelperMock']->expects($this->any())
+            ->method('getPrimaryKeyForTable')
+            ->will($this->returnValue('id'));
+
+        $this->dependencies['dbHelperMock']->expects($this->any())
+            ->method('execute')
+            ->will($this->returnValue($this->getPdoStatementWithRows(true, [[123]])));
+
+        $this->dependencies['dbHelperMock']->expects($this->any())
+            ->method('getParams')
+            ->will($this->returnValue(
+                ['DBPREFIX' => 'dev_', 'DBNAME' => 'mydb', 'DBSCHEMA' => 'myschema']
+            ));
+
+        $this->testObject = new SQLHandler(
+            $this->dependencies['dbHelperMock']
+        );
     }
 
-    public function testSetDBParamsFromEnvironmentVariable()
-    {
-        putenv('BEHAT_ENV_PARAMS=HOST: localhost;username: root;password: abc123');
+    // public function testSetDBParamsFromEnvironmentVariable()
+    // {
+    //     putenv('BEHAT_ENV_PARAMS=HOST: localhost;username: root;password: abc123');
 
-        $result = $this->testObject->setDBParams();
+    //     $result = $this->testObject->setDBParams();
 
-        $this->assertInstanceOf(SQLHandler::class, $result);
-        $this->assertEquals($this->testObject->getParams()['DBENGINE'], 'mysql');
-        $this->assertEquals($this->testObject->getParams()['DBHOST'], 'localhost');
-        $this->assertEquals($this->testObject->getParams()['DBUSER'], 'root');
-        $this->assertEquals($this->testObject->getParams()['DBPASSWORD'], 'toor');
-        $this->assertEquals($this->testObject->getParams()['DBPREFIX'], 'dev_');
-        $this->assertEquals($this->testObject->getParams()['DBNAME'], 'mydb');
-        $this->assertEquals($this->testObject->getParams()['DBSCHEMA'], 'myschema');
-    }
+    //     $this->assertInstanceOf(SQLHandler::class, $result);
+    //     $this->assertEquals($this->testObject->getParams()['DBENGINE'], 'mysql');
+    //     $this->assertEquals($this->testObject->getParams()['DBHOST'], 'localhost');
+    //     $this->assertEquals($this->testObject->getParams()['DBUSER'], 'root');
+    //     $this->assertEquals($this->testObject->getParams()['DBPASSWORD'], 'toor');
+    //     $this->assertEquals($this->testObject->getParams()['DBPREFIX'], 'dev_');
+    //     $this->assertEquals($this->testObject->getParams()['DBNAME'], 'mydb');
+    //     $this->assertEquals($this->testObject->getParams()['DBSCHEMA'], 'myschema');
+    // }
 
-    public function testSetDBParamsWithConstantsDefined()
-    {
-        $result = $this->testObject->setDBParams();
+    // public function testSetDBParamsWithConstantsDefined()
+    // {
+    //     $result = $this->testObject->setDBParams();
 
-        $this->assertInstanceOf(SQLHandler::class, $result);
-    }
+    //     $this->assertInstanceOf(SQLHandler::class, $result);
+    // }
 
     /**
      * testSampleData Test that sampleData executes as expected.
@@ -419,13 +443,13 @@ class SQLHandlerTest extends PHPUnit_Framework_TestCase
      */
     public function testThrowErrorsIfNoRowsAffectedNoRowsAffected()
     {
+        $this->dependencies['dbHelperMock']->expects($this->any())
+            ->method('hasFetchedRows')
+            ->will($this->returnValue(false));
+
         $sqlStatementMock = $this->getMockBuilder(\PDOStatement::class)
             ->disableOriginalConstructor()
             ->getMock();
-
-        $sqlStatementMock->expects($this->any())
-            ->method('rowCount')
-            ->willReturn(0);
 
         $this->testObject->throwErrorIfNoRowsAffected($sqlStatementMock);
     }
@@ -435,13 +459,13 @@ class SQLHandlerTest extends PHPUnit_Framework_TestCase
      */
     public function testThrowErrorsIfNoRowsAffectedDuplicateError()
     {
+        $this->dependencies['dbHelperMock']->expects($this->any())
+            ->method('hasFetchedRows')
+            ->will($this->returnValue(false));
+
         $sqlStatementMock = $this->getMockBuilder(\PDOStatement::class)
             ->disableOriginalConstructor()
             ->getMock();
-
-        $sqlStatementMock->expects($this->any())
-            ->method('rowCount')
-            ->willReturn(0);
 
         $sqlStatementMock->expects($this->exactly(2))
             ->method('errorInfo')
@@ -460,13 +484,13 @@ class SQLHandlerTest extends PHPUnit_Framework_TestCase
      */
     public function testThrowErrorsIfNoRowsAffectedNoException()
     {
+        $this->dependencies['dbHelperMock']->expects($this->any())
+            ->method('hasFetchedRows')
+            ->will($this->returnValue(true));
+
         $sqlStatementMock = $this->getMockBuilder(\PDOStatement::class)
             ->disableOriginalConstructor()
             ->getMock();
-
-        $sqlStatementMock->expects($this->any())
-            ->method('rowCount')
-            ->willReturn(1);
 
         $result = $this->testObject->throwErrorIfNoRowsAffected($sqlStatementMock);
 
@@ -540,6 +564,20 @@ class SQLHandlerTest extends PHPUnit_Framework_TestCase
         $this->testObject->setEntity('abc');
 
         $this->assertEquals('dev_abc', $this->testObject->getEntity());
+        $this->assertEquals('mydb', $this->testObject->getDatabaseName());
+        $this->assertEquals('abc', $this->testObject->getTableName());
+
+        $this->testObject->setEntity('random_abc');
+
+        $this->assertEquals('dev_random_abc', $this->testObject->getEntity());
+        $this->assertEquals('mydb', $this->testObject->getDatabaseName());
+        $this->assertEquals('random_abc', $this->testObject->getTableName());
+
+        $this->testObject->setEntity('abc.user');
+
+        $this->assertEquals('dev_abc.user', $this->testObject->getEntity());
+        $this->assertEquals('dev_abc', $this->testObject->getDatabaseName());
+        $this->assertEquals('user', $this->testObject->getTableName());
     }
 
     /**
@@ -592,5 +630,33 @@ class SQLHandlerTest extends PHPUnit_Framework_TestCase
 
             $this->assertEquals($clauseType, $this->testObject->getCommandType());
         }
+    }
+
+    /**
+     * Get PDO statement with 1 row, used for testing.
+     */
+    private function getPdoStatementWithRows($rowCount = true, $fetchAll = false)
+    {
+        $statementMock = $this->getMockBuilder(\PDOStatement::class)
+            ->disableOriginalConstructor()
+            ->getMock();
+
+        if ($rowCount) {
+            $statementMock->expects($this->any())
+                ->method('rowCount')
+                ->willReturn($rowCount);
+        }
+
+        if ($fetchAll) {
+            $statementMock->expects($this->any())
+                ->method('fetchAll')
+                ->willReturn($fetchAll);
+        }
+
+        $statementMock->expects($this->any())
+            ->method('execute')
+            ->willReturn(true);
+
+        return $statementMock;
     }
 }
