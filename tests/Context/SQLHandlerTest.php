@@ -54,6 +54,9 @@ use Behat\Gherkin\Node\TableNode;
 use Genesis\SQLExtension\Context\SQLHandler;
 use PHPUnit_Framework_TestCase;
 
+/**
+ * @group sqlHandler
+ */
 class SQLHandlerTest extends PHPUnit_Framework_TestCase
 {
     const TYPE_STRING_TIME = 234234234;
@@ -68,6 +71,22 @@ class SQLHandlerTest extends PHPUnit_Framework_TestCase
         error_reporting(E_ALL | E_STRICT);
         ini_set('display_errors', 'On');
         $this->testObject = new SQLHandler();
+
+        $pdoConnectionMock = $this->getMockBuilder(\PDO::class)
+            ->disableOriginalConstructor()
+            ->setMethods(array('prepare', 'lastInsertId', 'execute'))
+            ->getMock();
+
+        $pdoConnectionMock->expects($this->any())
+            ->method('lastInsertId')
+            ->willReturn(5);
+
+        $this->testObject->setConnection($pdoConnectionMock);
+
+        $this->testObject->getConnection()->expects($this->any())
+            ->method('prepare')
+            ->with($this->isType('string'))
+            ->willReturn($this->getPdoStatementWithRows(0));
     }
 
     public function testSetDBParamsFromEnvironmentVariable()
@@ -592,5 +611,33 @@ class SQLHandlerTest extends PHPUnit_Framework_TestCase
 
             $this->assertEquals($clauseType, $this->testObject->getCommandType());
         }
+    }
+
+    /**
+     * Get PDO statement with 1 row, used for testing.
+     */
+    private function getPdoStatementWithRows($rowCount = true, $fetchAll = false)
+    {
+        $statementMock = $this->getMockBuilder(\PDOStatement::class)
+            ->disableOriginalConstructor()
+            ->getMock();
+
+        if ($rowCount) {
+            $statementMock->expects($this->any())
+                ->method('rowCount')
+                ->willReturn($rowCount);
+        }
+
+        if ($fetchAll) {
+            $statementMock->expects($this->any())
+                ->method('fetchAll')
+                ->willReturn($fetchAll);
+        }
+
+        $statementMock->expects($this->any())
+            ->method('execute')
+            ->willReturn(true);
+
+        return $statementMock;
     }
 }

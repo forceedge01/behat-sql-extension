@@ -6,6 +6,9 @@ use Behat\Gherkin\Node\TableNode;
 use Genesis\SQLExtension\Context\SQLContext;
 use PHPUnit_Framework_TestCase;
 
+/**
+ * @group sqlContext
+ */
 class SQLContextTest extends PHPUnit_Framework_TestCase
 {
     private $testObject;
@@ -60,7 +63,7 @@ class SQLContextTest extends PHPUnit_Framework_TestCase
         $this->testObject->getConnection()->expects($this->any())
             ->method('prepare')
             ->with($this->isType('string'))
-            ->willReturn($this->getPdoStatementWithRows(1, [['id' => 234324, 'name' => 'Abdul', 'email' => 'its.inevitable@hotmail.com']]));
+            ->willReturn($this->getPdoStatementWithRows(1, [[0 => 'id', 'id' => 234324, 'name' => 'Abdul', 'email' => 'its.inevitable@hotmail.com']]));
 
         $sqls = $this->testObject->iHaveWhere($entity, $node);
 
@@ -70,6 +73,9 @@ class SQLContextTest extends PHPUnit_Framework_TestCase
         $this->assertEquals('Abdul', $this->testObject->getKeyword(sprintf('%s_name', $entity)));
     }
 
+    /**
+     * @group test
+     */
     public function testIHave()
     {
         $node = new TableNode();
@@ -94,13 +100,16 @@ class SQLContextTest extends PHPUnit_Framework_TestCase
         $this->testObject->getConnection()->expects($this->any())
             ->method('prepare')
             ->with($this->isType('string'))
-            ->willReturn($this->getPdoStatementWithRows(1, [['id' => 234324]]));
+            ->willReturn($this->getPdoStatementWithRows(1, [[0 => 'id', 'id' => 234324]]));
 
         $sqls = $this->testObject->iHave($node);
 
         $this->assertCount(2, $sqls);
     }
 
+    /**
+     * @group test
+     */
     public function testIDontHaveWhere()
     {
         $entity = 'database.unique';
@@ -126,13 +135,16 @@ class SQLContextTest extends PHPUnit_Framework_TestCase
         $this->testObject->getConnection()->expects($this->any())
             ->method('prepare')
             ->with($this->isType('string'))
-            ->willReturn($this->getPdoStatementWithRows(1, [['id' => 234324]]));
+            ->willReturn($this->getPdoStatementWithRows(1, [[0 => 'id', 'id' => 234324]]));
 
         $sqls = $this->testObject->iDontHaveWhere($entity, $node);
 
         $this->assertCount(2, $sqls);
     }
 
+    /**
+     * @group test
+     */
     public function testIDontHave()
     {
         $node = new TableNode();
@@ -157,7 +169,7 @@ class SQLContextTest extends PHPUnit_Framework_TestCase
         $this->testObject->getConnection()->expects($this->any())
             ->method('prepare')
             ->with($this->isType('string'))
-            ->willReturn($this->getPdoStatementWithRows(1, [['id' => 234324]]));
+            ->willReturn($this->getPdoStatementWithRows(1, [[0 => 'id', 'id' => 234324]]));
 
         $sqls = $this->testObject->iDontHave($node);
 
@@ -166,6 +178,8 @@ class SQLContextTest extends PHPUnit_Framework_TestCase
 
     /**
      * Test that this method works with values provided.
+     * 
+     * @group test
      */
     public function testIHaveAWhereWithValuesRecordAlreadyExists()
     {
@@ -175,7 +189,7 @@ class SQLContextTest extends PHPUnit_Framework_TestCase
         $this->testObject->getConnection()->expects($this->any())
             ->method('prepare')
             ->with($this->isType('string'))
-            ->willReturn($this->getPdoStatementWithRows(1, [['id' => 234324]]));
+            ->willReturn($this->getPdoStatementWithRows(1, [[0 => 'id', 'id' => 234324]]));
 
         $result = $this->testObject->iHaveAWhere($entity, $column);
 
@@ -191,6 +205,8 @@ class SQLContextTest extends PHPUnit_Framework_TestCase
 
     /**
      * Test that this method works with values provided.
+     * 
+     * @group testing
      */
     public function testIHaveAWhereWithValuesRecordDoesNotExists()
     {
@@ -201,9 +217,11 @@ class SQLContextTest extends PHPUnit_Framework_TestCase
             ->method('prepare')
             ->with($this->isType('string'))
             ->will($this->onConsecutiveCalls(
+                $this->getPdoStatementWithRows(1, [['id']]),
                 $this->getPdoStatementWithRows(0),
-                $this->getPdoStatementWithRows(1),
-                $this->getPdoStatementWithRows(1, [['id' => 237463]])
+                $this->getPdoStatementWithRows(1, [['column_name' => 'id', 'data_type' => 'int']]),
+                $this->getPdoStatementWithRows(1, [[0 => 'id', 'id' => 237463]]),
+                $this->getPdoStatementWithRows(1, [[0 => 'id', 'id' => 237463]])
             ));
 
         $result = $this->testObject->iHaveAWhere($entity, $column);
@@ -214,12 +232,13 @@ class SQLContextTest extends PHPUnit_Framework_TestCase
         // Assert.
         $this->assertEquals($expectedSQL, $result);
         $this->assertNotNull($this->testObject->getEntity());
-        $this->assertEquals(5, $this->testObject->getKeyword('database.unique1_id'));
+        $this->assertEquals(237463, $this->testObject->getKeyword('database.unique1_id'));
         $this->assertEquals('insert', $this->testObject->getCommandType());
     }
 
     /**
      * @expectedException Exception
+     * @group test
      */
     public function testIDontHaveAWhere()
     {
@@ -231,6 +250,8 @@ class SQLContextTest extends PHPUnit_Framework_TestCase
 
     /**
      * Test that this method works with values provided.
+     *
+     * @group test
      */
     public function testIDontHaveAWhereWithValues()
     {
@@ -240,7 +261,7 @@ class SQLContextTest extends PHPUnit_Framework_TestCase
         $this->testObject->getConnection()->expects($this->any())
             ->method('prepare')
             ->with($this->isType('string'))
-            ->willReturn($this->getPdoStatementWithRows());
+            ->willReturn($this->getPdoStatementWithRows(true, [[0 => 'id']]));
 
         $result = $this->testObject->iDontHaveAWhere($entity, $column);
 
@@ -256,6 +277,7 @@ class SQLContextTest extends PHPUnit_Framework_TestCase
 
     /**
      * @expectedException Exception
+     * @group test
      */
     public function testiHaveAnExistingWithWhere()
     {
@@ -268,6 +290,8 @@ class SQLContextTest extends PHPUnit_Framework_TestCase
 
     /**
      * Test that this method works with values provided.
+     *
+     * @group test
      */
     public function testiHaveAnExistingWithWhereWithValues()
     {
@@ -279,7 +303,7 @@ class SQLContextTest extends PHPUnit_Framework_TestCase
             ->method('prepare')
             ->with($this->isType('string'))
             ->willReturn($this->getPdoStatementWithRows(1, [
-                ['id' => 1234, 'name' => 'Abdul']
+                [0 => 'id', 'id' => 1234, 'name' => 'Abdul']
             ]));
 
         $result = $this->testObject->iHaveAnExistingWithWhere($entity, $with, $columns);
@@ -297,11 +321,19 @@ class SQLContextTest extends PHPUnit_Framework_TestCase
 
     /**
      * @expectedException Exception
+     * @group test
      */
     public function testiShouldNotHaveAWith()
     {
         $entity = '';
         $with = '';
+
+        $this->testObject->getConnection()->expects($this->any())
+            ->method('prepare')
+            ->with($this->isType('string'))
+            ->willReturn($this->getPdoStatementWithRows(1, [
+                [0 => 'id', 'id' => 1234, 'name' => 'Abdul']
+            ]));
 
         $this->testObject->iShouldNotHaveAWith($entity, $with);
     }
@@ -317,7 +349,7 @@ class SQLContextTest extends PHPUnit_Framework_TestCase
         $this->testObject->getConnection()->expects($this->any())
             ->method('prepare')
             ->with($this->isType('string'))
-            ->willReturn($this->getPdoStatementWithRows());
+            ->willReturn($this->getPdoStatementWithRows(0, [[0 => 'id']]));
 
         $result = $this->testObject->iShouldNotHaveAWith($entity, $with);
 
@@ -329,6 +361,24 @@ class SQLContextTest extends PHPUnit_Framework_TestCase
         $this->assertNotNull($this->testObject->getEntity());
         $this->assertEquals(5, $this->testObject->getKeyword('database.someTable3_id'));
         $this->assertEquals('select', $this->testObject->getCommandType());
+    }
+
+    /**
+     * Test that this method works with values provided.
+     * 
+     * @expectedException Exception
+     */
+    public function testiShouldNotHaveAWithWithValuesReturnsRows()
+    {
+        $entity = 'database.someTable3';
+        $with = "column1:abc,column2:xyz,column3:what's up doc";
+
+        $this->testObject->getConnection()->expects($this->any())
+            ->method('prepare')
+            ->with($this->isType('string'))
+            ->willReturn($this->getPdoStatementWithRows(true, [[0 => 'id']]));
+
+        $this->testObject->iShouldNotHaveAWith($entity, $with);
     }
 
     /**
@@ -354,7 +404,7 @@ class SQLContextTest extends PHPUnit_Framework_TestCase
         $this->testObject->getConnection()->expects($this->any())
             ->method('prepare')
             ->with($this->isType('string'))
-            ->willReturn($this->getPdoStatementWithRows());
+            ->willReturn($this->getPdoStatementWithRows(0, [[0 => 'id']]));
 
         $result = $this->testObject->iShouldNotHaveAWithTable($entity, $with);
 
@@ -364,8 +414,37 @@ class SQLContextTest extends PHPUnit_Framework_TestCase
         // Assert.
         $this->assertEquals($expectedSQL, $result);
         $this->assertNotNull($this->testObject->getEntity());
-        $this->assertEquals(5, $this->testObject->getKeyword('database.someTable3_id'));
         $this->assertEquals('select', $this->testObject->getCommandType());
+    }
+
+    /**
+     * Test that this method works with values provided.
+     * 
+     * @expectedException Exception
+     */
+    public function testiShouldNotHaveAWithWithTableNodeFindsRows()
+    {
+        $entity = 'database.someTable3';
+        $with = new TableNode();
+        $with->addRow([
+            'title',
+            'value'
+        ]);
+        $with->addRow([
+            'column1',
+            'abc'
+        ]);
+        $with->addRow([
+            'column2',
+            'xyz'
+        ]);
+
+        $this->testObject->getConnection()->expects($this->any())
+            ->method('prepare')
+            ->with($this->isType('string'))
+            ->willReturn($this->getPdoStatementWithRows(true, [[0 => 'id']]));
+
+        $this->testObject->iShouldNotHaveAWithTable($entity, $with);
     }
 
     /**
@@ -375,6 +454,13 @@ class SQLContextTest extends PHPUnit_Framework_TestCase
     {
         $entity = '';
         $with = '';
+
+        $this->testObject->getConnection()->expects($this->any())
+            ->method('prepare')
+            ->with($this->isType('string'))
+            ->willReturn($this->getPdoStatementWithRows(1, [
+                [0 => 'id', 'id' => 1234, 'name' => 'Abdul']
+            ]));
 
         $this->testObject->iShouldHaveAWith($entity, $with);
     }
@@ -406,7 +492,7 @@ class SQLContextTest extends PHPUnit_Framework_TestCase
         $this->testObject->getConnection()->expects($this->any())
             ->method('prepare')
             ->with($this->isType('string'))
-            ->willReturn($this->getPdoStatementWithRows());
+            ->willReturn($this->getPdoStatementWithRows(true, [[0 => 'id']]));
 
         $result = $this->testObject->iShouldHaveAWithTable($entity, $with);
 
@@ -431,7 +517,7 @@ class SQLContextTest extends PHPUnit_Framework_TestCase
         $this->testObject->getConnection()->expects($this->any())
             ->method('prepare')
             ->with($this->isType('string'))
-            ->willReturn($this->getPdoStatementWithRows());
+            ->willReturn($this->getPdoStatementWithRows(true, [[0 => 'id']]));
 
         $result = $this->testObject->iShouldHaveAWith($entity, $with);
 
@@ -454,9 +540,9 @@ class SQLContextTest extends PHPUnit_Framework_TestCase
         $with = 'column1:abc,column2:%xyz%';
 
         $this->testObject->getConnection()->expects($this->any())
-                         ->method('prepare')
-                         ->with($this->isType('string'))
-                         ->willReturn($this->getPdoStatementWithRows());
+             ->method('prepare')
+             ->with($this->isType('string'))
+             ->willReturn($this->getPdoStatementWithRows(true, [[0 => 'id']]));
 
         $result = $this->testObject->iShouldHaveAWith($entity, $with);
 

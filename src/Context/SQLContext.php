@@ -301,17 +301,13 @@ class SQLContext extends SQLHandler implements Interfaces\SQLContextInterface
 
         // Execute the sql query, if the query throws a generic not found error,
         // catch it and give it some context.
-        try {
-            $statement = $this->execute($sql);
-            $this->throwErrorIfNoRowsAffected($statement);
-        } catch (\Exception $e) {
-            if (! $this->hasFetchedRows($statement)) {
-                throw new \Exception(sprintf(
-                    'Record not found with "%s" in "%s"',
-                    $selectWhereClause,
-                    $this->getEntity()
-                ));
-            }
+        $statement = $this->execute($sql);
+        if (! $this->hasFetchedRows($statement)) {
+            throw new \Exception(sprintf(
+                'Record not found with "%s" in "%s"',
+                $selectWhereClause,
+                $this->getEntity()
+            ));
         }
 
         return $sql;
@@ -358,17 +354,13 @@ class SQLContext extends SQLHandler implements Interfaces\SQLContextInterface
 
         // Execute the sql query, if the query throws a generic not found error,
         // catch it and give it some context.
-        try {
-            $statement = $this->execute($sql);
-            $this->throwErrorIfNoRowsAffected($statement);
-        } catch (\Exception $e) {
-            if ($this->hasFetchedRows($statement)) {
-                throw new \Exception(sprintf(
-                    'Record not found with "%s" in "%s"',
-                    $selectWhereClause,
-                    $this->getEntity()
-                ));
-            }
+        $statement = $this->execute($sql);
+        if ($this->hasFetchedRows($statement)) {
+            throw new \Exception(sprintf(
+                'Record found with "%s" in "%s"',
+                $selectWhereClause,
+                $this->getEntity()
+            ));
         }
 
         return $sql;
