@@ -829,6 +829,19 @@ class SQLHandler extends BehatContext
             $this->entity = $expectedEntity;
         }
 
+        // Set the database and table name.
+        if (strpos($this->entity, '.') !== false) {
+            list($this->databaseName, $this->tableName) = explode('.', $this->entity, 2);
+        } else {
+            $this->databaseName = $this->getParams()['DBNAME'];
+            $this->tableName = $entity;
+        }
+
+        // Set the primary key for the current table.
+        $this->primaryKey = $this->getPrimaryKeyForTable($this->databaseName, $this->tableName);
+
+        $this->debugLog(sprintf('PRIMARY KEY: %s', $this->primaryKey));
+
         return $this;
     }
 
@@ -838,5 +851,33 @@ class SQLHandler extends BehatContext
     public function getEntity()
     {
         return $this->entity;
+    }
+
+    /**
+     * @param string $entity
+     * 
+     * @result string
+     */
+    public function getPrimaryKeyForTable($database, $table)
+    {
+        $sql = sprintf('
+            SELECT `COLUMN_NAME`
+            FROM `information_schema`.`COLUMNS`
+            WHERE (`TABLE_SCHEMA` = "%s")
+            AND (`TABLE_NAME` = "%s")
+            AND (`COLUMN_KEY` = "PRI")',
+            $database,
+            $table
+        );
+
+        $statement = $this->execute($sql);
+        $this->throwExceptionIfErrors($statement);
+        $result = $statement->fetchAll();
+
+        if (! $result) {
+            return 'id';
+        }
+
+        return $result[0][0];
     }
 }

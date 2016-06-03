@@ -118,8 +118,12 @@ class SQLContext extends SQLHandler implements Interfaces\SQLContextInterface
             );
 
             $whereClause = sprintf('%s = %s', $key, $this->quoteOrNot($this->getColumns()[$key]));
+        }
 
+        try {
             $this->setKeywordsFromCriteria($this->getEntity(), $whereClause);
+        } catch (\Exception $e) {
+            // ignore, as the keys may not be set because of dynamic function usage.
         }
 
         return $sql;
