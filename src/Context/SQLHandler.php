@@ -73,16 +73,21 @@ class SQLHandler extends BehatContext implements Interfaces\SQLHandlerInterface
         'update'
     ];
 
+    /**
+     * The database connection manager.
+     */
     private $dbManager;
 
+    /**
+     * The key store.
+     */
     private $keyStore;
 
     /**
      * Construct the object.
      * 
-     * @param PDO $connection
-     * @param DBManager $dbManager
-     * @param array $params
+     * @param Interfaces\DBManagerInterface $dbManager
+     * @param Interfaces\KeyStoreInterface $keyStore
      */
     public function __construct(
         Interfaces\DBManagerInterface $dbManager,
