@@ -753,6 +753,24 @@ class SQLHandler extends BehatContext
     }
 
     /**
+     * Convert an array to a genesis query.
+     *
+     * @param array $columns
+     *
+     * @return string
+     */
+    public function convertToQuery(array $columns)
+    {
+        $query = '';
+
+        foreach ($columns as $column => $value) {
+            $query .= sprintf('%s:%s,', $column, $value);
+        }
+
+        return trim($query, ',');
+    }
+
+    /**
      * @param  TableNode $node The node with all fields and data.
      *
      * @return array The queries built of the TableNode.

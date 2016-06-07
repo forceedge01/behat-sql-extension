@@ -614,6 +614,33 @@ class SQLHandlerTest extends PHPUnit_Framework_TestCase
     }
 
     /**
+     * Test that the conversion works as expected.
+     */
+    public function testConvertToQueryReturnTypeIfEmptyArrayProvided()
+    {
+        $values = $this->testObject->convertToQuery([]);
+
+        $this->assertInternalType('string', $values);
+    }
+
+    /**
+     * Test that the conversion works as expected.
+     */
+    public function testConvertToQueryConversionFormat()
+    {
+        $values = $this->testObject->convertToQuery([
+            'username' => 'its.inevitable@hotmail.com',
+            'role' => 'admin',
+            'is_active' => 1
+        ]);
+
+        $expectedQuery = 'username:its.inevitable@hotmail.com,role:admin,is_active:1';
+
+        $this->assertInternalType('string', $values);
+        $this->assertEquals($expectedQuery, $values);
+    }
+
+    /**
      * Get PDO statement with 1 row, used for testing.
      */
     private function getPdoStatementWithRows($rowCount = true, $fetchAll = false)
