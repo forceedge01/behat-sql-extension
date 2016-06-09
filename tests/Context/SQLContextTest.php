@@ -7,12 +7,12 @@ use Genesis\SQLExtension\Context\Interfaces\DBManagerInterface;
 use Genesis\SQLExtension\Context\Interfaces\KeyStoreInterface;
 use Genesis\SQLExtension\Context\Interfaces\SQLBuilderInterface;
 use Genesis\SQLExtension\Context\SQLContext;
-use PHPUnit_Framework_TestCase;
+use Exception;
 
 /**
  * @group sqlContext
  */
-class SQLContextTest extends PHPUnit_Framework_TestCase
+class SQLContextTest extends TestHelper
 {
     /**
      * @var object $testObject The object to be tested.
@@ -20,15 +20,13 @@ class SQLContextTest extends PHPUnit_Framework_TestCase
     private $testObject;
 
     /**
-     * @var array $dependencies The test object dependencies.
+     * Sample connection string.
      */
-    private $dependencies;
-
     const CONNECTION_STRING = 'BEHAT_ENV_PARAMS=DBENGINE:mysql;DBSCHEMA:;DBNAME:abc;DBHOST:localhost;DBUSER:root;DBPASSWORD:toor;DBPREFIX:';
 
     public function setup()
     {
-        $_SESSION['behat']['GenesisSqlExtension']['notQuotableKeywords'] = [];
+        // $_SESSION['behat']['GenesisSqlExtension']['notQuotableKeywords'] = [];
 
         putenv(self::CONNECTION_STRING);
 
@@ -73,15 +71,6 @@ class SQLContextTest extends PHPUnit_Framework_TestCase
         );
     }
 
-    private function mockDependencyMethods($dependency, array $methods)
-    {
-        foreach ($methods as $method => $value) {
-            $this->dependencies[$dependency]->expects($this->any())
-                ->method($method)
-                ->will($this->returnValue($value));
-        }
-    }
-
     /**
      */
     public function testIHaveWhere()
@@ -116,6 +105,13 @@ class SQLContextTest extends PHPUnit_Framework_TestCase
                 'hasFetchedRows' => true
             ]
         );
+
+        $queries = [
+            'email:its.inevitable@hotmail.com,name:Abdul',
+            'email:forceedge01@gmail.com,name:Qureshi'
+        ];
+
+        $this->mockDependency('sqlBuilder', 'convertTableNodeToQueries', [$node], $queries);
 
         $sqls = $this->testObject->iHaveWhere($entity, $node);
 
@@ -565,33 +561,5 @@ class SQLContextTest extends PHPUnit_Framework_TestCase
         // Assert.
         $this->assertEquals($expectedSQL, $result);
         $this->assertNotNull($this->testObject->getEntity());
-    }
-
-    /**
-     * Get PDO statement with 1 row, used for testing.
-     */
-    private function getPdoStatementWithRows($rowCount = true, $fetchAll = false)
-    {
-        $statementMock = $this->getMockBuilder(\PDOStatement::class)
-            ->disableOriginalConstructor()
-            ->getMock();
-
-        if ($rowCount) {
-            $statementMock->expects($this->any())
-                ->method('rowCount')
-                ->willReturn($rowCount);
-        }
-
-        if ($fetchAll) {
-            $statementMock->expects($this->any())
-                ->method('fetchAll')
-                ->willReturn($fetchAll);
-        }
-
-        $statementMock->expects($this->any())
-            ->method('execute')
-            ->willReturn(true);
-
-        return $statementMock;
     }
 }
