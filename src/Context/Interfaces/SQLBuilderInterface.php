@@ -61,4 +61,9 @@ interface SQLBuilderInterface
      * @param string $type
      */
     public function sampleData($type);
+
+    /**
+     * Returns the columns stored after conversion to array.
+     */
+    public function getColumns();
 }

@@ -532,6 +532,18 @@ class SQLHandler extends BehatContext implements Interfaces\SQLHandlerInterface
     }
 
     /**
+     * Get the required table columns for a table.
+     *
+     * @param string $entity
+     *
+     * @return array
+     */
+    public function getRequiredTableColumns($table)
+    {
+        return $this->dbManager->getRequiredTableColumns($table);
+    }
+
+    /**
      * @return array
      */
     private function getParams()
