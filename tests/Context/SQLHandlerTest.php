@@ -50,7 +50,7 @@ class SQLHandlerTest extends PHPUnit_Framework_TestCase
                 ['DBPREFIX' => 'dev_', 'DBNAME' => 'mydb', 'DBSCHEMA' => 'myschema']
             ));
 
-        $this->dependencies['sqlBuilder'] = $this->getMockBuilder(SQLBuilderInterface::class)
+        $this->dependencies['sqlBuilderMock'] = $this->getMockBuilder(SQLBuilderInterface::class)
             ->disableOriginalConstructor()
             ->getMock();
 
@@ -60,7 +60,7 @@ class SQLHandlerTest extends PHPUnit_Framework_TestCase
 
         $this->testObject = new SQLHandler(
             $this->dependencies['dbHelperMock'],
-            $this->dependencies['sqlBuilder'],
+            $this->dependencies['sqlBuilderMock'],
             $this->dependencies['keyStoreMock']
         );
     }
@@ -70,11 +70,14 @@ class SQLHandlerTest extends PHPUnit_Framework_TestCase
      */
     public function testSampleData()
     {
-        $type = '';
+        $type = 'a type';
+        $return = 'something';
+
+        $this->mockDependency('sqlBuilderMock', 'sampleData', [$type], $return);
 
         $result = $this->testObject->sampleData($type);
 
-        $this->assertTrue($result);
+        $this->assertEquals($return, $result);
     }
 
     /**
@@ -335,5 +338,28 @@ class SQLHandlerTest extends PHPUnit_Framework_TestCase
             ->willReturn(true);
 
         return $statementMock;
+
+        $this->checkIfDependencyCalled(
+            'setCommandType',
+            ['select'],
+            'sqlBuilder',
+            'setCommandType',
+            ['select']
+        );
+    }
+
+    /**
+     * @param string $dependency
+     * @param string $method
+     * @param array $with
+     * @param mixed $return This will return the string.
+     */
+    private function mockDependency($dependency, $method, array $with, $return = true)
+    {
+        $mock = $this->dependencies[$dependency]->expects($this->once())
+            ->method($method);
+
+        $mock = call_user_func_array(array($mock, 'with'), $with);
+        $mock->willReturn($return);
     }
 }

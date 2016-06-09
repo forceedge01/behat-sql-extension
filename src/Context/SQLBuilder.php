@@ -3,6 +3,7 @@
 namespace Genesis\SQLExtension\Context;
 
 use Behat\Gherkin\Node\TableNode;
+use Exception;
 
 class SQLBuilder implements Interfaces\SQLBuilderInterface
 {
@@ -76,11 +77,11 @@ class SQLBuilder implements Interfaces\SQLBuilderInterface
         $columns = explode(',', $columns);
 
         foreach ($columns as $column) {
-            try {
-                list($col, $val) = explode(':', $column, self::EXPLODE_MAX_LIMIT);
-            } catch (Exception $e) {
+            if (strpos($column, ':') == false) {
                 throw new Exception('Unable to explode columns based on ":" separator');
             }
+
+            list($col, $val) = explode(':', $column, self::EXPLODE_MAX_LIMIT);
 
             $this->columns[trim($col)] = trim($val);
         }
@@ -108,7 +109,7 @@ class SQLBuilder implements Interfaces\SQLBuilderInterface
     /**
      * Checks if the value isn't a keyword.
      */
-    public function isNotQuotable($val)
+    private function isNotQuotable($val)
     {
         $keywords = [
             'true',
@@ -139,16 +140,16 @@ class SQLBuilder implements Interfaces\SQLBuilderInterface
      */
     public function convertTableNodeToQueries(TableNode $node)
     {
-        // Get the title row.
-        $columns = $node->getRow(0);
-
         // Get all rows and extract the heading.
         $rows = $node->getRows();
-        unset($rows[0]);
 
-        if (! $rows) {
+        if (! $rows || !isset($rows[1])) {
             throw new Exception('No data provided to loop through.');
         }
+
+        // Get the title row.
+        $columns = $rows[0];
+        unset($rows[0]);
 
         $queries = [];
 
@@ -173,12 +174,13 @@ class SQLBuilder implements Interfaces\SQLBuilderInterface
     {
         // Get all rows and extract the heading.
         $rows = $node->getRows();
-        // Get rid of the top row as its just represents the title.
-        unset($rows[0]);
 
-        if (! $rows) {
+        if (! $rows || !isset($rows[1])) {
             throw new Exception('No data provided to loop through.');
         }
+
+        // Get rid of the top row as its just represents the title.
+        unset($rows[0]);
 
         $clauseArray = [];
         // Loop through the rest of the rows and form up the queries.

@@ -39,17 +39,10 @@ class SQLBuilderTest extends PHPUnit_Framework_TestCase
     private $testObject;
 
     /**
-     * @var array $dependencies The test object dependencies.
-     */
-    private $dependencies;
-
-    /**
      * Set up the testing object.
      */
     public function setUp()
     {
-        //nm
-
         $this->testObject = new SQLBuilder();
     }
 
@@ -130,7 +123,7 @@ class SQLBuilderTest extends PHPUnit_Framework_TestCase
         ];
 
         // Execute
-        $result = $this->testObject->constructSQLClause($glue, $columns);
+        $result = $this->testObject->constructSQLClause('select', $glue, $columns);
 
         $expected = "firstname != 'Abdul' - lastname = 'Qureshi'";
 
@@ -154,7 +147,7 @@ class SQLBuilderTest extends PHPUnit_Framework_TestCase
         ];
 
         // Execute
-        $result = $this->testObject->constructSQLClause($glue, $columns);
+        $result = $this->testObject->constructSQLClause('select', $glue, $columns);
 
         $expected = "firstname = 'Abdul' - lastname = 'Qureshi'";
 
@@ -181,38 +174,31 @@ class SQLBuilderTest extends PHPUnit_Framework_TestCase
     }
 
     /**
-     * testSampleData Test that sampleData executes as expected.
+     * testFilterAndConvertToArray Test that filterAndConvertToArray executes as expected.
+     *
+     * @expectedException Exception
      */
-    public function testSampleData()
+    public function testFilterAndConvertToArrayNoSeparator()
     {
-        $_SESSION['behat']['GenesisSqlExtension']['notQuotableKeywords'] = [];
+        // Prepare / Mock
+        $columns = 'one string without separator';
 
-        $types = [
-            'boolean' => 'false',
-            'integer' => self::INT_NUMBER,
-            'double' => self::INT_NUMBER,
-            'int' => self::INT_NUMBER,
-            'tinyint' => self::TINY_INT_NUMBER,
-            'string' => "'behat-test-string-" . self::TYPE_STRING_TIME . "'",
-            'text' => "'behat-test-string-" . self::TYPE_STRING_TIME . "'",
-            'varchar' => "'behat-test-string-" . self::TYPE_STRING_TIME . "'",
-            'character varying' => "'behat-test-string-" . self::TYPE_STRING_TIME . "'",
-            'tinytext' => "'behat-test-string-" . self::TYPE_STRING_TIME . "'",
-            'char' => "'f'",
-            'timestamp' => 'NOW()',
-            'timestamp with time zone' => 'NOW()',
-            'null' => null,
-            'longtext' => "'behat-test-string-" . self::TYPE_STRING_TIME . "'",
-            'randomness' => "'behat-test-string-" . self::TYPE_STRING_TIME . "'"
-        ];
+        // Execute
+        $this->testObject->convertToArray($columns);
+    }
 
-        // Assert
-        foreach ($types as $type => $val) {
-            // Execute
-            $result = $this->testObject->sampleData($type);
+    /**
+     * testFilterAndConvertToArray Test that filterAndConvertToArray executes as expected.
+     *
+     * @expectedException Exception
+     */
+    public function testFilterAndConvertToArraySeparatorTheFirstChar()
+    {
+        // Prepare / Mock
+        $columns = ':one string without separator';
 
-            $this->assertEquals($val, $result);
-        }
+        // Execute
+        $this->testObject->convertToArray($columns);
     }
 
     /**
@@ -281,6 +267,25 @@ class SQLBuilderTest extends PHPUnit_Framework_TestCase
     }
 
     /**
+     * Test that convertTableNodeToQueries works as expected.
+     *
+     * @expectedException Exception
+     */
+    public function testConvertTableNodeToQueriesNoRows()
+    {
+        // Mock.
+        $node = new TableNode();
+        // Add title row.
+        $node->addRow([
+            'email',
+            'name'
+        ]);
+
+        // Run.
+        $this->testObject->convertTableNodeToQueries($node);
+    }
+
+    /**
      * Test that convertTableNodeToSingleContextClause works as expected.
      */
     public function testConvertTableNodeToSingleContextClauseTableNode()
@@ -306,5 +311,56 @@ class SQLBuilderTest extends PHPUnit_Framework_TestCase
         $result = $this->testObject->convertTableNodeToSingleContextClause($node);
 
         $this->assertEquals('email:its.inevitable@hotmail,name:Abdul,age:26', $result);
+    }
+
+    /**
+     * Test that convertTableNodeToSingleContextClause works as expected.
+     * 
+     * @expectedException Exception
+     */
+    public function testConvertTableNodeToSingleContextClauseTableNodeNoData()
+    {
+        $node = new TableNode();
+        $node->addRow([
+            'title',
+            'value'
+        ]);
+
+        $this->testObject->convertTableNodeToSingleContextClause($node);
+    }
+
+    /**
+     * testSampleData Test that sampleData executes as expected.
+     */
+    public function testSampleData()
+    {
+        $_SESSION['behat']['GenesisSqlExtension']['notQuotableKeywords'] = [];
+
+        $types = [
+            'boolean' => 'false',
+            'integer' => self::INT_NUMBER,
+            'double' => self::INT_NUMBER,
+            'int' => self::INT_NUMBER,
+            'tinyint' => self::TINY_INT_NUMBER,
+            'string' => "'behat-test-string-" . self::TYPE_STRING_TIME . "'",
+            'text' => "'behat-test-string-" . self::TYPE_STRING_TIME . "'",
+            'varchar' => "'behat-test-string-" . self::TYPE_STRING_TIME . "'",
+            'character varying' => "'behat-test-string-" . self::TYPE_STRING_TIME . "'",
+            'tinytext' => "'behat-test-string-" . self::TYPE_STRING_TIME . "'",
+            'char' => "'f'",
+            'timestamp' => 'NOW()',
+            'timestamp with time zone' => 'NOW()',
+            'null' => null,
+            'longtext' => "'behat-test-string-" . self::TYPE_STRING_TIME . "'",
+            'randomness' => "'behat-test-string-" . self::TYPE_STRING_TIME . "'"
+        ];
+
+        // Assert
+        foreach ($types as $type => $val) {
+            // Execute
+            $result = $this->testObject->sampleData($type);
+
+            $this->assertEquals($val, $result);
+        }
     }
 }

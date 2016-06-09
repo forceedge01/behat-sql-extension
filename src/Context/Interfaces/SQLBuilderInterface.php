@@ -37,11 +37,6 @@ interface SQLBuilderInterface
     public function quoteOrNot($val);
 
     /**
-     * Checks if the value isn't a keyword.
-     */
-    public function isNotQuotable($val);
-
-    /**
      * @param  TableNode $node The node with all fields and data.
      *
      * @return array The queries built of the TableNode.
