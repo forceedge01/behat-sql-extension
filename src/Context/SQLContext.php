@@ -67,10 +67,10 @@ class SQLContext extends SQLHandler implements Interfaces\SQLContextInterface
         $this->setCommandType('select');
 
         // Convert columns given to an array.
-        $this->filterAndConvertToArray($columns);
+        $columns = $this->filterAndConvertToArray($columns);
 
         // Check if the record exists.
-        $whereClause = $this->constructSQLClause(' AND ', $this->getColumns());
+        $whereClause = $this->constructSQLClause($this->getCommandType(), ' AND ', $columns);
 
         // Build up the sql command.
         $sql = sprintf('SELECT * FROM %s WHERE %s', $this->getEntity(), $whereClause);
@@ -114,10 +114,10 @@ class SQLContext extends SQLHandler implements Interfaces\SQLContextInterface
             $this->iHaveAnExistingWithWhere(
                 $this->getEntity(),
                 $columns,
-                sprintf('%s:%s', $key, $this->getColumns()[$key])
+                sprintf('%s:%s', $key, $columns[$key])
             );
 
-            $whereClause = sprintf('%s = %s', $key, $this->quoteOrNot($this->getColumns()[$key]));
+            $whereClause = sprintf('%s = %s', $key, $this->quoteOrNot($columns[$key]));
 
             $this->setKeywordsFromCriteria($this->getEntity(), $whereClause);
         }
@@ -142,8 +142,8 @@ class SQLContext extends SQLHandler implements Interfaces\SQLContextInterface
         $this->setCommandType('delete');
 
         // Construct the where clause.
-        $this->filterAndConvertToArray($columns);
-        $whereClause = $this->constructSQLClause(' AND ', $this->getColumns());
+        $columns = $this->filterAndConvertToArray($columns);
+        $whereClause = $this->constructSQLClause($this->getCommandType(), ' AND ', $columns);
 
         // Construct the delete statement.
         $sql = sprintf('DELETE FROM %s WHERE %s', $this->getEntity(), $whereClause);
@@ -210,12 +210,12 @@ class SQLContext extends SQLHandler implements Interfaces\SQLContextInterface
         $this->setCommandType('update');
 
         // Build up the update clause.
-        $this->filterAndConvertToArray($with);
-        $updateClause = $this->constructSQLClause(', ', $this->getColumns());
+        $columns = $this->filterAndConvertToArray($with);
+        $updateClause = $this->constructSQLClause($this->getCommandType(), ', ', $columns);
 
         // Build up the where clause.
         $this->filterAndConvertToArray($columns);
-        $whereClause = $this->constructSQLClause(' AND ', $this->getColumns());
+        $whereClause = $this->constructSQLClause($this->getCommandType(), ' AND ', $columns);
 
         // Build up the update statement.
         $sql = sprintf('UPDATE %s SET %s WHERE %s', $this->getEntity(), $updateClause, $whereClause);
@@ -245,10 +245,10 @@ class SQLContext extends SQLHandler implements Interfaces\SQLContextInterface
         $this->setEntity($entity);
 
         // Create array out of the with string given.
-        $this->filterAndConvertToArray($where);
+        $columns = $this->filterAndConvertToArray($where);
 
         // Create a usable sql clause.
-        $selectWhereClause = $this->constructSQLClause(' AND ', $this->getColumns());
+        $selectWhereClause = $this->constructSQLClause($this->getCommandType(), ' AND ', $columns);
 
         // Execute sql for setting last id.
         return $this->setKeywordsFromCriteria(
@@ -280,13 +280,13 @@ class SQLContext extends SQLHandler implements Interfaces\SQLContextInterface
         $this->setEntity($entity);
 
         // Create array out of the with string given.
-        $this->filterAndConvertToArray($with);
+        $columns = $this->filterAndConvertToArray($with);
 
         // Set the clause type.
         $this->setCommandType('select');
 
         // Create a usable sql clause.
-        $selectWhereClause = $this->constructSQLClause(' AND ', $this->getColumns());
+        $selectWhereClause = $this->constructSQLClause($this->getCommandType(), ' AND ', $columns);
 
         // Create the sql to be inserted.
         $sql = sprintf(
@@ -337,13 +337,13 @@ class SQLContext extends SQLHandler implements Interfaces\SQLContextInterface
         $this->setEntity($entity);
 
         // Create array out of the with string given.
-        $this->filterAndConvertToArray($with);
+        $columns = $this->filterAndConvertToArray($with);
 
         // Set clause type.
         $this->setCommandType('select');
 
         // Create a usable sql clause.
-        $selectWhereClause = $this->constructSQLClause(' AND ', $this->getColumns());
+        $selectWhereClause = $this->constructSQLClause($this->getCommandType(), ' AND ', $columns);
 
         // Create the sql to be inserted.
         $sql = sprintf(

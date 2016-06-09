@@ -5,10 +5,13 @@ namespace Genesis\SQLExtension\Tests\Context;
 use Genesis\SQLExtension\Context\LocalKeyStore;
 use PHPUnit_Framework_TestCase;
 
-class KeyStoreTest extends PHPUnit_Framework_TestCase
+/**
+ * @group localKeyStore
+ */
+class LocalKeyStoreTest extends PHPUnit_Framework_TestCase
 {
     /**
-     * The test object.
+     * @var object $testObject The object to be tested.
      */
     private $testObject;
 

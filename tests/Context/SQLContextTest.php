@@ -3,15 +3,25 @@
 namespace Genesis\SQLExtension\Tests\Context;
 
 use Behat\Gherkin\Node\TableNode;
-use Genesis\SQLExtension\Context\DBManager;
-use Genesis\SQLExtension\Context\LocalKeyStore;
+use Genesis\SQLExtension\Context\Interfaces\DBManagerInterface;
+use Genesis\SQLExtension\Context\Interfaces\KeyStoreInterface;
+use Genesis\SQLExtension\Context\Interfaces\SQLBuilderInterface;
 use Genesis\SQLExtension\Context\SQLContext;
 use PHPUnit_Framework_TestCase;
 
+/**
+ * @group sqlContext
+ */
 class SQLContextTest extends PHPUnit_Framework_TestCase
 {
+    /**
+     * @var object $testObject The object to be tested.
+     */
     private $testObject;
 
+    /**
+     * @var array $dependencies The test object dependencies.
+     */
     private $dependencies;
 
     const CONNECTION_STRING = 'BEHAT_ENV_PARAMS=DBENGINE:mysql;DBSCHEMA:;DBNAME:abc;DBHOST:localhost;DBUSER:root;DBPASSWORD:toor;DBPREFIX:';
@@ -22,7 +32,7 @@ class SQLContextTest extends PHPUnit_Framework_TestCase
 
         putenv(self::CONNECTION_STRING);
 
-        $this->dependencies['dbHelperMock'] = $this->getMockBuilder(DBManager::class)
+        $this->dependencies['dbHelperMock'] = $this->getMockBuilder(DBManagerInterface::class)
             ->disableOriginalConstructor()
             ->getMock();
 
@@ -40,7 +50,11 @@ class SQLContextTest extends PHPUnit_Framework_TestCase
                 ['DBPREFIX' => 'dev_', 'DBNAME' => 'mydb', 'DBSCHEMA' => 'myschema']
             ));
 
-        $this->dependencies['keyStoreMock'] = $this->getMockBuilder(LocalKeyStore::class)
+        $this->dependencies['sqlBuilder'] = $this->getMockBuilder(SQLBuilderInterface::class)
+            ->disableOriginalConstructor()
+            ->getMock();
+
+        $this->dependencies['keyStoreMock'] = $this->getMockBuilder(KeyStoreInterface::class)
             ->disableOriginalConstructor()
             ->getMock();
 
@@ -54,6 +68,7 @@ class SQLContextTest extends PHPUnit_Framework_TestCase
 
         $this->testObject = new SQLContext(
             $this->dependencies['dbHelperMock'],
+            $this->dependencies['sqlBuilder'],
             $this->dependencies['keyStoreMock']
         );
     }

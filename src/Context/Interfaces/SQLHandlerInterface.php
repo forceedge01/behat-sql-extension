@@ -28,11 +28,6 @@ interface SQLHandlerInterface
     const IGNORE_DUPLICATE = true;
 
     /**
-     * Will explode resulting in max 2 values.
-     */
-    const EXPLODE_MAX_LIMIT = 2;
-
-    /**
      * returns sample data for a data type.
      */
     public function sampleData($type);
@@ -50,15 +45,11 @@ interface SQLHandlerInterface
     /**
      * Constructs a clause based on the glue, to be used for where and update clause.
      * 
+     * @param string $commandType
      * @param string $glue
      * @param array $columns
      */
-    public function constructSQLClause($glue, array $columns);
-
-    /**
-     * Converts the incoming string param from steps to array.
-     */
-    public function filterAndConvertToArray($columns);
+    public function constructSQLClause($commandType, $glue, array $columns);
 
     /**
      * Sets a behat keyword.
@@ -152,6 +143,15 @@ interface SQLHandlerInterface
     public function convertTableNodeToQueries(TableNode $node);
 
     /**
+     * Filter keywords and convert queries to an array.
+     *
+     * @param string $columns
+     *
+     * @return array
+     */
+    public function filterAndConvertToArray($columns);
+
+    /**
      * @param  TableNode $node The node with all fields and data.
      *
      * @return array The queries built of the TableNode.
@@ -162,11 +162,6 @@ interface SQLHandlerInterface
      * Checks if the command executed affected any rows.
      */
     public function hasFetchedRows(Traversable $sqlStatement);
-
-    /**
-     * Get the value of columns var.
-     */
-    public function getColumns();
 
     /**
      * Set the entity for further processing.

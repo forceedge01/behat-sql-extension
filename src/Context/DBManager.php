@@ -3,6 +3,7 @@
 namespace Genesis\SQLExtension\Context;
 
 use Traversable;
+use Exception;
 
 class DBManager implements Interfaces\DBManagerInterface
 {
@@ -40,6 +41,8 @@ class DBManager implements Interfaces\DBManagerInterface
     public function setConnection($connection)
     {
         $this->connection = $connection;
+
+        return $this;
     }
 
     /**
@@ -86,7 +89,7 @@ class DBManager implements Interfaces\DBManagerInterface
 
     /**
      * @param string $sql
-     * 
+     *
      * @return Traversable
      */
     public function execute($sql)
@@ -99,6 +102,8 @@ class DBManager implements Interfaces\DBManagerInterface
 
     /**
      * @param Traversable $statement
+     *
+     * @return bool
      */
     public function hasFetchedRows(Traversable $statement)
     {
@@ -226,5 +231,45 @@ class DBManager implements Interfaces\DBManagerInterface
         }
 
         return $this;
+    }
+
+    /**
+     * Check for any mysql errors.
+     */
+    public function throwErrorIfNoRowsAffected(Traversable $sqlStatement, $ignoreDuplicate = false)
+    {
+        if (! $this->hasFetchedRows($sqlStatement)) {
+            $error = print_r($sqlStatement->errorInfo(), true);
+
+            if ($ignoreDuplicate and preg_match('/duplicate/i', $error)) {
+                return $sqlStatement->errorInfo();
+            }
+
+            throw new Exception(
+                sprintf(
+                    'No rows were effected!%sSQL: "%s",%sError: %s',
+                    PHP_EOL,
+                    $sqlStatement->queryString,
+                    PHP_EOL,
+                    $error
+                )
+            );
+        }
+
+        return false;
+    }
+
+    /**
+     * Errors found then throw exception.
+     */
+    public function throwExceptionIfErrors(Traversable $sqlStatement)
+    {
+        if ((int) $sqlStatement->errorCode()) {
+            throw new Exception(
+                print_r($sqlStatement->errorInfo(), true)
+            );
+        }
+
+        return false;
     }
 }

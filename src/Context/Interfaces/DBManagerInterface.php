@@ -52,4 +52,20 @@ interface DBManagerInterface
      * @return int|null
      */
     public function getLastInsertId($table = null);
+
+    /**
+     * Check for any mysql errors.
+     */
+    public function throwErrorIfNoRowsAffected(Traversable $sqlStatement, $ignoreDuplicate = false);
+
+    /**
+     * Errors found then throw exception.
+     *
+     * @param Traversable $sqlStatement
+     *
+     * @throws Exception if errors found.
+     *
+     * @return boolean
+     */
+    public function throwExceptionIfErrors(Traversable $sqlStatement);
 }
