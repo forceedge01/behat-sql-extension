@@ -91,6 +91,10 @@ class SQLBuilder implements Interfaces\SQLBuilderInterface
 
     /**
      * Quotes value if needed for sql.
+     *
+     * @param  string $val
+     *
+     * @return string
      */
     public function quoteOrNot($val)
     {

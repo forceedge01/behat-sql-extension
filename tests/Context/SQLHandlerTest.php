@@ -7,6 +7,7 @@ use Genesis\SQLExtension\Context\Interfaces\KeyStoreInterface;
 use Genesis\SQLExtension\Context\Interfaces\SQLBuilderInterface;
 use Genesis\SQLExtension\Context\SQLHandler;
 use PHPUnit_Framework_TestCase;
+use Exception;
 
 /**
  * @group sqlHandler
@@ -81,12 +82,41 @@ class SQLHandlerTest extends PHPUnit_Framework_TestCase
     }
 
     /**
+     * Test that the setCommandType works as expected.
+     *
+     * @expectedException Exception
+     */
+    public function testSetCommandType()
+    {
+        $type = 'random';
+
+        $this->testObject->setCommandType($type);
+    }
+
+    public function testGetCommandType()
+    {
+        $type = 'delete';
+
+        $this->testObject->setCommandType($type);
+
+        $result = $this->testObject->getCommandType();
+
+        $this->assertEquals($type, $result);
+    }
+
+    /**
      * Tests that constructSQLClause executes as expected with LIKE values.
      */
     public function testConstructSQLClauseLikeValues()
     {
+        $commandType = 'select';
+        $glue = ' AND ';
+        $columns = ['abc', 123];
+
+        $this->mockDependency('sqlBuilderMock', 'constructSQLClause', [$commandType, $glue, $columns], true);
+
         // Execute
-        $result = $this->testObject->constructSQLClause($glue, $columns);
+        $result = $this->testObject->constructSQLClause('select', $glue, $columns);
 
         $this->assertTrue($result);
     }
@@ -96,10 +126,16 @@ class SQLHandlerTest extends PHPUnit_Framework_TestCase
      */
     public function testFilterAndConvertToArray()
     {
-        // Execute
-        $result = $this->testObject->filterAndConvertToArray($columns);
+        $queries = 'abc:123';
+        $expected = ['abc' => 123];
 
-        $this->assertTrue($result);
+        $this->mockDependency('sqlBuilderMock', 'convertToArray', [$queries], $expected);
+        $this->mockDependency('keyStoreMock', 'getKeywordFromConfigForKeyIfExists', [123], 123);
+
+        // Execute
+        $result = $this->testObject->filterAndConvertToArray($queries);
+
+        $this->assertEquals($expected, $result);
     }
 
     /**
@@ -130,7 +166,9 @@ class SQLHandlerTest extends PHPUnit_Framework_TestCase
      */
     public function testQuoteOrNot()
     {
-        $value = '';
+        $value = 'quote this?';
+
+        $this->mockDependency('sqlBuilderMock', 'quoteOrNot', [$value], true);
 
         $result = $this->testObject->quoteOrNot($value);
 
@@ -142,8 +180,12 @@ class SQLHandlerTest extends PHPUnit_Framework_TestCase
      */
     public function testConvertTableNodeToQueries()
     {
+        $tableNodeMock = $this->getTableNodeMock();
+
+        $this->mockDependency('sqlBuilderMock', 'convertTableNodeToQueries', [$tableNodeMock]);
+
         // Run.
-        $result = $this->testObject->convertTableNodeToQueries($node);
+        $result = $this->testObject->convertTableNodeToQueries($tableNodeMock);
 
         $this->assertTrue($result);
     }
@@ -153,7 +195,11 @@ class SQLHandlerTest extends PHPUnit_Framework_TestCase
      */
     public function testThrowErrorsIfNoRowsAffectedNoException()
     {
-        $result = $this->testObject->throwErrorIfNoRowsAffected($sqlStatementMock);
+        $statementMock = $this->getPdoStatementWithRows();
+
+        $this->mockDependency('dbHelperMock', 'throwErrorIfNoRowsAffected', [$statementMock, false]);
+
+        $result = $this->testObject->throwErrorIfNoRowsAffected($statementMock);
 
         $this->assertTrue($result);
     }
@@ -163,6 +209,10 @@ class SQLHandlerTest extends PHPUnit_Framework_TestCase
      */
     public function testThrowExceptionIfErrorsNoErrors()
     {
+        $sqlStatementMock = $this->getPdoStatementWithRows();
+
+        $this->mockDependency('dbHelperMock', 'throwExceptionIfErrors', [$sqlStatementMock]);
+
         $result = $this->testObject->throwExceptionIfErrors($sqlStatementMock);
 
         $this->assertTrue($result);
@@ -221,7 +271,11 @@ class SQLHandlerTest extends PHPUnit_Framework_TestCase
      */
     public function testConvertTableNodeToSingleContextClauseTableNode()
     {
-        $result = $this->testObject->convertTableNodeToSingleContextClause($node);
+        $tableNodeMokc = $this->getTableNodeMock();
+
+        $this->mockDependency('sqlBuilderMock', 'convertTableNodeToSingleContextClause', [$tableNodeMokc]);
+
+        $result = $this->testObject->convertTableNodeToSingleContextClause($tableNodeMokc);
 
         $this->assertTrue($result);
     }
@@ -302,14 +356,38 @@ class SQLHandlerTest extends PHPUnit_Framework_TestCase
     {
         // Prepare / Mock
         $entity = 'user';
-        //nm
+
+        $this->mockDependency('dbHelperMock', 'getRequiredTableColumns', ['user'], ['id' => 'int', 'name' => 'string', 'email' => 'string']);
+
+        $sqlBuilderMock = $this->dependencies['sqlBuilderMock'];
+
+        $sqlBuilderMock->expects($this->any())
+            ->method('getColumns')
+            ->willReturn(['name' => 'Abdul', 'role' => 'admin']);
+
+        $sqlBuilderMock->expects($this->any())
+            ->method('quoteOrNot')
+            ->will($this->returnValueMap(array(
+                array('Abdul', '"Abdul"'),
+                array('admin', '"admin"')
+            )));
+
+        $sqlBuilderMock->expects($this->any())
+            ->method('sampleData')
+            ->will($this->returnValueMap(array(
+                array('int', 234234),
+                array('string', '"Abdul@random.com"')
+            )));
+
+        $expectedResult = array(
+            0 => 'id, name, email, role',
+            1 => '234234, "Abdul", "Abdul@random.com", "admin"'
+        );
 
         // Execute
         $result = $this->testObject->getTableColumns($entity);
 
-        // Assert Result
-        //assert
-        $this->markTestIncomplete('This test has not been implemented yet.');
+        $this->assertEquals($expectedResult, $result);
     }
 
     /**
@@ -354,12 +432,33 @@ class SQLHandlerTest extends PHPUnit_Framework_TestCase
      * @param array $with
      * @param mixed $return This will return the string.
      */
-    private function mockDependency($dependency, $method, array $with, $return = true)
+    private function mockDependency($dependency, $method, array $with = null, $return = true)
     {
-        $mock = $this->dependencies[$dependency]->expects($this->once())
+        if (! in_array($dependency, array_keys($this->dependencies))) {
+            throw new Exception(sprintf('Dependency "%s" not found, available deps are: %s', $dependency, print_r(array_keys($this->dependencies), true)));
+        }
+
+        $mock = $this->dependencies[$dependency]->expects($this->any())
             ->method($method);
 
-        $mock = call_user_func_array(array($mock, 'with'), $with);
-        $mock->willReturn($return);
+        if ($with) {
+            $mock = call_user_func_array(array($mock, 'with'), $with);
+        }
+
+        if ($return !== false) {
+            $mock->willReturn($return);
+        }
+
+        return $mock;
+    }
+
+    /**
+     * Get table node mock.
+     */
+    private function getTableNodeMock()
+    {
+        return $this->getMockBuilder(\Behat\Gherkin\Node\TableNode::class)
+            ->disableOriginalConstructor()
+            ->getMock();
     }
 }

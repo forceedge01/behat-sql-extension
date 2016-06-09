@@ -106,14 +106,6 @@ class SQLHandler extends BehatContext implements Interfaces\SQLHandlerInterface
     }
 
     /**
-     * Get the clause type.
-     */
-    public function getCommandType()
-    {
-        return $this->commandType;
-    }
-
-    /**
      * Set the clause type.
      */
     public function setCommandType($commandType)
@@ -135,15 +127,32 @@ class SQLHandler extends BehatContext implements Interfaces\SQLHandlerInterface
         return $this;
     }
 
+    /**
+     * Get the clause type.
+     */
+    public function getCommandType()
+    {
+        return $this->commandType;
+    }
+
+    /**
+     * Construct the sql clause.
+     * 
+     * @param string $commandType
+     * @param string $glue
+     * @param array $columns
+     * 
+     * @return array
+     */
     public function constructSQLClause($commandType, $glue, array $columns)
     {
         return $this->sqlBuilder->constructSQLClause($commandType, $glue, $columns);
     }
 
-    public function filterAndConvertToArray($columns)
+    public function filterAndConvertToArray($queries)
     {
         // Convert column string to array.
-        $columns = $this->sqlBuilder->convertToArray($columns);
+        $columns = $this->sqlBuilder->convertToArray($queries);
 
         $filteredColumns = [];
 
@@ -292,6 +301,10 @@ class SQLHandler extends BehatContext implements Interfaces\SQLHandlerInterface
 
     /**
      * Quotes value if needed for sql.
+     *
+     * @param string $val
+     *
+     * @return string
      */
     public function quoteOrNot($val)
     {
