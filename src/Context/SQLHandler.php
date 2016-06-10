@@ -233,12 +233,7 @@ class SQLHandler extends BehatContext implements Interfaces\SQLHandlerInterface
      */
     public function debugLog($log)
     {
-        if (defined('DEBUG_MODE') and DEBUG_MODE == 1) {
-            $log = 'DEBUG >>> ' . $log;
-            echo $log . PHP_EOL . PHP_EOL;
-        }
-
-        return $this;
+        Debugger::log($log);
     }
 
     /**
