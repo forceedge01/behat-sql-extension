@@ -61,6 +61,26 @@ class SQLHandlerTest extends TestHelper
     }
 
     /**
+     * Test that the Get call works as expected.
+     */
+    public function testGetKnownDependency()
+    {
+        $sqlBuilder = $this->testObject->get('sqlBuilder');
+
+        $this->assertInstanceOf(get_class($this->dependencies['sqlBuilderMock']), $sqlBuilder);
+    }
+
+    /**
+     * Test that the Get call works as expected.
+     * 
+     * @expectedException Exception
+     */
+    public function testGetUnknownDependency()
+    {
+        $this->testObject->get('random');
+    }
+
+    /**
      * testSampleData Test that sampleData executes as expected.
      */
     public function testSampleData()

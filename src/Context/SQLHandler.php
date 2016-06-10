@@ -96,6 +96,20 @@ class SQLHandler extends BehatContext implements Interfaces\SQLHandlerInterface
     }
 
     /**
+     * Get a dependency.
+     *
+     * @param string $dependency.
+     */
+    public function get($dependency)
+    {
+        if (! property_exists($this, $dependency)) {
+            throw new Exception(sprintf('Dependency "%s" not found', $dependency));
+        }
+
+        return $this->$dependency;
+    }
+
+    /**
      * returns sample data for a data type.
      *
      * @param string $type
