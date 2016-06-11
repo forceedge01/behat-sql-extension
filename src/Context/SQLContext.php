@@ -210,11 +210,11 @@ class SQLContext extends SQLHandler implements Interfaces\SQLContextInterface
         $this->setCommandType('update');
 
         // Build up the update clause.
-        $columns = $this->filterAndConvertToArray($with);
-        $updateClause = $this->constructSQLClause($this->getCommandType(), ', ', $columns);
+        $with = $this->filterAndConvertToArray($with);
+        $updateClause = $this->constructSQLClause($this->getCommandType(), ', ', $with);
 
         // Build up the where clause.
-        $this->filterAndConvertToArray($columns);
+        $columns = $this->filterAndConvertToArray($columns);
         $whereClause = $this->constructSQLClause($this->getCommandType(), ' AND ', $columns);
 
         // Build up the update statement.

@@ -54,7 +54,7 @@ class TestHelper extends PHPUnit_Framework_TestCase
      * @param array $with
      * @param mixed $return This will return the string.
      */
-    public function mockDependency($dependency, $method, array $with = null, $return = true)
+    protected function mockDependency($dependency, $method, array $with = null, $return = true)
     {
         if (! in_array($dependency, array_keys($this->dependencies))) {
             throw new Exception(sprintf('Dependency "%s" not found, available deps are: %s', $dependency, print_r(array_keys($this->dependencies), true)));
@@ -80,7 +80,7 @@ class TestHelper extends PHPUnit_Framework_TestCase
      * @param string $dependency
      * @param array $methods
      */
-    public function mockDependencyMethods($dependency, array $methods)
+    protected function mockDependencyMethods($dependency, array $methods)
     {
         foreach ($methods as $method => $value) {
             $this->dependencies[$dependency]->expects($this->any())
@@ -97,5 +97,19 @@ class TestHelper extends PHPUnit_Framework_TestCase
         return $this->getMockBuilder(\Behat\Gherkin\Node\TableNode::class)
             ->disableOriginalConstructor()
             ->getMock();
+    }
+
+    /**
+     * Mock dependency using value map.
+     *
+     * @param string $dependency
+     * @param string $method
+     * @param array $valueMap
+     */
+    protected function mockDependencyValueMap($dependency, $method, array $valueMap)
+    {
+        $this->dependencies[$dependency]->expects($this->any())
+            ->method($method)
+            ->will($this->returnValueMap($valueMap));
     }
 }

@@ -72,6 +72,9 @@ class SQLContextTest extends TestHelper
     }
 
     /**
+     * Make sure that the IHaveWhere method works as expected.
+     *
+     * @group test
      */
     public function testIHaveWhere()
     {
@@ -111,7 +114,27 @@ class SQLContextTest extends TestHelper
             'email:forceedge01@gmail.com,name:Qureshi'
         ];
 
+        $convertedQuery1 = [
+            'email' => 'its.its.inevitable@hotmail.com',
+            'name' => 'Abdul'
+        ];
+
+        $convertedQuery2 = [
+            'email' => 'forceedge01@gmail.com',
+            'name' => 'Qureshi'
+        ];
+
         $this->mockDependency('sqlBuilder', 'convertTableNodeToQueries', [$node], $queries);
+
+        $this->mockDependencyValueMap('sqlBuilder', 'convertToArray', array(
+                array('email:its.inevitable@hotmail.com,name:Abdul', $convertedQuery1),
+                array('email:forceedge01@gmail.com,name:Qureshi', $convertedQuery2)
+            ));
+
+        $this->mockDependencyValueMap('sqlBuilder', 'constructSQLClause', array(
+                array('select', ' AND ', $convertedQuery1, "email = 'its.inevitable@hotmail.com' AND name = 'Abdul'"),
+                array('select', ' AND ', $convertedQuery2, "email = 'forceedge01@gmail.com' AND name = 'Qureshi'")
+            ));
 
         $sqls = $this->testObject->iHaveWhere($entity, $node);
 
@@ -120,6 +143,9 @@ class SQLContextTest extends TestHelper
     }
 
     /**
+     * Make sure that the IHave method works as expected.
+     *
+     * @group test
      */
     public function testIHave()
     {
@@ -133,13 +159,13 @@ class SQLContextTest extends TestHelper
         // Add data.
         $node->addRow([
             'table1',
-            "id:34234, name:abdul"
+            "email:its.inevitable@hotmail.com, name:Abdul"
         ]);
 
         // Add more data.
         $node->addRow([
             'table2',
-            'id:34234, name:Jenkins'
+            'email:forceedge01@gmail.com, name:Qureshi'
         ]);
 
         $this->mockDependencyMethods(
@@ -153,12 +179,219 @@ class SQLContextTest extends TestHelper
             ]
         );
 
+        $convertedQuery1 = [
+            'email' => 'its.its.inevitable@hotmail.com',
+            'name' => 'Abdul'
+        ];
+
+        $convertedQuery2 = [
+            'email' => 'forceedge01@gmail.com',
+            'name' => 'Qureshi'
+        ];
+
+        $this->mockDependencyValueMap('sqlBuilder', 'convertToArray', array(
+                array('email:its.inevitable@hotmail.com, name:Abdul', $convertedQuery1),
+                array('email:forceedge01@gmail.com, name:Qureshi', $convertedQuery2)
+            ));
+
+        $this->mockDependencyValueMap('sqlBuilder', 'constructSQLClause', array(
+                array('select', ' AND ', $convertedQuery1, "email = 'its.inevitable@hotmail.com' AND name = 'Abdul'"),
+                array('select', ' AND ', $convertedQuery2, "email = 'forceedge01@gmail.com' AND name = 'Qureshi'")
+            ));
+
         $sqls = $this->testObject->iHave($node);
 
         $this->assertCount(2, $sqls);
     }
 
     /**
+     * Test that this method works with values provided.
+     *
+     * @group test
+     */
+    public function testIHaveAWhereWithValuesRecordAlreadyExists()
+    {
+        $entity = 'database.unique';
+        $column = "column1:abc,column2:xyz,column3:NULL, column4:what\'s up doc";
+
+        $this->mockDependencyMethods(
+            'dbHelperMock',
+            [
+                'execute' => $this->getPdoStatementWithRows(1, [['name' => 'Abdul']]),
+                'hasFetchedRows' => true
+            ]
+        );
+
+        $convertedQuery1 = [
+            'column1' => 'abc',
+            'column2' => 'xyz',
+            'column3' => 'NULL',
+            'column4' => 'what\\\'s up doc'
+        ];
+
+        $this->mockDependency('sqlBuilder', 'convertToArray',
+                array('column1:abc,column2:xyz,column3:NULL, column4:what\\\'s up doc'), $convertedQuery1);
+
+        $this->mockDependency(
+            'sqlBuilder',
+            'constructSQLClause',
+            array(
+                'select',
+                ' AND ',
+                $convertedQuery1
+            ),
+            "column1 = 'abc' AND column2 = 'xyz' AND column3 is NULL AND column4 = 'what\'s up doc'"
+        );
+
+        $this->mockDependency('dbHelperMock', 'getRequiredTableColumns', null, []);
+
+        $this->mockDependency('sqlBuilder', 'getColumns', null, ['column1' => 'abc']);
+
+        // print_r($this->testObject->get('sqlBuilder')->getColumns());
+
+        $result = $this->testObject->iHaveAWhere($entity, $column);
+
+        // Expected SQL.
+        $expectedSQL = "SELECT * FROM dev_database.unique WHERE column1 = 'abc' AND column2 = 'xyz' AND column3 is NULL AND column4 = 'what\'s up doc'";
+
+        // Assert.
+        $this->assertEquals($expectedSQL, $result);
+        $this->assertNotNull($this->testObject->getEntity());
+        $this->assertEquals('select', $this->testObject->getCommandType());
+    }
+
+    /**
+     * Test that this method works with values provided.
+     *
+     * @group test
+     */
+    public function testIHaveAWhereWithValuesRecordDoesNotExists()
+    {
+        $entity = 'database.unique1';
+        $column = "column1:abc";
+
+        $this->dependencies['dbHelperMock']->expects($this->any())
+            ->method('getRequiredTableColumns')
+            ->with($this->isType('string'))
+            ->will($this->returnValue([]));
+
+        $this->dependencies['dbHelperMock']->expects($this->any())
+            ->method('hasFetchedRows')
+            ->will($this->onConsecutiveCalls(
+                false,
+                true,
+                true
+            ));
+
+        $this->dependencies['dbHelperMock']->expects($this->any())
+            ->method('execute')
+            ->with($this->isType('string'))
+            ->will($this->onConsecutiveCalls(
+                $this->getPdoStatementWithRows(0),
+                $this->getPdoStatementWithRows(1, [['id' => 237463]]),
+                $this->getPdoStatementWithRows(1, [['id' => 237463]])
+            ));
+
+        $convertedQuery1 = [
+            'column1' => 'abc'
+        ];
+
+        $this->mockDependency('sqlBuilder', 'convertToArray',
+                array('column1:abc'), $convertedQuery1);
+
+        $this->mockDependency(
+            'sqlBuilder',
+            'constructSQLClause',
+            array(
+                'select',
+                ' AND ',
+                $convertedQuery1
+            ),
+            "column1 = 'abc'"
+        );
+
+        $this->mockDependency('dbHelperMock', 'getRequiredTableColumns', null, []);
+
+        $this->mockDependency('sqlBuilder', 'getColumns', null, ['column1' => 'abc']);
+
+        $this->mockDependency('sqlBuilder', 'quoteOrNot', null, "'abc'");
+
+        $result = $this->testObject->iHaveAWhere($entity, $column);
+
+        // Expected SQL.
+        $expectedSQL = "INSERT INTO dev_database.unique1 (column1) VALUES ('abc')";
+
+        // Assert.
+        $this->assertEquals($expectedSQL, $result);
+        $this->assertNotNull($this->testObject->getEntity());
+        $this->assertEquals('insert', $this->testObject->getCommandType());
+    }
+
+    /**
+     * @expectedException Exception
+     *
+     * @group test
+     */
+    public function testIDontHaveAWhere()
+    {
+        $entity = '';
+        $column = '';
+
+        $this->testObject->iDontHaveAWhere($entity, $column);
+    }
+
+    /**
+     * Test that this method works with values provided.
+     *
+     * @group test
+     */
+    public function testIDontHaveAWhereWithValues()
+    {
+        $entity = 'database.someTable';
+        $column = "column1:abc,column2:xyz,column3:NULL,column4:what's up doc";
+
+        $this->mockDependencyMethods(
+            'dbHelperMock',
+            [
+                'execute' => $this->getPdoStatementWithRows(),
+                'hasFetchedRows' => true
+            ]
+        );
+
+        $convertedQuery1 = [
+            'column1' => 'abc',
+            'column2' => 'xyz',
+            'column3' => 'NULL',
+            'column4' => 'what\'s up doc'
+        ];
+
+        $this->mockDependency('sqlBuilder', 'convertToArray',
+                array('column1:abc,column2:xyz,column3:NULL,column4:what\'s up doc'), $convertedQuery1);
+
+        $this->mockDependency(
+            'sqlBuilder',
+            'constructSQLClause',
+            array(
+                'delete',
+                ' AND ',
+                $convertedQuery1
+            ),
+            "column1 = 'abc' AND column2 = 'xyz' AND column3 is NULL AND column4 = 'what\\'s up doc'"
+        );
+
+        $result = $this->testObject->iDontHaveAWhere($entity, $column);
+
+        // Expected SQL.
+        $expectedSQL = "DELETE FROM dev_database.someTable WHERE column1 = 'abc' AND column2 = 'xyz' AND column3 is NULL AND column4 = 'what\'s up doc'";
+
+        // Assert.
+        $this->assertEquals($expectedSQL, $result);
+        $this->assertNotNull($this->testObject->getEntity());
+        $this->assertEquals('delete', $this->testObject->getCommandType());
+    }
+
+    /**
+     * @group test
      */
     public function testIDontHaveWhere()
     {
@@ -190,12 +423,40 @@ class SQLContextTest extends TestHelper
             ]
         );
 
+        $convertedQuery1 = [
+            'email' => 'its.its.inevitable@hotmail.com',
+            'name' => 'Abdul'
+        ];
+
+        $convertedQuery2 = [
+            'email' => 'forceedge01@gmail.com',
+            'name' => 'Qureshi'
+        ];
+
+        $queries = [
+            'email:its.inevitable@hotmail.com,name:Abdul',
+            'email:forceedge01@gmail.com,name:Qureshi'
+        ];
+
+        $this->mockDependency('sqlBuilder', 'convertTableNodeToQueries', [$node], $queries);
+
+        $this->mockDependencyValueMap('sqlBuilder', 'convertToArray', array(
+                array('email:its.inevitable@hotmail.com,name:Abdul', $convertedQuery1),
+                array('email:forceedge01@gmail.com,name:Qureshi', $convertedQuery2)
+            ));
+
+        $this->mockDependencyValueMap('sqlBuilder', 'constructSQLClause', array(
+                array('delete', ' AND ', $convertedQuery1, "email = 'its.inevitable@hotmail.com' AND name = 'Abdul'"),
+                array('delete', ' AND ', $convertedQuery2, "email = 'forceedge01@gmail.com' AND name = 'Qureshi'")
+            ));
+
         $sqls = $this->testObject->iDontHaveWhere($entity, $node);
 
         $this->assertCount(2, $sqls);
     }
 
     /**
+     * @group test
      */
     public function testIDontHave()
     {
@@ -209,13 +470,13 @@ class SQLContextTest extends TestHelper
         // Add data.
         $node->addRow([
             'table1',
-            'id:34234, name:abdul'
+            "email:its.inevitable@hotmail.com,name:Abdul"
         ]);
 
         // Add more data.
         $node->addRow([
             'table2',
-            'id:34234, name:Jenkins'
+            'email:forceedge01@gmail.com,name:Qureshi'
         ]);
 
         $this->mockDependencyMethods(
@@ -226,119 +487,37 @@ class SQLContextTest extends TestHelper
             ]
         );
 
+        $convertedQuery1 = [
+            'email' => 'its.its.inevitable@hotmail.com',
+            'name' => 'Abdul'
+        ];
+
+        $convertedQuery2 = [
+            'email' => 'forceedge01@gmail.com',
+            'name' => 'Qureshi'
+        ];
+
+        $queries = [
+            'email:its.inevitable@hotmail.com,name:Abdul',
+            'email:forceedge01@gmail.com,name:Qureshi'
+        ];
+
+        $this->mockDependency('sqlBuilder', 'convertTableNodeToQueries', [$node], $queries);
+
+        $this->mockDependencyValueMap('sqlBuilder', 'convertToArray', array(
+                array('email:its.inevitable@hotmail.com,name:Abdul', $convertedQuery1),
+                array('email:forceedge01@gmail.com,name:Qureshi', $convertedQuery2)
+            ));
+
         $sqls = $this->testObject->iDontHave($node);
 
         $this->assertCount(2, $sqls);
     }
 
     /**
-     * Test that this method works with values provided.
-     */
-    public function testIHaveAWhereWithValuesRecordAlreadyExists()
-    {
-        $entity = 'database.unique';
-        $column = "column1:abc,column2:xyz,column3:NULL, column4:what\'s up doc";
-
-        $this->mockDependencyMethods(
-            'dbHelperMock',
-            [
-                'execute' => $this->getPdoStatementWithRows(1, [['name' => 'Abdul']]),
-                'hasFetchedRows' => true
-            ]
-        );
-
-        $result = $this->testObject->iHaveAWhere($entity, $column);
-
-        // Expected SQL.
-        $expectedSQL = "SELECT * FROM dev_database.unique WHERE column1 = 'abc' AND column2 = 'xyz' AND column3 is NULL AND column4 = 'what\'s up doc'";
-
-        // Assert.
-        $this->assertEquals($expectedSQL, $result);
-        $this->assertNotNull($this->testObject->getEntity());
-        $this->assertEquals('select', $this->testObject->getCommandType());
-    }
-
-    /**
-     * Test that this method works with values provided.
-     */
-    public function testIHaveAWhereWithValuesRecordDoesNotExists()
-    {
-        $entity = 'database.unique1';
-        $column = "column1:abc,column2:xyz,column3:NULL,column4:what's up doc";
-
-        $this->dependencies['dbHelperMock']->expects($this->any())
-            ->method('getRequiredTableColumns')
-            ->with($this->isType('string'))
-            ->will($this->returnValue([]));
-
-        $this->dependencies['dbHelperMock']->expects($this->any())
-            ->method('hasFetchedRows')
-            ->will($this->onConsecutiveCalls(
-                false,
-                true,
-                true
-            ));
-
-        $this->dependencies['dbHelperMock']->expects($this->any())
-            ->method('execute')
-            ->with($this->isType('string'))
-            ->will($this->onConsecutiveCalls(
-                $this->getPdoStatementWithRows(0),
-                $this->getPdoStatementWithRows(1, [['id' => 237463]]),
-                $this->getPdoStatementWithRows(1, [['id' => 237463]])
-            ));
-
-        $result = $this->testObject->iHaveAWhere($entity, $column);
-
-        // Expected SQL.
-        $expectedSQL = "INSERT INTO dev_database.unique1 (column1, column2, column3, column4) VALUES ('abc', 'xyz', NULL, 'what\'s up doc')";
-
-        // Assert.
-        $this->assertEquals($expectedSQL, $result);
-        $this->assertNotNull($this->testObject->getEntity());
-        $this->assertEquals('insert', $this->testObject->getCommandType());
-    }
-
-    /**
      * @expectedException Exception
-     */
-    public function testIDontHaveAWhere()
-    {
-        $entity = '';
-        $column = '';
-
-        $this->testObject->iDontHaveAWhere($entity, $column);
-    }
-
-    /**
-     * Test that this method works with values provided.
-     */
-    public function testIDontHaveAWhereWithValues()
-    {
-        $entity = 'database.someTable';
-        $column = "column1:abc,column2:xyz,column3:NULL,column4:what's up doc";
-
-        $this->mockDependencyMethods(
-            'dbHelperMock',
-            [
-                'execute' => $this->getPdoStatementWithRows(),
-                'hasFetchedRows' => true
-            ]
-        );
-
-        $result = $this->testObject->iDontHaveAWhere($entity, $column);
-
-        // Expected SQL.
-        $expectedSQL = "DELETE FROM dev_database.someTable WHERE column1 = 'abc' AND column2 = 'xyz' AND column3 is NULL AND column4 = 'what\'s up doc'";
-
-        // Assert.
-        $this->assertEquals($expectedSQL, $result);
-        $this->assertNotNull($this->testObject->getEntity());
-        $this->assertEquals('delete', $this->testObject->getCommandType());
-    }
-
-    /**
-     * @expectedException Exception
+     *
+     * @group test
      */
     public function testiHaveAnExistingWithWhere()
     {
@@ -351,6 +530,8 @@ class SQLContextTest extends TestHelper
 
     /**
      * Test that this method works with values provided.
+     *
+     * @group test
      */
     public function testiHaveAnExistingWithWhereWithValues()
     {
@@ -368,6 +549,29 @@ class SQLContextTest extends TestHelper
             ]
         );
 
+        $convertedQuery1 = [
+            'column1' => 'abc',
+            'column2' => 'xyz',
+            'column3' => 'NULL',
+            'column4' => 'what\\\'s up doc'
+        ];
+
+        $convertedQuery2 = [
+            'id' => '134',
+            'photo' => 'is not NULL',
+            'column' => 'what\\\'s up doc'
+        ];
+
+        $this->mockDependencyValueMap('sqlBuilder', 'convertToArray', array(
+                array('column1:abc,column2:xyz,column3:NULL,column4:what\'s up doc', $convertedQuery1),
+                array('id:134,photo:!NULL,column:what\'s up doc', $convertedQuery2)
+            ));
+
+        $this->mockDependencyValueMap('sqlBuilder', 'constructSQLClause', array(
+                array('update', ', ', $convertedQuery1, "column1 = 'abc', column2 = 'xyz', column3 = NULL, column4 = 'what\'s up doc'"),
+                array('update', ' AND ', $convertedQuery2, "id = 134 AND photo is not NULL AND column = 'what\'s up doc'")
+            ));
+
         $result = $this->testObject->iHaveAnExistingWithWhere($entity, $with, $columns);
 
         // Expected SQL.
@@ -380,9 +584,21 @@ class SQLContextTest extends TestHelper
     }
 
     /**
-     * @expectedException Exception
+     * @group test
      */
-    public function testiShouldNotHaveAWith()
+    public function testiHaveAnExistingWhere()
+    {
+        $this->markTestIncomplete();
+
+        $this->testObject->iHaveAnExistingWhere();
+    }
+
+    /**
+     * @expectedException Exception
+     *
+     * @group test
+     */
+    public function testiShouldNotHaveAWithThrowException()
     {
         $entity = '';
         $with = '';
@@ -392,6 +608,8 @@ class SQLContextTest extends TestHelper
 
     /**
      * Test that this method works with values provided.
+     *
+     * @group test
      */
     public function testiShouldNotHaveAWithWithValues()
     {
