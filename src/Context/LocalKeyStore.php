@@ -2,6 +2,8 @@
 
 namespace Genesis\SQLExtension\Context;
 
+use Exception;
+
 class LocalKeyStore implements Interfaces\KeyStoreInterface
 {
     /**
@@ -49,17 +51,17 @@ class LocalKeyStore implements Interfaces\KeyStoreInterface
     public function getKeywordFromConfigForKeyIfExists($key)
     {
         if (! isset($_SESSION['behat']['GenesisSqlExtension']['keywords'])) {
-            return $value;
+            return $key;
         }
 
         foreach ($_SESSION['behat']['GenesisSqlExtension']['keywords'] as $keyword => $val) {
-            $key = sprintf('{%s}', $keyword);
+            $keyValue = sprintf('{%s}', $keyword);
 
-            if ($value == $key) {
-                $value = str_replace($key, $val, $value);
+            if ($key == $keyValue) {
+                $key = str_replace($keyValue, $val, $key);
             }
         }
 
-        return $value;
+        return $key;
     }
 }

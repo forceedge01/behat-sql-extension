@@ -41,4 +41,48 @@ class LocalKeyStoreTest extends PHPUnit_Framework_TestCase
         $this->assertEquals($value, $result);
         $this->assertEquals($value, $_SESSION['behat']['GenesisSqlExtension']['keywords'][$keyword]);
     }
+
+    /**
+     * Throw exception if no keys are set at all.
+     * 
+     * @expectedException Exception
+     */
+    public function testGetKeywordNoKeywords()
+    {
+        $this->testObject->getKeyword('not_exists');
+    }
+
+    /**
+     * Throw exception if keys are found but not the one that we are looking for.
+     * 
+     * @expectedException Exception
+     */
+    public function testGetKeywordNotFound()
+    {
+        $_SESSION['behat']['GenesisSqlExtension']['keywords']['one'] = ['the word one'];
+
+        $this->testObject->getKeyword('not_exists');
+    }
+
+    /**
+     * Test that the value is returned unchanged if key is not set.
+     */
+    public function testgetKeywordFromConfigForKeyIfExistsNotFound()
+    {
+        $key = $this->testObject->getKeywordFromConfigForKeyIfExists('not_exists');
+
+        $this->assertEquals('not_exists', $key);
+    }
+
+    /**
+     * Test that the value is returned as is if not a keyword.
+     */
+    public function testgetKeywordFromConfigForKeyIfExistsFoundString()
+    {
+        $_SESSION['behat']['GenesisSqlExtension']['keywords']['one'] = 'the word one';
+
+        $key = $this->testObject->getKeywordFromConfigForKeyIfExists('{one}');
+
+        $this->assertEquals('the word one', $key);
+    }
 }

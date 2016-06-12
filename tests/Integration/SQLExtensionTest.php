@@ -18,15 +18,11 @@ class SQLExtensionTest extends TestHelper
     private $testObject;
 
     /**
-     * Sample connection string.
+     * Set the test object.
      */
-    // const CONNECTION_STRING = 'BEHAT_ENV_PARAMS=DBENGINE:mysql;DBSCHEMA:;DBNAME:abc;DBHOST:localhost;DBUSER:root;DBPASSWORD:toor;DBPREFIX:';
-
     public function setup()
     {
         $_SESSION['behat']['GenesisSqlExtension']['notQuotableKeywords'] = [];
-
-        // putenv(self::CONNECTION_STRING);
 
         $databaseParams = [];
 
@@ -35,6 +31,13 @@ class SQLExtensionTest extends TestHelper
             new Context\SQLBuilder(),
             new Context\LocalKeyStore()
         );
+
+        // This PDO object comes from the testHelper class.
+        $connectionMock = $this->getMockBuilder(\Genesis\SQLExtension\Context\PDO::class)
+            ->disableOriginalConstructor()
+            ->getMock();
+
+        $this->testObject->get('dbManager')->setConnection($connectionMock);
     }
 
     /**
@@ -59,7 +62,7 @@ class SQLExtensionTest extends TestHelper
             'forceedge01@gmail.com',
             'Qureshi'
         ]);
-        $this->testObject->getConnection()->expects($this->any())
+        $this->testObject->get('dbManager')->getConnection()->expects($this->any())
             ->method('prepare')
             ->with($this->isType('string'))
             ->willReturn($this->getPdoStatementWithRows(1, [[0 => 'id', 'id' => 234324, 'name' => 'Abdul', 'email' => 'its.inevitable@hotmail.com']]));
@@ -91,7 +94,7 @@ class SQLExtensionTest extends TestHelper
             'table2',
             'id:34234, name:Jenkins'
         ]);
-        $this->testObject->getConnection()->expects($this->any())
+        $this->testObject->get('dbManager')->getConnection()->expects($this->any())
             ->method('prepare')
             ->with($this->isType('string'))
             ->willReturn($this->getPdoStatementWithRows(1, [[0 => 'id', 'id' => 234324]]));
@@ -121,7 +124,7 @@ class SQLExtensionTest extends TestHelper
             'forceedge01@gmail.com',
             'Qureshi'
         ]);
-        $this->testObject->getConnection()->expects($this->any())
+        $this->testObject->get('dbManager')->getConnection()->expects($this->any())
             ->method('prepare')
             ->with($this->isType('string'))
             ->willReturn($this->getPdoStatementWithRows(1, [[0 => 'id', 'id' => 234324]]));
@@ -150,7 +153,7 @@ class SQLExtensionTest extends TestHelper
             'table2',
             'id:34234, name:Jenkins'
         ]);
-        $this->testObject->getConnection()->expects($this->any())
+        $this->testObject->get('dbManager')->getConnection()->expects($this->any())
             ->method('prepare')
             ->with($this->isType('string'))
             ->willReturn($this->getPdoStatementWithRows(1, [[0 => 'id', 'id' => 234324]]));
@@ -167,7 +170,7 @@ class SQLExtensionTest extends TestHelper
     {
         $entity = 'database.unique';
         $column = "column1:abc,column2:xyz,column3:NULL, column4:what\'s up doc";
-        $this->testObject->getConnection()->expects($this->any())
+        $this->testObject->get('dbManager')->getConnection()->expects($this->any())
             ->method('prepare')
             ->with($this->isType('string'))
             ->willReturn($this->getPdoStatementWithRows(1, [[0 => 'id', 'id' => 234324]]));
@@ -190,7 +193,7 @@ class SQLExtensionTest extends TestHelper
     {
         $entity = 'database.unique1';
         $column = "column1:abc,column2:xyz,column3:NULL,column4:what's up doc";
-        $this->testObject->getConnection()->expects($this->any())
+        $this->testObject->get('dbManager')->getConnection()->expects($this->any())
             ->method('prepare')
             ->with($this->isType('string'))
             ->will($this->onConsecutiveCalls(
@@ -230,7 +233,7 @@ class SQLExtensionTest extends TestHelper
     {
         $entity = 'database.someTable';
         $column = "column1:abc,column2:xyz,column3:NULL,column4:what's up doc";
-        $this->testObject->getConnection()->expects($this->any())
+        $this->testObject->get('dbManager')->getConnection()->expects($this->any())
             ->method('prepare')
             ->with($this->isType('string'))
             ->willReturn($this->getPdoStatementWithRows(true, [[0 => 'id']]));
@@ -266,7 +269,7 @@ class SQLExtensionTest extends TestHelper
         $entity = 'database.someTable2';
         $with = "column1:abc,column2:xyz,column3:NULL,column4:what's up doc";
         $columns = "id:134,photo:!NULL,column:what's up doc";
-        $this->testObject->getConnection()->expects($this->any())
+        $this->testObject->get('dbManager')->getConnection()->expects($this->any())
             ->method('prepare')
             ->with($this->isType('string'))
             ->willReturn($this->getPdoStatementWithRows(1, [
@@ -291,7 +294,7 @@ class SQLExtensionTest extends TestHelper
     {
         $entity = '';
         $with = '';
-        $this->testObject->getConnection()->expects($this->any())
+        $this->testObject->get('dbManager')->getConnection()->expects($this->any())
             ->method('prepare')
             ->with($this->isType('string'))
             ->willReturn($this->getPdoStatementWithRows(1, [
@@ -307,7 +310,7 @@ class SQLExtensionTest extends TestHelper
     {
         $entity = 'database.someTable3';
         $with = "column1:abc,column2:xyz,column3:what's up doc";
-        $this->testObject->getConnection()->expects($this->any())
+        $this->testObject->get('dbManager')->getConnection()->expects($this->any())
             ->method('prepare')
             ->with($this->isType('string'))
             ->willReturn($this->getPdoStatementWithRows(0, [[0 => 'id']]));
@@ -330,7 +333,7 @@ class SQLExtensionTest extends TestHelper
     {
         $entity = 'database.someTable3';
         $with = "column1:abc,column2:xyz,column3:what's up doc";
-        $this->testObject->getConnection()->expects($this->any())
+        $this->testObject->get('dbManager')->getConnection()->expects($this->any())
             ->method('prepare')
             ->with($this->isType('string'))
             ->willReturn($this->getPdoStatementWithRows(true, [[0 => 'id']]));
@@ -356,7 +359,7 @@ class SQLExtensionTest extends TestHelper
             'column2',
             'xyz'
         ]);
-        $this->testObject->getConnection()->expects($this->any())
+        $this->testObject->get('dbManager')->getConnection()->expects($this->any())
             ->method('prepare')
             ->with($this->isType('string'))
             ->willReturn($this->getPdoStatementWithRows(0, [[0 => 'id']]));
@@ -390,7 +393,7 @@ class SQLExtensionTest extends TestHelper
             'column2',
             'xyz'
         ]);
-        $this->testObject->getConnection()->expects($this->any())
+        $this->testObject->get('dbManager')->getConnection()->expects($this->any())
             ->method('prepare')
             ->with($this->isType('string'))
             ->willReturn($this->getPdoStatementWithRows(true, [[0 => 'id']]));
@@ -404,7 +407,7 @@ class SQLExtensionTest extends TestHelper
     {
         $entity = '';
         $with = '';
-        $this->testObject->getConnection()->expects($this->any())
+        $this->testObject->get('dbManager')->getConnection()->expects($this->any())
             ->method('prepare')
             ->with($this->isType('string'))
             ->willReturn($this->getPdoStatementWithRows(1, [
@@ -436,7 +439,7 @@ class SQLExtensionTest extends TestHelper
             'column3',
             'NULL'
         ]);
-        $this->testObject->getConnection()->expects($this->any())
+        $this->testObject->get('dbManager')->getConnection()->expects($this->any())
             ->method('prepare')
             ->with($this->isType('string'))
             ->willReturn($this->getPdoStatementWithRows(true, [[0 => 'id']]));
@@ -457,7 +460,7 @@ class SQLExtensionTest extends TestHelper
     {
         $entity = 'database.someTable4';
         $with = "column1:abc,column2:xyz,column3:NULL,column4:!NULL,column5:what's up doc";
-        $this->testObject->getConnection()->expects($this->any())
+        $this->testObject->get('dbManager')->getConnection()->expects($this->any())
             ->method('prepare')
             ->with($this->isType('string'))
             ->willReturn($this->getPdoStatementWithRows(true, [[0 => 'id']]));
@@ -478,7 +481,7 @@ class SQLExtensionTest extends TestHelper
     {
         $entity = 'database.someTable4';
         $with = 'column1:abc,column2:%xyz%';
-        $this->testObject->getConnection()->expects($this->any())
+        $this->testObject->get('dbManager')->getConnection()->expects($this->any())
              ->method('prepare')
              ->with($this->isType('string'))
              ->willReturn($this->getPdoStatementWithRows(true, [[0 => 'id']]));
