@@ -243,6 +243,7 @@ class SQLContext extends SQLHandler implements Interfaces\SQLContextInterface
         $this->debugLog('------- I HAVE AN EXISTING WHERE -------');
 
         $this->setEntity($entity);
+        $this->setCommandType('select');
 
         // Create array out of the with string given.
         $columns = $this->filterAndConvertToArray($where);
@@ -314,20 +315,6 @@ class SQLContext extends SQLHandler implements Interfaces\SQLContextInterface
     }
 
     /**
-     * @Then /^(?:|I )should not have(?:| an| a) "([^"]*)" with:$/
-     */
-    public function iShouldNotHaveAWithTable($entity, TableNode $with)
-    {
-        // Convert the table node to parse able string.
-        $clause = $this->convertTableNodeToSingleContextClause($with);
-
-        // Run through the shouldNotHave step definition.
-        $sql = $this->iShouldNotHaveAWith($entity, $clause);
-
-        return $sql;
-    }
-
-    /**
      * @Then /^(?:|I )should not have(?:| an| a) "([^"]*)" with "([^"]*)"(?:| in the database)$/
      */
     public function iShouldNotHaveAWith($entity, $with)
@@ -366,6 +353,20 @@ class SQLContext extends SQLHandler implements Interfaces\SQLContextInterface
                 ));
             }
         }
+
+        return $sql;
+    }
+
+    /**
+     * @Then /^(?:|I )should not have(?:| an| a) "([^"]*)" with:$/
+     */
+    public function iShouldNotHaveAWithTable($entity, TableNode $with)
+    {
+        // Convert the table node to parse able string.
+        $clause = $this->convertTableNodeToSingleContextClause($with);
+
+        // Run through the shouldNotHave step definition.
+        $sql = $this->iShouldNotHaveAWith($entity, $clause);
 
         return $sql;
     }

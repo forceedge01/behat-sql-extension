@@ -356,7 +356,7 @@ class SQLHandler extends BehatContext implements Interfaces\SQLHandlerInterface
             $criteria
         );
 
-        $this->setKeywordsFromRecord(
+        return $this->setKeywordsFromRecord(
             $entity,
             $result[0]
         );

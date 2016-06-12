@@ -588,105 +588,49 @@ class SQLContextTest extends TestHelper
      */
     public function testiHaveAnExistingWhere()
     {
-        $this->markTestIncomplete();
+        $entity = 'database.someTable2';
+        $where = "column1:abc,column2:xyz,column3:NULL,column4:what's up doc";
 
-        $this->testObject->iHaveAnExistingWhere();
-    }
+        $convertedQuery1 = [
+            'column1' => 'abc',
+            'column2' => 'xyz',
+            'column3' => 'NULL',
+            'column4' => 'what\'s up doc'
+        ];
 
-    /**
-     * @expectedException Exception
-     *
-     * @group test
-     */
-    public function testiShouldNotHaveAWithThrowException()
-    {
-        $entity = '';
-        $with = '';
+        $this->mockDependency('sqlBuilder', 'convertToArray',
+                array('column1:abc,column2:xyz,column3:NULL,column4:what\'s up doc'), $convertedQuery1);
 
-        $this->testObject->iShouldNotHaveAWith($entity, $with);
-    }
-
-    /**
-     * Test that this method works with values provided.
-     *
-     * @group test
-     */
-    public function testiShouldNotHaveAWithWithValues()
-    {
-        $entity = 'database.someTable3';
-        $with = "column1:abc,column2:xyz,column3:what's up doc";
-
-        $this->mockDependencyMethods(
-            'dbHelperMock',
-            [
-                'execute' => $this->getPdoStatementWithRows(),
-                'hasFetchedRows' => true
-            ]
+        $this->mockDependency(
+            'sqlBuilder',
+            'constructSQLClause',
+            array(
+                'select',
+                ' AND ',
+                $convertedQuery1
+            ),
+            "column1 = 'abc' AND column2 = 'xyz' AND column3 is NULL AND column4 = 'what\\'s up doc'"
         );
 
-        $result = $this->testObject->iShouldNotHaveAWith($entity, $with);
+        $expectedResult = [['id' => 5, 'name' => 'Abdul']];
+        $statement = $this->getPdoStatementWithRows();
+        $statement->expects($this->once())
+            ->method('fetchAll')
+            ->will($this->returnValue($expectedResult));
 
-        // Expected SQL.
-        $expectedSQL = "SELECT * FROM dev_database.someTable3 WHERE column1 = 'abc' AND column2 = 'xyz' AND column3 = 'what\'s up doc'";
+        $this->mockDependency('dbHelperMock', 'execute', ["SELECT * FROM dev_database.someTable2 WHERE column1 = 'abc' AND column2 = 'xyz' AND column3 is NULL AND column4 = 'what\'s up doc'"], $statement);
 
-        // Assert.
-        $this->assertEquals($expectedSQL, $result);
-        $this->assertNotNull($this->testObject->getEntity());
-        $this->assertEquals('select', $this->testObject->getCommandType());
+        $this->mockDependency('dbHelperMock', 'throwErrorIfNoRowsAffected', [$statement]);
+
+        $result = $this->testObject->iHaveAnExistingWhere($entity, $where);
+
+        $this->assertEquals($expectedResult[0], $result);
     }
 
     /**
      * Test that this method works with values provided.
-     */
-    public function testiShouldNotHaveAWithWithTableNode()
-    {
-        $entity = 'database.someTable3';
-        $with = new TableNode();
-        $with->addRow([
-            'title',
-            'value'
-        ]);
-        $with->addRow([
-            'column1',
-            'abc'
-        ]);
-        $with->addRow([
-            'column2',
-            'xyz'
-        ]);
-
-        $this->mockDependencyMethods(
-            'dbHelperMock',
-            [
-                'execute' => $this->getPdoStatementWithRows(),
-                'hasFetchedRows' => true
-            ]
-        );
-
-        $result = $this->testObject->iShouldNotHaveAWithTable($entity, $with);
-
-        // Expected SQL.
-        $expectedSQL = "SELECT * FROM dev_database.someTable3 WHERE column1 = 'abc' AND column2 = 'xyz'";
-
-        // Assert.
-        $this->assertEquals($expectedSQL, $result);
-        $this->assertNotNull($this->testObject->getEntity());
-        $this->assertEquals('select', $this->testObject->getCommandType());
-    }
-
-    /**
-     * @expectedException Exception
-     */
-    public function testiShouldHaveAWith()
-    {
-        $entity = '';
-        $with = '';
-
-        $this->testObject->iShouldHaveAWith($entity, $with);
-    }
-
-    /**
-     * Test that this method works with values provided.
+     *
+     * @group test
      */
     public function testiShouldHaveAWithTableNode()
     {
@@ -709,6 +653,13 @@ class SQLContextTest extends TestHelper
             'NULL'
         ]);
 
+        $this->mockDependency(
+            'sqlBuilder',
+            'convertTableNodeToSingleContextClause',
+            [$with],
+            'column1:abc,column2:xyz,column3:NULL'
+        );
+
         $this->mockDependencyMethods(
             'dbHelperMock',
             [
@@ -716,6 +667,14 @@ class SQLContextTest extends TestHelper
                 'hasFetchedRows' => true
             ]
         );
+
+        $this->mockDependency('sqlBuilder', 'convertToArray', ['column1:abc,column2:xyz,column3:NULL'], [
+            'column1' => 'abc',
+            'column2' => 'xyz',
+            'column3' => 'NULL'
+        ]);
+
+        $this->mockDependency('sqlBuilder', 'constructSQLClause', null, "column1 = 'abc' AND column2 = 'xyz' AND column3 is NULL");
 
         $result = $this->testObject->iShouldHaveAWithTable($entity, $with);
 
@@ -730,11 +689,20 @@ class SQLContextTest extends TestHelper
 
     /**
      * Test that this method works with values provided.
+     *
+     * @group test
      */
     public function testiShouldHaveAWithWithValues()
     {
         $entity = 'database.someTable4';
-        $with = "column1:abc,column2:xyz,column3:NULL,column4:!NULL,column5:what's up doc";
+        $with = "column1:abc,column2:xyz,column3:!NULL";
+
+        $this->mockDependency(
+            'sqlBuilder',
+            'convertTableNodeToSingleContextClause',
+            [$with],
+            'column1:abc,column2:xyz,column3:!NULL'
+        );
 
         $this->mockDependencyMethods(
             'dbHelperMock',
@@ -744,10 +712,110 @@ class SQLContextTest extends TestHelper
             ]
         );
 
+        $this->mockDependency('sqlBuilder', 'convertToArray', ['column1:abc,column2:xyz,column3:!NULL'], [
+            'column1' => 'abc',
+            'column2' => 'xyz',
+            'column3' => '!NULL'
+        ]);
+
+        $this->mockDependency('sqlBuilder', 'constructSQLClause', null, "column1 = 'abc' AND column2 = 'xyz' AND column3 is not NULL");
+
         $result = $this->testObject->iShouldHaveAWith($entity, $with);
 
         // Expected SQL.
-        $expectedSQL = "SELECT * FROM dev_database.someTable4 WHERE column1 = 'abc' AND column2 = 'xyz' AND column3 is NULL AND column4 is not NULL AND column5 = 'what\'s up doc'";
+        $expectedSQL = "SELECT * FROM dev_database.someTable4 WHERE column1 = 'abc' AND column2 = 'xyz' AND column3 is not NULL";
+
+        // Assert.
+        $this->assertEquals($expectedSQL, $result);
+        $this->assertNotNull($this->testObject->getEntity());
+        $this->assertEquals('select', $this->testObject->getCommandType());
+    }
+
+    /**
+     * Test that this method works with values provided.
+     *
+     * @group test
+     */
+    public function testiShouldNotHaveAWithWithValues()
+    {
+        $entity = 'database.someTable3';
+        $with = "column1:abc,column2:xyz,column3:what's up doc";
+
+        $this->mockDependencyMethods(
+            'dbHelperMock',
+            [
+                'execute' => $this->getPdoStatementWithRows(),
+                'hasFetchedRows' => true
+            ]
+        );
+
+        $this->mockDependency('sqlBuilder', 'convertToArray', [$with], [
+            'column1' => 'abc',
+            'column2' => 'xyz',
+            'column3' => 'what\'s up doc'
+        ]);
+
+        $this->mockDependency('sqlBuilder', 'constructSQLClause', null, "column1 = 'abc' AND column2 = 'xyz' AND column3 = 'what\'s up doc'");
+
+        $result = $this->testObject->iShouldNotHaveAWith($entity, $with);
+
+        // Expected SQL.
+        $expectedSQL = "SELECT * FROM dev_database.someTable3 WHERE column1 = 'abc' AND column2 = 'xyz' AND column3 = 'what\'s up doc'";
+
+        // Assert.
+        $this->assertEquals($expectedSQL, $result);
+        $this->assertNotNull($this->testObject->getEntity());
+        $this->assertEquals('select', $this->testObject->getCommandType());
+    }
+
+    /**
+     * Test that this method works with values provided.
+     *
+     * @group test
+     */
+    public function testiShouldNotHaveAWithWithTableNode()
+    {
+        $entity = 'database.someTable3';
+        $with = new TableNode();
+        $with->addRow([
+            'title',
+            'value'
+        ]);
+        $with->addRow([
+            'column1',
+            'abc'
+        ]);
+        $with->addRow([
+            'column2',
+            'xyz'
+        ]);
+
+        $this->mockDependency(
+            'sqlBuilder',
+            'convertTableNodeToSingleContextClause',
+            [$with],
+            'column1:abc,column2:xyz'
+        );
+
+        $this->mockDependencyMethods(
+            'dbHelperMock',
+            [
+                'execute' => $this->getPdoStatementWithRows(),
+                'hasFetchedRows' => true
+            ]
+        );
+
+        $this->mockDependency('sqlBuilder', 'convertToArray', ['column1:abc,column2:xyz'], [
+            'column1' => 'abc',
+            'column2' => 'xyz'
+        ]);
+
+        $this->mockDependency('sqlBuilder', 'constructSQLClause', null, "column1 = 'abc' AND column2 = 'xyz'");
+
+        $result = $this->testObject->iShouldNotHaveAWithTable($entity, $with);
+
+        // Expected SQL.
+        $expectedSQL = "SELECT * FROM dev_database.someTable3 WHERE column1 = 'abc' AND column2 = 'xyz'";
 
         // Assert.
         $this->assertEquals($expectedSQL, $result);
@@ -757,11 +825,20 @@ class SQLContextTest extends TestHelper
 
     /**
      * Test that this method works with values containing wildcards for a LIKE search.
+     *
+     * @group test
      */
     public function testiShouldHaveAWithWithLikeValues()
     {
         $entity = 'database.someTable4';
         $with = 'column1:abc,column2:%xyz%';
+
+        $this->mockDependency(
+            'sqlBuilder',
+            'convertTableNodeToSingleContextClause',
+            [$with],
+            'column1:abc,column2:%xyz%'
+        );
 
         $this->mockDependencyMethods(
             'dbHelperMock',
@@ -771,6 +848,13 @@ class SQLContextTest extends TestHelper
             ]
         );
 
+        $this->mockDependency('sqlBuilder', 'convertToArray', ['column1:abc,column2:%xyz%'], [
+            'column1' => 'abc',
+            'column2' => '%xyz%'
+        ]);
+
+        $this->mockDependency('sqlBuilder', 'constructSQLClause', null, "column1 = 'abc' AND column2 LIKE '%xyz%'");
+
         $result = $this->testObject->iShouldHaveAWith($entity, $with);
 
         // Expected SQL.
@@ -779,5 +863,32 @@ class SQLContextTest extends TestHelper
         // Assert.
         $this->assertEquals($expectedSQL, $result);
         $this->assertNotNull($this->testObject->getEntity());
+    }
+
+    /**
+     * Test that iSaveTheIdAs works as expected.
+     *
+     * @group test
+     */
+    public function testiSaveTheIdAs()
+    {
+        $key = 'a key';
+
+        $this->mockDependency('keyStoreMock', 'setKeyword', [$key]);
+
+        $this->testObject->iSaveTheIdAs($key);
+    }
+
+    /**
+     * @group test
+     */
+    public function testiAmInDebugMode()
+    {
+        ob_start();
+        $this->testObject->iAmInDebugMode();
+        $string = ob_get_clean();
+
+        $this->assertInternalType('string', $string);
+        $this->assertTrue(defined('DEBUG_MODE'));
     }
 }
