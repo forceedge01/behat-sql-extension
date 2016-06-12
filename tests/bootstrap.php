@@ -2,6 +2,8 @@
 
 require __DIR__ . '/../vendor/autoload.php';
 
+session_start();
+
 // Necessary vars for testing.
 DEFINE('SQLDBENGINE', 'mysql');
 DEFINE('SQLDBHOST', 'localhost');

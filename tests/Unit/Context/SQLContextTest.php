@@ -74,8 +74,6 @@ class SQLContextTest extends TestHelper
 
     /**
      * Make sure that the IHaveWhere method works as expected.
-     *
-     * @group test
      */
     public function testIHaveWhere()
     {
@@ -145,8 +143,6 @@ class SQLContextTest extends TestHelper
 
     /**
      * Make sure that the IHave method works as expected.
-     *
-     * @group test
      */
     public function testIHave()
     {
@@ -207,8 +203,6 @@ class SQLContextTest extends TestHelper
 
     /**
      * Test that this method works with values provided.
-     *
-     * @group test
      */
     public function testIHaveAWhereWithValuesRecordAlreadyExists()
     {
@@ -263,8 +257,6 @@ class SQLContextTest extends TestHelper
 
     /**
      * Test that this method works with values provided.
-     *
-     * @group test
      */
     public function testIHaveAWhereWithValuesRecordDoesNotExists()
     {
@@ -330,8 +322,6 @@ class SQLContextTest extends TestHelper
 
     /**
      * @expectedException Exception
-     *
-     * @group test
      */
     public function testIDontHaveAWhere()
     {
@@ -343,8 +333,6 @@ class SQLContextTest extends TestHelper
 
     /**
      * Test that this method works with values provided.
-     *
-     * @group test
      */
     public function testIDontHaveAWhereWithValues()
     {
@@ -392,7 +380,7 @@ class SQLContextTest extends TestHelper
     }
 
     /**
-     * @group test
+     * Assert that the IDontHaveWhere method works as expected.
      */
     public function testIDontHaveWhere()
     {
@@ -457,7 +445,7 @@ class SQLContextTest extends TestHelper
     }
 
     /**
-     * @group test
+     * Assert that the IDontHave method works as expected.
      */
     public function testIDontHave()
     {
@@ -517,8 +505,6 @@ class SQLContextTest extends TestHelper
 
     /**
      * @expectedException Exception
-     *
-     * @group test
      */
     public function testiHaveAnExistingWithWhere()
     {
@@ -531,8 +517,6 @@ class SQLContextTest extends TestHelper
 
     /**
      * Test that this method works with values provided.
-     *
-     * @group test
      */
     public function testiHaveAnExistingWithWhereWithValues()
     {
@@ -585,7 +569,7 @@ class SQLContextTest extends TestHelper
     }
 
     /**
-     * @group test
+     * Test that this method works as expected.
      */
     public function testiHaveAnExistingWhere()
     {
@@ -630,8 +614,6 @@ class SQLContextTest extends TestHelper
 
     /**
      * Test that this method works with values provided.
-     *
-     * @group test
      */
     public function testiShouldHaveAWithTableNode()
     {
@@ -690,8 +672,6 @@ class SQLContextTest extends TestHelper
 
     /**
      * Test that this method works with values provided.
-     *
-     * @group test
      */
     public function testiShouldHaveAWithWithValues()
     {
@@ -734,8 +714,6 @@ class SQLContextTest extends TestHelper
 
     /**
      * Test that this method works with values provided.
-     *
-     * @group test
      */
     public function testiShouldNotHaveAWithWithValues()
     {
@@ -771,8 +749,6 @@ class SQLContextTest extends TestHelper
 
     /**
      * Test that this method works with values provided.
-     *
-     * @group test
      */
     public function testiShouldNotHaveAWithWithTableNode()
     {
@@ -826,8 +802,6 @@ class SQLContextTest extends TestHelper
 
     /**
      * Test that this method works with values containing wildcards for a LIKE search.
-     *
-     * @group test
      */
     public function testiShouldHaveAWithWithLikeValues()
     {
@@ -868,8 +842,6 @@ class SQLContextTest extends TestHelper
 
     /**
      * Test that iSaveTheIdAs works as expected.
-     *
-     * @group test
      */
     public function testiSaveTheIdAs()
     {
@@ -881,7 +853,7 @@ class SQLContextTest extends TestHelper
     }
 
     /**
-     * @group test
+     * Test that this method works as expected.
      */
     public function testiAmInDebugMode()
     {

@@ -24,6 +24,8 @@ class SQLExtensionTest extends TestHelper
     {
         $_SESSION['behat']['GenesisSqlExtension']['notQuotableKeywords'] = [];
 
+        $_SESSION['behat']['GenesisSqlExtension']['keywords'] = [];
+
         $databaseParams = [];
 
         $this->testObject = new Context\SQLContext(
@@ -243,7 +245,6 @@ class SQLExtensionTest extends TestHelper
         // Assert.
         $this->assertEquals($expectedSQL, $result);
         $this->assertNotNull($this->testObject->getEntity());
-        $this->assertEquals(5, $this->testObject->getKeyword('database.someTable_id'));
         $this->assertEquals('delete', $this->testObject->getCommandType());
     }
 
@@ -275,9 +276,12 @@ class SQLExtensionTest extends TestHelper
             ->willReturn($this->getPdoStatementWithRows(1, [
                 [0 => 'id', 'id' => 1234, 'name' => 'Abdul']
             ]));
+
         $result = $this->testObject->iHaveAnExistingWithWhere($entity, $with, $columns);
+
         // Expected SQL.
         $expectedSQL = "UPDATE dev_database.someTable2 SET column1 = 'abc', column2 = 'xyz', column3 = NULL, column4 = 'what\'s up doc' WHERE id = 134 AND photo is not NULL AND column = 'what\'s up doc'";
+
         // Assert.
         $this->assertEquals($expectedSQL, $result);
         $this->assertNotNull($this->testObject->getEntity());
@@ -300,11 +304,14 @@ class SQLExtensionTest extends TestHelper
             ->willReturn($this->getPdoStatementWithRows(1, [
                 [0 => 'id', 'id' => 1234, 'name' => 'Abdul']
             ]));
+
         $this->testObject->iShouldNotHaveAWith($entity, $with);
     }
 
     /**
      * Test that this method works with values provided.
+     *
+     * @group test
      */
     public function testiShouldNotHaveAWithWithValues()
     {
@@ -315,12 +322,13 @@ class SQLExtensionTest extends TestHelper
             ->with($this->isType('string'))
             ->willReturn($this->getPdoStatementWithRows(0, [[0 => 'id']]));
         $result = $this->testObject->iShouldNotHaveAWith($entity, $with);
+
         // Expected SQL.
         $expectedSQL = "SELECT * FROM dev_database.someTable3 WHERE column1 = 'abc' AND column2 = 'xyz' AND column3 = 'what\'s up doc'";
+
         // Assert.
         $this->assertEquals($expectedSQL, $result);
         $this->assertNotNull($this->testObject->getEntity());
-        $this->assertEquals(5, $this->testObject->getKeyword('database.someTable3_id'));
         $this->assertEquals('select', $this->testObject->getCommandType());
     }
 
@@ -328,20 +336,26 @@ class SQLExtensionTest extends TestHelper
      * Test that this method works with values provided.
      * 
      * @expectedException Exception
+     *
+     * @group test
      */
     public function testiShouldNotHaveAWithWithValuesReturnsRows()
     {
         $entity = 'database.someTable3';
         $with = "column1:abc,column2:xyz,column3:what's up doc";
+
         $this->testObject->get('dbManager')->getConnection()->expects($this->any())
             ->method('prepare')
             ->with($this->isType('string'))
             ->willReturn($this->getPdoStatementWithRows(true, [[0 => 'id']]));
+
         $this->testObject->iShouldNotHaveAWith($entity, $with);
     }
 
     /**
      * Test that this method works with values provided.
+     *
+     * @group test
      */
     public function testiShouldNotHaveAWithWithTableNode()
     {
@@ -376,6 +390,8 @@ class SQLExtensionTest extends TestHelper
      * Test that this method works with values provided.
      * 
      * @expectedException Exception
+     *
+     * @group test
      */
     public function testiShouldNotHaveAWithWithTableNodeFindsRows()
     {
@@ -402,6 +418,8 @@ class SQLExtensionTest extends TestHelper
 
     /**
      * @expectedException Exception
+     *
+     * @group test
      */
     public function testiShouldHaveAWith()
     {
@@ -418,6 +436,8 @@ class SQLExtensionTest extends TestHelper
 
     /**
      * Test that this method works with values provided.
+     *
+     * @group test
      */
     public function testiShouldHaveAWithTableNode()
     {
@@ -449,12 +469,13 @@ class SQLExtensionTest extends TestHelper
         // Assert.
         $this->assertEquals($expectedSQL, $result);
         $this->assertNotNull($this->testObject->getEntity());
-        $this->assertEquals(5, $this->testObject->getKeyword('database.someTable4_id'));
         $this->assertEquals('select', $this->testObject->getCommandType());
     }
 
     /**
      * Test that this method works with values provided.
+     *
+     * @group test
      */
     public function testiShouldHaveAWithWithValues()
     {
@@ -470,12 +491,13 @@ class SQLExtensionTest extends TestHelper
         // Assert.
         $this->assertEquals($expectedSQL, $result);
         $this->assertNotNull($this->testObject->getEntity());
-        $this->assertEquals(5, $this->testObject->getKeyword('database.someTable4_id'));
         $this->assertEquals('select', $this->testObject->getCommandType());
     }
 
     /**
      * Test that this method works with values containing wildcards for a LIKE search.
+     *
+     * @group test
      */
     public function testiShouldHaveAWithWithLikeValues()
     {
@@ -491,11 +513,12 @@ class SQLExtensionTest extends TestHelper
         // Assert.
         $this->assertEquals($expectedSQL, $result);
         $this->assertNotNull($this->testObject->getEntity());
-        $this->assertEquals(5, $this->testObject->getKeyword('database.someTable4_id'));
     }
 
     /**
      * @expectedException Exception
+     *
+     * @group test
      */
     public function testISaveTheIdAs()
     {

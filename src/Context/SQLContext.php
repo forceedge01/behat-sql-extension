@@ -4,6 +4,7 @@ namespace Genesis\SQLExtension\Context;
 
 use Behat\Behat\Context\Step\Given;
 use Behat\Gherkin\Node\TableNode;
+use Exception;
 
 /*
  * This file is part of the Behat\SQLExtension
@@ -135,7 +136,7 @@ class SQLContext extends SQLHandler implements Interfaces\SQLContextInterface
         $this->debugLog('------- I DONT HAVE WHERE -------');
 
         if (! $columns) {
-            throw new \Exception('You must provide a where clause!');
+            throw new Exception('You must provide a where clause!');
         }
 
         $this->setEntity($entity);
@@ -203,7 +204,7 @@ class SQLContext extends SQLHandler implements Interfaces\SQLContextInterface
         $this->debugLog('------- I HAVE AN EXISTING WITH WHERE -------');
 
         if (! $columns) {
-            throw new \Exception('You must provide a where clause!');
+            throw new Exception('You must provide a where clause!');
         }
 
         $this->setEntity($entity);
@@ -298,17 +299,13 @@ class SQLContext extends SQLHandler implements Interfaces\SQLContextInterface
 
         // Execute the sql query, if the query throws a generic not found error,
         // catch it and give it some context.
-        try {
-            $statement = $this->execute($sql);
-            $this->throwErrorIfNoRowsAffected($statement);
-        } catch (\Exception $e) {
-            if (! $this->hasFetchedRows($statement)) {
-                throw new \Exception(sprintf(
-                    'Record not found with "%s" in "%s"',
-                    $selectWhereClause,
-                    $this->getEntity()
-                ));
-            }
+        $statement = $this->execute($sql);
+        if (! $this->hasFetchedRows($statement)) {
+            throw new Exception(sprintf(
+                'Record not found with "%s" in "%s"',
+                $selectWhereClause,
+                $this->getEntity()
+            ));
         }
 
         return $sql;
@@ -341,17 +338,13 @@ class SQLContext extends SQLHandler implements Interfaces\SQLContextInterface
 
         // Execute the sql query, if the query throws a generic not found error,
         // catch it and give it some context.
-        try {
-            $statement = $this->execute($sql);
-            $this->throwErrorIfNoRowsAffected($statement);
-        } catch (\Exception $e) {
-            if ($this->hasFetchedRows($statement)) {
-                throw new \Exception(sprintf(
-                    'Record not found with "%s" in "%s"',
-                    $selectWhereClause,
-                    $this->getEntity()
-                ));
-            }
+        $statement = $this->execute($sql);
+        if ($this->hasFetchedRows($statement)) {
+            throw new Exception(sprintf(
+                'Record not found with "%s" in "%s"',
+                $selectWhereClause,
+                $this->getEntity()
+            ));
         }
 
         return $sql;
