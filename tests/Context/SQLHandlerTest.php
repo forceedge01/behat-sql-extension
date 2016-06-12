@@ -157,7 +157,9 @@ class SQLHandlerTest extends TestHelper
      */
     public function testDebugLog()
     {
-        define('DEBUG_MODE', 1);
+        if (! defined('DEBUG_MODE')) {
+            define('DEBUG_MODE', 1);
+        }
 
         // Start capturing the output to the screen.
         ob_start();
