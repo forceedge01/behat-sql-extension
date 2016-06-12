@@ -1,6 +1,6 @@
 <?php
 
-namespace Genesis\SQLExtension\Tests\Context;
+namespace Genesis\SQLExtension\Tests\Unit\Context;
 
 use Genesis\SQLExtension\Context\LocalKeyStore;
 use PHPUnit_Framework_TestCase;

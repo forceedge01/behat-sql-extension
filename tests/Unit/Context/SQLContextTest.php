@@ -1,6 +1,6 @@
 <?php
 
-namespace Genesis\SQLExtension\Tests\Context;
+namespace Genesis\SQLExtension\Tests\Unit\Context;
 
 use Behat\Gherkin\Node\TableNode;
 use Genesis\SQLExtension\Context\Interfaces\DBManagerInterface;
@@ -8,6 +8,7 @@ use Genesis\SQLExtension\Context\Interfaces\KeyStoreInterface;
 use Genesis\SQLExtension\Context\Interfaces\SQLBuilderInterface;
 use Genesis\SQLExtension\Context\SQLContext;
 use Exception;
+use Genesis\SQLExtension\Tests\TestHelper;
 
 /**
  * @group sqlContext

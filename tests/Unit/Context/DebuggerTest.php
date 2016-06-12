@@ -1,8 +1,9 @@
 <?php
 
-namespace Genesis\SQLExtension\Tests\Context;
+namespace Genesis\SQLExtension\Tests\Unit\Context;
 
 use Genesis\SQLExtension\Context\Debugger;
+use Genesis\SQLExtension\Tests\TestHelper;
 
 /**
  * @group debugger

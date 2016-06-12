@@ -1,6 +1,48 @@
 <?php
 
-namespace Genesis\SQLExtension\Tests\Context;
+namespace Genesis\SQLExtension\Context;
+
+// Mock pdo class for testing.
+class PDO
+{
+    private $dns;
+    private $username;
+    private $password;
+
+    public function __construct($dns = null, $username = null, $password = null)
+    {
+        $this->dns = $dns;
+        $this->username = $username;
+        $this->password = $password;
+    }
+
+    public function getDns()
+    {
+        return $this->dns;
+    }
+
+    public function getUsername()
+    {
+        return $this->username;
+    }
+
+    public function getPassword()
+    {
+        return $this->password;
+    }
+
+    public function prepare()
+    {
+        return;
+    }
+
+    public function lastInsertId()
+    {
+        return;
+    }
+}
+
+namespace Genesis\SQLExtension\Tests;
 
 use PHPUnit_Framework_TestCase;
 use Exception;

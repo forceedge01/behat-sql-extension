@@ -6,19 +6,19 @@ namespace Genesis\SQLExtension\Context;
 function rand($min = null, $max = null)
 {
     if ($min == null && $max == null) {
-        return \Genesis\SQLExtension\Tests\Context\SQLBuilderTest::INT_NUMBER;
+        return \Genesis\SQLExtension\Tests\Unit\Context\SQLBuilderTest::INT_NUMBER;
     }
 
-    return \Genesis\SQLExtension\Tests\Context\SQLBuilderTest::TINY_INT_NUMBER;
+    return \Genesis\SQLExtension\Tests\Unit\Context\SQLBuilderTest::TINY_INT_NUMBER;
 }
 
 // Mock time method for testing.
 function time()
 {
-    return \Genesis\SQLExtension\Tests\Context\SQLBuilderTest::TYPE_STRING_TIME;
+    return \Genesis\SQLExtension\Tests\Unit\Context\SQLBuilderTest::TYPE_STRING_TIME;
 }
 
-namespace Genesis\SQLExtension\Tests\Context;
+namespace Genesis\SQLExtension\Tests\Unit\Context;
 
 use PHPUnit_Framework_TestCase;
 use Genesis\SQLExtension\Context\SQLBuilder;

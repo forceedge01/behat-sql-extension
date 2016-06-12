@@ -19,6 +19,7 @@ use Genesis\SQLExtension\Context;
 $databaseParams = [...];
 $this->sqlContext = new Context\SQLContext(
     new Context\DBManager($databaseParams),
+    new Context\SQLBuilder(),
     new Context\LocalKeyStore()
 );
 ```

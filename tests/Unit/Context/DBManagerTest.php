@@ -1,57 +1,15 @@
 <?php
 
-namespace Genesis\SQLExtension\Context;
-
-// Mock pdo class for testing.
-class PDO
-{
-    private $dns;
-    private $username;
-    private $password;
-
-    public function __construct($dns = null, $username = null, $password = null)
-    {
-        $this->dns = $dns;
-        $this->username = $username;
-        $this->password = $password;
-    }
-
-    public function getDns()
-    {
-        return $this->dns;
-    }
-
-    public function getUsername()
-    {
-        return $this->username;
-    }
-
-    public function getPassword()
-    {
-        return $this->password;
-    }
-
-    public function prepare()
-    {
-        return;
-    }
-
-    public function lastInsertId()
-    {
-        return;
-    }
-}
-
-namespace Genesis\SQLExtension\Tests\Context;
+namespace Genesis\SQLExtension\Tests\Unit\Context;
 
 use Genesis\SQLExtension\Context\DBManager;
-use PHPUnit_Framework_TestCase;
 use Genesis\SQLExtension\Context\PDO;
+use Genesis\SQLExtension\Tests\TestHelper;
 
 /**
  * @group DBManager
  */
-class DBManagerTest extends PHPUnit_Framework_TestCase
+class DBManagerTest extends TestHelper
 {
     /**
      * @var object $testObject The object to be tested.
@@ -326,31 +284,5 @@ class DBManagerTest extends PHPUnit_Framework_TestCase
         $result = $this->testObject->throwExceptionIfErrors($sqlStatementMock);
 
         $this->assertFalse($result);
-    }
-
-    /**
-     * Get PDO statement with 1 row, used for testing.
-     */
-    private function getPdoStatementWithRows($rowCount = true, $fetchAll = false)
-    {
-        $statementMock = $this->getMockBuilder(\PDOStatement::class)
-            ->disableOriginalConstructor()
-            ->getMock();
-
-        $statementMock->expects($this->any())
-            ->method('rowCount')
-            ->willReturn($rowCount);
-
-        if ($fetchAll) {
-            $statementMock->expects($this->any())
-                ->method('fetchAll')
-                ->willReturn($fetchAll);
-        }
-
-        $statementMock->expects($this->any())
-            ->method('execute')
-            ->willReturn(true);
-
-        return $statementMock;
     }
 }
