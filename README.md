@@ -271,3 +271,18 @@ public function __construct(array $parameters) {
     $this->useContext('genesis_sql_context', new SQLContext($databaseCredentials));
 }
 ```
+
+### Extended use in feature context file.
+
+The extension provides wrapper methods for the same functionality as the dsl language. To give the code more context use the following:
+
+```php
+  $this
+    ->select($table, $where) # select a record, essentially perform a iHaveAnExistingWhere.
+    ->insert($table, $where) # Insert a new record if it does not exist, same as iHaveAWith
+    ->update($table, $update, $where) # Update an existing record, same as iHaveAnExistingWithWhere
+    ->delete($table, $where) # Delete a record, same as iDontHaveAWhere
+    ;
+```
+
+Anything the DSL does will be done using the above methods (i.e setting keywords, outputting to debug log etc...)
