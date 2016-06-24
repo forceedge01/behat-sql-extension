@@ -617,7 +617,7 @@ class SQLHandler extends BehatContext
      * @param string $entity
      * @param string $criteria
      */
-    protected function setKeywordsFromCriteria($entity, $criteria)
+    public function setKeywordsFromCriteria($entity, $criteria)
     {
         $result = $this->fetchByCriteria(
             $entity,
@@ -636,7 +636,7 @@ class SQLHandler extends BehatContext
      * @param string $entity
      * @param string $criteria
      */
-    protected function fetchByCriteria($entity, $criteria)
+    public function fetchByCriteria($entity, $criteria)
     {
         $sql = sprintf('SELECT * FROM %s WHERE %s', $entity, $criteria);
         $statement = $this->execute($sql);
@@ -656,7 +656,7 @@ class SQLHandler extends BehatContext
      * @param string $entity
      * @param array $record
      */
-    protected function setKeywordsFromRecord($entity, array $record)
+    public function setKeywordsFromRecord($entity, array $record)
     {
         // Normalise the entity.
         $entity = $this->getUserInputEntity($entity);
