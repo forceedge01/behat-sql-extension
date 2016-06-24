@@ -477,7 +477,7 @@ class SQLHandler extends BehatContext
      * 
      * @param string $sql
      */
-    protected function execute($sql)
+    public function execute($sql)
     {
         $this->lastQuery = $sql;
 
