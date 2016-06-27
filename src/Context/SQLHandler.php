@@ -376,7 +376,13 @@ class SQLHandler extends BehatContext implements Interfaces\SQLHandlerInterface
         $result = $statement->fetchAll();
 
         if (! $result) {
-            throw new Exception('Unable to fetch result');
+            throw new Exception(
+                sprintf(
+                    'Unable to fetch result using criteria "%s" on "%s"',
+                    $criteria,
+                    $entity
+                )
+            );
         }
 
         return $result;

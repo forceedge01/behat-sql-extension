@@ -562,4 +562,60 @@ class SQLExtensionTest extends TestHelper
         $this->assertInternalType('string', $string);
         $this->assertTrue(defined('DEBUG_MODE'));
     }
+
+    /**
+     * testIHaveAnExistingWhere Test that iHaveAnExistingWhere executes as expected.
+     *
+     * @expectedException Exception
+     */
+    public function testIHaveAnExistingWhereNoRows()
+    {
+        // Prepare / Mock
+        $entity = 'abc.my_entity';
+        $where = 'column1:abc, column2:!xyz, column3: %yes%';
+
+        $this->testObject->get('dbManager')->getConnection()->expects($this->any())
+            ->method('prepare')
+            ->with($this->isType('string'))
+            ->willReturn($this->getPdoStatementWithRows(0));
+
+        // Execute
+        $this->testObject->iHaveAnExistingWhere($entity, $where);
+    }
+
+    /**
+     * testIHaveAnExistingWhere Test that iHaveAnExistingWhere executes as expected.
+     */
+    public function testIHaveAnExistingWhereWithRows()
+    {
+        // Prepare / Mock
+        $entity = 'abc.my_entity';
+        $where = 'column1:abc, column2:!xyz';
+        $expectedResult = [
+            0 => 'id',
+            'column1' => 'abc',
+            'column2' => 'random'
+        ];
+
+        $this->testObject->get('dbManager')->getConnection()->expects($this->any())
+            ->method('prepare')
+            ->with($this->isType('string'))
+            ->willReturn($this->getPdoStatementWithRows(1, [
+                $expectedResult
+            ]));
+
+        // Execute
+        $result = $this->testObject->iHaveAnExistingWhere($entity, $where);
+
+        $this->assertEquals('dev_abc.my_entity', $this->testObject->getEntity());
+        $this->assertEquals($expectedResult, $result);
+        $this->assertEquals('id', $this->testObject->getKeyword('abc.my_entity.0'));
+        $this->assertEquals('id', $this->testObject->getKeyword('abc.my_entity_0'));
+
+        $this->assertEquals('abc', $this->testObject->getKeyword('abc.my_entity.column1'));
+        $this->assertEquals('abc', $this->testObject->getKeyword('abc.my_entity_column1'));
+
+        $this->assertEquals('random', $this->testObject->getKeyword('abc.my_entity_column2'));
+        $this->assertEquals('random', $this->testObject->getKeyword('abc.my_entity.column2'));
+    }
 }
