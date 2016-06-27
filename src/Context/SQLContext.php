@@ -399,7 +399,7 @@ class SQLContext extends SQLHandler implements Interfaces\SQLContextInterface
 
         if ($this->hasFetchedRows($statement)) {
             throw new Exception(sprintf(
-                'Record found with "%s" in "%s" where as it was not expected to be found.',
+                'Unexpected record found with "%s" in "%s".',
                 $selectWhereClause,
                 $this->getEntity()
             ));
