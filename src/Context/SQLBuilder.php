@@ -92,7 +92,7 @@ class SQLBuilder implements Interfaces\SQLBuilderInterface
     /**
      * Quotes value if needed for sql.
      *
-     * @param  string $val
+     * @param string $val
      *
      * @return string
      */
@@ -112,6 +112,10 @@ class SQLBuilder implements Interfaces\SQLBuilderInterface
 
     /**
      * Checks if the value isn't a keyword.
+     *
+     * @param string $val
+     *
+     * @return bool
      */
     private function isNotQuotable($val)
     {
@@ -138,7 +142,7 @@ class SQLBuilder implements Interfaces\SQLBuilderInterface
     }
 
     /**
-     * @param  TableNode $node The node with all fields and data.
+     * @param TableNode $node The node with all fields and data.
      *
      * @return array The queries built of the TableNode.
      */
@@ -170,9 +174,9 @@ class SQLBuilder implements Interfaces\SQLBuilderInterface
     }
 
     /**
-     * @param  TableNode $node The node with all fields and data.
+     * @param TableNode $node The node with all fields and data.
      *
-     * @return array The queries built of the TableNode.
+     * @return string The queries built of the TableNode.
      */
     public function convertTableNodeToSingleContextClause(TableNode $node)
     {
@@ -197,6 +201,10 @@ class SQLBuilder implements Interfaces\SQLBuilderInterface
 
     /**
      * returns sample data for a data type.
+     *
+     * @param string $type
+     *
+     * @return string|bool
      */
     public function sampleData($type)
     {
@@ -230,6 +238,8 @@ class SQLBuilder implements Interfaces\SQLBuilderInterface
 
     /**
      * Returns the columns stored after conversion to array.
+     *
+     * @return array
      */
     public function getColumns()
     {

@@ -5,6 +5,9 @@ namespace Genesis\SQLExtension\Context;
 use Traversable;
 use Exception;
 
+/**
+ * DBManager that handles the database connection.
+ */
 class DBManager implements Interfaces\DBManagerInterface
 {
     /**
@@ -27,7 +30,7 @@ class DBManager implements Interfaces\DBManagerInterface
 
     /**
      * Get params.
-     * 
+     *
      * @return array
      */
     public function getParams()
@@ -37,6 +40,8 @@ class DBManager implements Interfaces\DBManagerInterface
 
     /**
      * Set the connection.
+     *
+     * @return $this
      */
     public function setConnection($connection)
     {
@@ -47,6 +52,8 @@ class DBManager implements Interfaces\DBManagerInterface
 
     /**
      * Gets the connection for query execution.
+     *
+     * @return PDOConnection
      */
     public function getConnection()
     {
@@ -60,8 +67,9 @@ class DBManager implements Interfaces\DBManagerInterface
     }
 
     /**
-     * @param string $entity
-     * 
+     * @param string $database
+     * @param string $table
+     *
      * @result string
      */
     public function getPrimaryKeyForTable($database, $table)
@@ -112,8 +120,10 @@ class DBManager implements Interfaces\DBManagerInterface
 
     /**
      * Gets a column list for a table with their type.
-     * 
+     *
      * @param string $table
+     *
+     * @return array
      */
     public function getRequiredTableColumns($table)
     {
@@ -170,9 +180,9 @@ class DBManager implements Interfaces\DBManagerInterface
 
     /**
      * Get the last insert id.
-     * 
+     *
      * @param string $table For compatibility with postgres.
-     * 
+     *
      * @return int|null
      */
     public function getLastInsertId($table = null)
@@ -182,6 +192,8 @@ class DBManager implements Interfaces\DBManagerInterface
 
     /**
      * Creates the connection string for the pdo object.
+     *
+     * @return string
      */
     private function getConnectionString()
     {
@@ -200,6 +212,10 @@ class DBManager implements Interfaces\DBManagerInterface
     /**
      * Sets the database param from either the environment variable or params
      * passed in by behat.yml, params have precedence over env variable.
+     *
+     * @param array $dbParams
+     *
+     * @return $this
      */
     private function setDBParams(array $dbParams = array())
     {
@@ -219,7 +235,7 @@ class DBManager implements Interfaces\DBManagerInterface
             $params = getenv('BEHAT_ENV_PARAMS');
 
             if (! $params) {
-                throw new Exception('"BEHAT_ENV_PARAMS" environment variable was not found.');
+                throw new Exception('Params not passed in and "BEHAT_ENV_PARAMS" environment variable was not found.');
             }
 
             $params = explode(';', $params);
@@ -235,6 +251,11 @@ class DBManager implements Interfaces\DBManagerInterface
 
     /**
      * Check for any mysql errors.
+     *
+     * @param Traversable $sqlStatement
+     * @param bool $ignoreDuplicate
+     *
+     * @return bool
      */
     public function throwErrorIfNoRowsAffected(Traversable $sqlStatement, $ignoreDuplicate = false)
     {
@@ -261,6 +282,12 @@ class DBManager implements Interfaces\DBManagerInterface
 
     /**
      * Errors found then throw exception.
+     *
+     * @param Traverable $sqlStatement
+     *
+     * @throws Exception
+     *
+     * @return false if no errors.
      */
     public function throwExceptionIfErrors(Traversable $sqlStatement)
     {

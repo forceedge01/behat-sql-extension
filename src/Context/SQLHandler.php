@@ -99,6 +99,8 @@ class SQLHandler extends BehatContext implements Interfaces\SQLHandlerInterface
      * Get a dependency.
      *
      * @param string $dependency.
+     *
+     * @return object
      */
     public function get($dependency)
     {
@@ -121,6 +123,8 @@ class SQLHandler extends BehatContext implements Interfaces\SQLHandlerInterface
 
     /**
      * Set the clause type.
+     *
+     * @param string $commandType
      */
     public function setCommandType($commandType)
     {
@@ -143,6 +147,8 @@ class SQLHandler extends BehatContext implements Interfaces\SQLHandlerInterface
 
     /**
      * Get the clause type.
+     *
+     * @return string
      */
     public function getCommandType()
     {

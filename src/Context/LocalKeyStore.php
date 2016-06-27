@@ -8,9 +8,11 @@ class LocalKeyStore implements Interfaces\KeyStoreInterface
 {
     /**
      * Sets a behat keyword.
-     * 
+     *
      * @param string $key
      * @param mixed $value
+     *
+     * @return $this
      */
     public function setKeyword($key, $value)
     {
@@ -21,8 +23,10 @@ class LocalKeyStore implements Interfaces\KeyStoreInterface
 
     /**
      * Fetches a specific keyword from the behat keywords store.
-     * 
+     *
      * @param string $key
+     *
+     * @return string|null
      */
     public function getKeyword($key)
     {
@@ -45,8 +49,10 @@ class LocalKeyStore implements Interfaces\KeyStoreInterface
 
     /**
      * Checks the value for possible keywords set in behat.yml file.
-     * 
+     *
      * @param string $key
+     *
+     * @return string|null
      */
     public function getKeywordFromConfigForKeyIfExists($key)
     {
