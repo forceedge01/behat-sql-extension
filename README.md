@@ -8,6 +8,22 @@ require with composer
 require "genesis/behat-sql-extension"
 ```
 
+Instantiation
+-------------
+
+Instantiating the sql extension in your FeatureContext class.
+
+```php
+use Genesis\SQLExtension\Context;
+
+$databaseParams = [...];
+$this->sqlContext = new Context\SQLContext(
+    new Context\DBManager($databaseParams),
+    new Context\SQLBuilder(),
+    new Context\LocalKeyStore()
+);
+```
+
 Setup
 -----
 After composer has installed the extension you would need to setup the connection details. This can be done in 2 ways:
@@ -93,7 +109,7 @@ The fields needs to be preset but may be left empty.
 
 DB Support
 ----------
-Tested with PostgreSQL. Expected to work with MySQL as well.
+Tested with MySQL.
 
 
 Calls provided by this extension
