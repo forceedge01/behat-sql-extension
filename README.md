@@ -245,49 +245,6 @@ Executing SQL: INSERT INTO user (email) VALUES ('its.inevitable@hotmail.com')
 Last ID fetched: 57
 ```
 
-### Using SQL context with other contexts
-
-Registering SQL context additionally to an existing context can be done as follows:
-
-```php
-# file: FeatureContext.php
-<?php
-
-use Genesis\SQLExtension\Context\SQLContext;
-
-public function __construct(array $parameters) {
-    $this->parameters = $parameters;
-
-    // Load Context Class
-    $this->useContext('genesis_sql_context', new SQLContext());
-}
-```
-
-### Overriding database params.
-
-Override database params by passing credentials in to the constructor of the SQLContext.
-
-```php
-# file: FeatureContext.php
-<?php
-
-use Genesis\SQLExtension\Context\SQLContext;
-
-public function __construct(array $parameters) {
-    $this->parameters = $parameters;
-
-    $databaseCredentials = [
-      'engine' => 'mysql',
-      'host' => 'localhost',
-      'username' => 'root',
-      'password' => ''
-    ];
-
-    // Load Context Class
-    $this->useContext('genesis_sql_context', new SQLContext($databaseCredentials));
-}
-```
-
 ### Extended use in feature context file.
 
 The extension provides wrapper methods for the same functionality as the dsl language. To give the code more context use the following:
