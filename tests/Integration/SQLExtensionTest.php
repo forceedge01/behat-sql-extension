@@ -23,9 +23,7 @@ class SQLExtensionTest extends TestHelper
     public function setup()
     {
         $_SESSION['behat']['GenesisSqlExtension']['notQuotableKeywords'] = [];
-
         $_SESSION['behat']['GenesisSqlExtension']['keywords'] = [];
-
         $databaseParams = [];
 
         $this->testObject = new Context\SQLContext(
@@ -67,12 +65,24 @@ class SQLExtensionTest extends TestHelper
         $this->testObject->get('dbManager')->getConnection()->expects($this->any())
             ->method('prepare')
             ->with($this->isType('string'))
-            ->willReturn($this->getPdoStatementWithRows(1, [[0 => 'id', 'id' => 234324, 'name' => 'Abdul', 'email' => 'its.inevitable@hotmail.com']]));
+            ->willReturn($this->getPdoStatementWithRows(
+                1,
+                [
+                    [
+                        0 => 'id',
+                        'id' => 234324,
+                        'name' => 'Abdul',
+                        'email' => 'its.inevitable@hotmail.com'
+                    ]
+                ]
+            ));
 
         $sqls = $this->testObject->iHaveWhere($entity, $node);
         $this->assertCount(2, $sqls);
         $this->assertEquals(234324, $this->testObject->getKeyword(sprintf('%s_id', $entity)));
+        $this->assertEquals(234324, $this->testObject->getKeyword(sprintf('%s.id', $entity)));
         $this->assertEquals('its.inevitable@hotmail.com', $this->testObject->getKeyword(sprintf('%s_email', $entity)));
+        $this->assertEquals('its.inevitable@hotmail.com', $this->testObject->getKeyword(sprintf('%s.email', $entity)));
         $this->assertEquals('Abdul', $this->testObject->getKeyword(sprintf('%s_name', $entity)));
     }
 

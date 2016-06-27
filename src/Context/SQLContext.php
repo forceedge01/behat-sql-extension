@@ -396,9 +396,10 @@ class SQLContext extends SQLHandler implements Interfaces\SQLContextInterface
         // Execute the sql query, if the query throws a generic not found error,
         // catch it and give it some context.
         $statement = $this->execute($sql);
+
         if ($this->hasFetchedRows($statement)) {
             throw new Exception(sprintf(
-                'Record not found with "%s" in "%s"',
+                'Record found with "%s" in "%s" where as it was not expected to be found.',
                 $selectWhereClause,
                 $this->getEntity()
             ));
