@@ -119,11 +119,29 @@ class SQLContext extends SQLHandler implements Interfaces\SQLContextInterface
             );
 
             $whereClause = sprintf('%s = %s', $key, $this->quoteOrNot($columns[$key]));
+        }
 
+
+        try {
             $this->setKeywordsFromCriteria($this->getEntity(), $whereClause);
+        } catch (\Exception $e) {
+            // ignore, as the keys may not be set because of dynamic function usage.
         }
 
         return $sql;
+    }
+
+    /**
+     * User friendly version of iHaveAWith.
+     *
+     * @param $table The table to insert into.
+     * @param $values Values to insert.
+     *
+     * @return string
+     */
+    public function insert($table, $values)
+    {
+        return $this->iHaveAWhere($table, $values);
     }
 
     /**
@@ -197,6 +215,19 @@ class SQLContext extends SQLHandler implements Interfaces\SQLContextInterface
     }
 
     /**
+     * User friendly version of iDontHaveAWhere.
+     *
+     * @param string $table The table to delete from.
+     * @param string $where The where clause.
+     *
+     * @return string
+     */
+    public function delete($table, $where)
+    {
+        return $this->iDontHaveAWhere($table, $where);
+    }
+
+    /**
      * @Given /^(?:|I )have an existing "([^"]*)" with "([^"]*)" where "([^"]*)"$/
      */
     public function iHaveAnExistingWithWhere($entity, $with, $columns)
@@ -237,6 +268,19 @@ class SQLContext extends SQLHandler implements Interfaces\SQLContextInterface
     }
 
     /**
+     * User friendly version of iHaveAnExistingWithWhere.
+     *
+     * @param string $table The table to delete from.
+     * @param string $where The where clause.
+     *
+     * @return string
+     */
+    public function update($table, $update, $where)
+    {
+        return $this->iHaveAnExistingWithWhere($table, $update, $where);
+    }
+
+    /**
      * @Given /^(?:|I )have(?:| an| a) existing "([^"]*)" where "([^"]*)"$/
      */
     public function iHaveAnExistingWhere($entity, $where)
@@ -257,6 +301,19 @@ class SQLContext extends SQLHandler implements Interfaces\SQLContextInterface
             $this->getEntity(),
             $selectWhereClause
         );
+    }
+
+    /**
+     * User friendly version of iHaveAnExistingWhere.
+     *
+     * @param string $table The table to delete from.
+     * @param string $where The where clause.
+     *
+     * @return string
+     */
+    public function select($table, $where)
+    {
+        return $this->iHaveAnExistingWhere($table, $where);
     }
 
     /**

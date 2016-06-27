@@ -68,6 +68,7 @@ class SQLExtensionTest extends TestHelper
             ->method('prepare')
             ->with($this->isType('string'))
             ->willReturn($this->getPdoStatementWithRows(1, [[0 => 'id', 'id' => 234324, 'name' => 'Abdul', 'email' => 'its.inevitable@hotmail.com']]));
+
         $sqls = $this->testObject->iHaveWhere($entity, $node);
         $this->assertCount(2, $sqls);
         $this->assertEquals(234324, $this->testObject->getKeyword(sprintf('%s_id', $entity)));
@@ -100,6 +101,7 @@ class SQLExtensionTest extends TestHelper
             ->method('prepare')
             ->with($this->isType('string'))
             ->willReturn($this->getPdoStatementWithRows(1, [[0 => 'id', 'id' => 234324]]));
+
         $sqls = $this->testObject->iHave($node);
         $this->assertCount(2, $sqls);
     }
@@ -130,6 +132,7 @@ class SQLExtensionTest extends TestHelper
             ->method('prepare')
             ->with($this->isType('string'))
             ->willReturn($this->getPdoStatementWithRows(1, [[0 => 'id', 'id' => 234324]]));
+
         $sqls = $this->testObject->iDontHaveWhere($entity, $node);
         $this->assertCount(2, $sqls);
     }
@@ -159,13 +162,14 @@ class SQLExtensionTest extends TestHelper
             ->method('prepare')
             ->with($this->isType('string'))
             ->willReturn($this->getPdoStatementWithRows(1, [[0 => 'id', 'id' => 234324]]));
+
         $sqls = $this->testObject->iDontHave($node);
         $this->assertCount(2, $sqls);
     }
 
     /**
      * Test that this method works with values provided.
-     * 
+     *
      * @group test
      */
     public function testIHaveAWhereWithValuesRecordAlreadyExists()
@@ -176,6 +180,7 @@ class SQLExtensionTest extends TestHelper
             ->method('prepare')
             ->with($this->isType('string'))
             ->willReturn($this->getPdoStatementWithRows(1, [[0 => 'id', 'id' => 234324]]));
+
         $result = $this->testObject->iHaveAWhere($entity, $column);
         // Expected SQL.
         $expectedSQL = "SELECT * FROM dev_database.unique WHERE column1 = 'abc' AND column2 = 'xyz' AND column3 is NULL AND column4 = 'what\'s up doc'";
@@ -239,6 +244,7 @@ class SQLExtensionTest extends TestHelper
             ->method('prepare')
             ->with($this->isType('string'))
             ->willReturn($this->getPdoStatementWithRows(true, [[0 => 'id']]));
+
         $result = $this->testObject->iDontHaveAWhere($entity, $column);
         // Expected SQL.
         $expectedSQL = "DELETE FROM dev_database.someTable WHERE column1 = 'abc' AND column2 = 'xyz' AND column3 is NULL AND column4 = 'what\'s up doc'";
@@ -321,6 +327,7 @@ class SQLExtensionTest extends TestHelper
             ->method('prepare')
             ->with($this->isType('string'))
             ->willReturn($this->getPdoStatementWithRows(0, [[0 => 'id']]));
+
         $result = $this->testObject->iShouldNotHaveAWith($entity, $with);
 
         // Expected SQL.
@@ -334,7 +341,7 @@ class SQLExtensionTest extends TestHelper
 
     /**
      * Test that this method works with values provided.
-     * 
+     *
      * @expectedException Exception
      *
      * @group test
@@ -377,6 +384,7 @@ class SQLExtensionTest extends TestHelper
             ->method('prepare')
             ->with($this->isType('string'))
             ->willReturn($this->getPdoStatementWithRows(0, [[0 => 'id']]));
+
         $result = $this->testObject->iShouldNotHaveAWithTable($entity, $with);
         // Expected SQL.
         $expectedSQL = "SELECT * FROM dev_database.someTable3 WHERE column1 = 'abc' AND column2 = 'xyz'";
@@ -388,7 +396,7 @@ class SQLExtensionTest extends TestHelper
 
     /**
      * Test that this method works with values provided.
-     * 
+     *
      * @expectedException Exception
      *
      * @group test
@@ -425,12 +433,14 @@ class SQLExtensionTest extends TestHelper
     {
         $entity = '';
         $with = '';
+
         $this->testObject->get('dbManager')->getConnection()->expects($this->any())
             ->method('prepare')
             ->with($this->isType('string'))
             ->willReturn($this->getPdoStatementWithRows(1, [
                 [0 => 'id', 'id' => 1234, 'name' => 'Abdul']
             ]));
+
         $this->testObject->iShouldHaveAWith($entity, $with);
     }
 
@@ -463,6 +473,7 @@ class SQLExtensionTest extends TestHelper
             ->method('prepare')
             ->with($this->isType('string'))
             ->willReturn($this->getPdoStatementWithRows(true, [[0 => 'id']]));
+
         $result = $this->testObject->iShouldHaveAWithTable($entity, $with);
         // Expected SQL.
         $expectedSQL = "SELECT * FROM dev_database.someTable4 WHERE column1 = 'abc' AND column2 = 'xyz' AND column3 is NULL";
@@ -485,6 +496,7 @@ class SQLExtensionTest extends TestHelper
             ->method('prepare')
             ->with($this->isType('string'))
             ->willReturn($this->getPdoStatementWithRows(true, [[0 => 'id']]));
+
         $result = $this->testObject->iShouldHaveAWith($entity, $with);
         // Expected SQL.
         $expectedSQL = "SELECT * FROM dev_database.someTable4 WHERE column1 = 'abc' AND column2 = 'xyz' AND column3 is NULL AND column4 is not NULL AND column5 = 'what\'s up doc'";
@@ -503,10 +515,12 @@ class SQLExtensionTest extends TestHelper
     {
         $entity = 'database.someTable4';
         $with = 'column1:abc,column2:%xyz%';
+
         $this->testObject->get('dbManager')->getConnection()->expects($this->any())
              ->method('prepare')
              ->with($this->isType('string'))
              ->willReturn($this->getPdoStatementWithRows(true, [[0 => 'id']]));
+
         $result = $this->testObject->iShouldHaveAWith($entity, $with);
         // Expected SQL.
         $expectedSQL = "SELECT * FROM dev_database.someTable4 WHERE column1 = 'abc' AND column2 LIKE '%xyz%'";

@@ -241,7 +241,7 @@ class SQLHandler extends BehatContext implements Interfaces\SQLHandlerInterface
      *
      * @param string $sql
      */
-    protected function execute($sql)
+    public function execute($sql)
     {
         $this->debugLog(sprintf('Executing SQL: %s', $sql));
         $this->lastQuery = $sql;
@@ -465,6 +465,24 @@ class SQLHandler extends BehatContext implements Interfaces\SQLHandlerInterface
     }
 
     /**
+     * Convert an array to a genesis query.
+     *
+     * @param array $columns
+     *
+     * @return string
+     */
+    public function convertToQuery(array $columns)
+    {
+        $query = '';
+
+        foreach ($columns as $column => $value) {
+            $query .= sprintf('%s:%s,', $column, $value);
+        }
+
+        return trim($query, ',');
+    }
+
+    /**
      * @param  TableNode $node The node with all fields and data.
      *
      * @return array The queries built of the TableNode.
@@ -528,6 +546,7 @@ class SQLHandler extends BehatContext implements Interfaces\SQLHandlerInterface
 
         // Set the primary key for the current table.
         $this->primaryKey = $this->dbManager->getPrimaryKeyForTable($this->databaseName, $this->tableName);
+
         $this->debugLog(sprintf('PRIMARY KEY: %s', $this->primaryKey));
 
         return $this;
