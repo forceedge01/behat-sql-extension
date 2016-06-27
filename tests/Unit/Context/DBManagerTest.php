@@ -71,7 +71,28 @@ class DBManagerTest extends TestHelper
 
         $result = $this->testObject->getPrimaryKeyForTable($database, $table);
 
-        $this->assertEquals('id', $result);
+        $this->assertFalse($result);
+    }
+
+    public function testGetPrimaryKeyForTableReturnSomeColumn()
+    {
+        $database = 'my_app';
+        $table = 'user';
+        $expectedSql = '
+            SELECT `COLUMN_NAME`
+            FROM `information_schema`.`COLUMNS`
+            WHERE (`TABLE_SCHEMA` = "my_app")
+            AND (`TABLE_NAME` = "user")
+            AND (`COLUMN_KEY` = "PRI")';
+
+        $this->testObject->getConnection()->expects($this->once())
+            ->method('prepare')
+            ->with($expectedSql)
+            ->will($this->returnValue($this->getPdoStatementWithRows(1, [[0 => 'coid']])));
+
+        $result = $this->testObject->getPrimaryKeyForTable($database, $table);
+
+        $this->assertEquals('coid', $result);
     }
 
     public function testGetPrimaryKeyForTableReturnSomething()

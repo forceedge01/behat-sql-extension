@@ -21,7 +21,7 @@ interface DBManagerInterface
     /**
      * @param string $entity
      * 
-     * @result string
+     * @result string|bool
      */
     public function getPrimaryKeyForTable($database, $table);
 

@@ -557,7 +557,13 @@ class SQLHandler extends BehatContext implements Interfaces\SQLHandlerInterface
         }
 
         // Set the primary key for the current table.
-        $this->primaryKey = $this->dbManager->getPrimaryKeyForTable($this->databaseName, $this->tableName);
+        $primaryKey = $this->dbManager->getPrimaryKeyForTable($this->databaseName, $this->tableName);
+
+        if (! $primaryKey) {
+            $primaryKey = 'id';
+        }
+
+        $this->primaryKey = $primaryKey;
 
         $this->debugLog(sprintf('PRIMARY KEY: %s', $this->primaryKey));
 

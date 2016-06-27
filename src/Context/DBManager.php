@@ -70,7 +70,7 @@ class DBManager implements Interfaces\DBManagerInterface
      * @param string $database
      * @param string $table
      *
-     * @result string
+     * @result string|bool
      */
     public function getPrimaryKeyForTable($database, $table)
     {
@@ -89,7 +89,7 @@ class DBManager implements Interfaces\DBManagerInterface
         $result = $statement->fetchAll();
 
         if (! $result) {
-            return 'id';
+            return false;
         }
 
         return $result[0][0];
