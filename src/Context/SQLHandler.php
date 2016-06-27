@@ -80,7 +80,7 @@ class SQLHandler extends BehatContext implements Interfaces\SQLHandlerInterface
 
     /**
      * Construct the object.
-     * 
+     *
      * @param Interfaces\DBManagerInterface $dbManager
      * @param Interfaces\SQLBuilderInterface $sqlBuilder
      * @param Interfaces\KeyStoreInterface $keyStore
@@ -151,11 +151,11 @@ class SQLHandler extends BehatContext implements Interfaces\SQLHandlerInterface
 
     /**
      * Construct the sql clause.
-     * 
+     *
      * @param string $commandType
      * @param string $glue
      * @param array $columns
-     * 
+     *
      * @return array
      */
     public function constructSQLClause($commandType, $glue, array $columns)
@@ -180,7 +180,7 @@ class SQLHandler extends BehatContext implements Interfaces\SQLHandlerInterface
 
     /**
      * Sets a behat keyword.
-     * 
+     *
      * @param string $key
      * @param mixed $value
      */
@@ -197,7 +197,7 @@ class SQLHandler extends BehatContext implements Interfaces\SQLHandlerInterface
 
     /**
      * Fetches a specific keyword from the behat keywords store.
-     * 
+     *
      * @param string $key
      */
     public function getKeyword($key)
@@ -220,7 +220,7 @@ class SQLHandler extends BehatContext implements Interfaces\SQLHandlerInterface
 
     /**
      * Checks the value for possible keywords set in behat.yml file.
-     * 
+     *
      * @param string $key
      */
     public function checkForKeyword($key)
@@ -238,7 +238,7 @@ class SQLHandler extends BehatContext implements Interfaces\SQLHandlerInterface
 
     /**
      * Executes sql command.
-     * 
+     *
      * @param string $sql
      */
     protected function execute($sql)
@@ -345,7 +345,7 @@ class SQLHandler extends BehatContext implements Interfaces\SQLHandlerInterface
 
     /**
      * Set all keys from the current entity.
-     * 
+     *
      * @param string $entity
      * @param string $criteria
      */
@@ -364,7 +364,7 @@ class SQLHandler extends BehatContext implements Interfaces\SQLHandlerInterface
 
     /**
      * Get a record by a criteria.
-     * 
+     *
      * @param string $entity
      * @param string $criteria
      */
@@ -384,7 +384,7 @@ class SQLHandler extends BehatContext implements Interfaces\SQLHandlerInterface
 
     /**
      * Set the record as keywords for re-use.
-     * 
+     *
      * @param string $entity
      * @param array $record
      */
@@ -395,6 +395,8 @@ class SQLHandler extends BehatContext implements Interfaces\SQLHandlerInterface
 
         // Set all columns as reusable.
         foreach ($record as $column => $value) {
+            $this->setKeyword(sprintf('%s.%s', $entity, $column), $value);
+            // For backward compatibility.
             $this->setKeyword(sprintf('%s_%s', $entity, $column), $value);
         }
 
@@ -410,12 +412,14 @@ class SQLHandler extends BehatContext implements Interfaces\SQLHandlerInterface
         $this->lastId = $id;
         $entity = $this->makeSQLUnsafe($entity);
         $this->saveLastId($entity, $this->lastId);
+        $this->setKeyword($entity . '.' . $this->primaryKey, $this->lastId);
+        // For backward compatibility.
         $this->setKeyword($entity . '_' . $this->primaryKey, $this->lastId);
     }
 
     /**
      * Gets table columns and its values.
-     * 
+     *
      * @return array
      */
     public function getTableColumns($entity)
