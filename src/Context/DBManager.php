@@ -21,7 +21,7 @@ class DBManager implements Interfaces\DBManagerInterface
     private $params;
 
     /**
-     * @param PDO $connection
+     * @param array $params
      */
     public function __construct(array $params = array())
     {
