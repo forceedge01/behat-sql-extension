@@ -443,9 +443,21 @@ class SQLHandler extends BehatContext implements Interfaces\SQLHandlerInterface
 
         // Set values for columns
         foreach ($allColumns as $col => $type) {
-            $columnClause[$col] = isset($this->sqlBuilder->getColumns()[$col]) ?
-                $this->quoteOrNot($this->sqlBuilder->getColumns()[$col]) :
-                $this->sampleData($type);
+            // Check if a column is provided, if not use sample data to fill in.
+            if (isset($this->sqlBuilder->getColumns()[$col])) {
+                // If the value is provided get value and check if its a keyword.
+                $value = $this->checkForKeyword($this->sqlBuilder->getColumns()[$col]);
+
+                // If the value is not a keyword then use the value provided as is.
+                if (! $value) {
+                    $value = $this->sqlBuilder->getColumns()[$col];
+                }
+
+                // Assign value back to the column.
+                $columnClause[$col] = $this->quoteOrNot($value);
+            } else {
+                $columnClause[$col] = $this->sampleData($type);
+            }
         }
 
         $columnNames = implode(', ', array_keys($columnClause));

@@ -618,4 +618,44 @@ class SQLExtensionTest extends TestHelper
         $this->assertEquals('random', $this->testObject->getKeyword('abc.my_entity_column2'));
         $this->assertEquals('random', $this->testObject->getKeyword('abc.my_entity.column2'));
     }
+
+
+    /**
+     * test that the keywords resolve using any call.
+     */
+    public function testThatKeywordsResolve()
+    {
+        $keyword = 'hjlasjdkfhlajksfdhklasdfj';
+        $this->testObject->setKeyword('{abc}', $keyword);
+
+        // Prepare / Mock
+        $entity = 'abc.my_entity';
+        $where = 'column1:{abc}, column2:!xyz';
+        $expectedResult = [
+            0 => 'id',
+            'column1' => $keyword,
+            'column2' => 'random'
+        ];
+
+        $this->testObject->get('dbManager')->getConnection()->expects($this->any())
+            ->method('prepare')
+            ->with($this->isType('string'))
+            ->willReturn($this->getPdoStatementWithRows(1, [
+                $expectedResult
+            ]));
+
+        // Execute
+        $result = $this->testObject->iHaveAnExistingWhere($entity, $where);
+
+        $this->assertEquals('dev_abc.my_entity', $this->testObject->getEntity());
+        $this->assertEquals($expectedResult, $result);
+        $this->assertEquals('id', $this->testObject->getKeyword('abc.my_entity.0'));
+        $this->assertEquals('id', $this->testObject->getKeyword('abc.my_entity_0'));
+
+        $this->assertEquals($keyword, $this->testObject->getKeyword('abc.my_entity.column1'));
+        $this->assertEquals($keyword, $this->testObject->getKeyword('abc.my_entity_column1'));
+
+        $this->assertEquals('random', $this->testObject->getKeyword('abc.my_entity_column2'));
+        $this->assertEquals('random', $this->testObject->getKeyword('abc.my_entity.column2'));
+    }
 }
