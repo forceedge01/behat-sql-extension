@@ -273,4 +273,4 @@ class FeatureContext implements Context, SnippetAcceptingContext
 Contributing to this extension
 ==============================
 
-We are supporting two different versions of the sql extension at the moment. For contributing to the branch that supports behat 2.5 please branch of `version/1.x`, for behat 3.0 branch off `version/2.x`.
+We are supporting two different versions of the sql extension at the moment. For contributing to the branch that supports behat 2.5 please branch of `behat/2.5.x`, for behat 3.0 branch off `behat/3.x`.
