@@ -131,6 +131,7 @@ class SQLBuilder implements Interfaces\SQLBuilderInterface
             'NOW\(\)',
             'COUNT\(.*\)',
             'MAX\(.*\)',
+            'DATE\(.*\)',
             '\d+'
         ];
 
