@@ -1,7 +1,10 @@
 # genesis-behat-sql-extension
-Provides easy data manipulation with any pdo enabled database for behat.
+Provides easy data manipulation with any PDO enabled database for Behat.
 
-There are several versions maintained at the moment dependent on the version of behat, for a more tailored readme around usage of this extension with a version of behat please choose the appropriate branch first.
+There are two versions maintained at the moment dependent on the version of Behat, for a more tailored README around usage of this extension please choose the appropriate branch first.
+
+[behat 2.5.x](https://github.com/forceedge01/genesis-behat-sql-extension/tree/behat/2.5.x)
+[behat 3.x](https://github.com/forceedge01/genesis-behat-sql-extension/tree/behat/3.x)
 
 Installation
 ------------
