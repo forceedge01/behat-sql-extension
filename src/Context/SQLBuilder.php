@@ -66,15 +66,20 @@ class SQLBuilder implements Interfaces\SQLBuilderInterface
 
     /**
      * Converts the incoming string param from steps to array.
-     * 
+     *
      * @param string $columns
-     * 
+     *
      * @return array
      */
-    public function convertToArray($columns)
+    public function convertToArray($query)
     {
+        // Temporary placeholder to protect escaped commas.
+        $commaEscapeCode = '%|-|';
         $this->columns = [];
-        $columns = explode(',', $columns);
+        // as a rule, each array element after this should have the ":" separator.
+        // Would it be better to use preg_match here?
+        $query = str_replace('\,', $commaEscapeCode, $query);
+        $columns = explode(',', $query);
 
         foreach ($columns as $column) {
             if (strpos($column, ':') == false) {
@@ -83,7 +88,7 @@ class SQLBuilder implements Interfaces\SQLBuilderInterface
 
             list($col, $val) = explode(':', $column, self::EXPLODE_MAX_LIMIT);
 
-            $this->columns[trim($col)] = trim($val);
+            $this->columns[trim($col)] = str_replace($commaEscapeCode, ',', trim($val));
         }
 
         return $this->columns;

@@ -156,12 +156,17 @@ class SQLBuilderTest extends PHPUnit_Framework_TestCase
     }
 
     /**
-     * testFilterAndConvertToArray Test that filterAndConvertToArray executes as expected.
+     * testConvertToArray Test that convertToArray executes as expected.
      */
-    public function testFilterAndConvertToArray()
+    public function testConvertToArray()
     {
         // Prepare / Mock
-        $columns = 'one:1, two:2, three:ransom, four:randomness';
+        $columns = 'one:1,
+            two:2,
+            three:ransom,
+            four:randomness,
+            address: 1\, Burlington road,
+            created: DATE(NOW()\, "U")';
 
         // Execute
         $result = $this->testObject->convertToArray($columns);
@@ -171,6 +176,8 @@ class SQLBuilderTest extends PHPUnit_Framework_TestCase
         $this->assertEquals($result['two'], 2);
         $this->assertEquals($result['three'], 'ransom');
         $this->assertEquals($result['four'], 'randomness');
+        $this->assertEquals($result['address'], '1, Burlington road');
+        $this->assertEquals($result['created'], 'DATE(NOW(), "U")');
     }
 
     /**
