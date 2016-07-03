@@ -454,9 +454,9 @@ class SQLHandler extends BehatContext implements Interfaces\SQLHandlerInterface
                 }
 
                 // Assign value back to the column.
-                $columnClause[$col] = $this->quoteOrNot($value);
+                $columnClause['`'.$col.'`'] = $this->quoteOrNot($value);
             } else {
-                $columnClause[$col] = $this->sampleData($type);
+                $columnClause['`'.$col.'`'] = $this->sampleData($type);
             }
         }
 

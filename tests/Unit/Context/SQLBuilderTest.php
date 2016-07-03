@@ -65,7 +65,7 @@ class SQLBuilderTest extends PHPUnit_Framework_TestCase
         // Execute
         $result = $this->testObject->constructSQLClause($commandType, $glue, $columns);
 
-        $expected = "firstname = 'Bob' AND user_agent LIKE '%Firefox%'";
+        $expected = "`firstname` = 'Bob' AND `user_agent` LIKE '%Firefox%'";
 
         // Assert Result
         $this->assertEquals($expected, $result);
@@ -90,19 +90,19 @@ class SQLBuilderTest extends PHPUnit_Framework_TestCase
         // Execute
 
         $result = $this->testObject->constructSQLClause('select', ' AND ', $columns);
-        $expected = "firstname is null AND lastname is not null AND postcode is not NULL AND address is NULL";
+        $expected = "`firstname` is null AND `lastname` is not null AND `postcode` is not NULL AND `address` is NULL";
         // Assert Result
         $this->assertEquals($expected, $result);
 
         // Execute
         $result = $this->testObject->constructSQLClause('update', ' AND ', $columns);
-        $expected = "firstname is null AND lastname is not null AND postcode is not NULL AND address is NULL";
+        $expected = "`firstname` is null AND `lastname` is not null AND `postcode` is not NULL AND `address` is NULL";
         // Assert Result
         $this->assertEquals($expected, $result);
 
         // Execute
         $result = $this->testObject->constructSQLClause('delete', ' AND ', $columns);
-        $expected = "firstname is null AND lastname is not null AND postcode is not NULL AND address is NULL";
+        $expected = "`firstname` is null AND `lastname` is not null AND `postcode` is not NULL AND `address` is NULL";
         // Assert Result
         $this->assertEquals($expected, $result);
     }
@@ -125,7 +125,7 @@ class SQLBuilderTest extends PHPUnit_Framework_TestCase
         // Execute
         $result = $this->testObject->constructSQLClause('select', $glue, $columns);
 
-        $expected = "firstname != 'Abdul' - lastname = 'Qureshi'";
+        $expected = "`firstname` != 'Abdul' - `lastname` = 'Qureshi'";
 
         // Assert Result
         $this->assertEquals($expected, $result);
@@ -149,7 +149,7 @@ class SQLBuilderTest extends PHPUnit_Framework_TestCase
         // Execute
         $result = $this->testObject->constructSQLClause('select', $glue, $columns);
 
-        $expected = "firstname = 'Abdul' - lastname = 'Qureshi'";
+        $expected = "`firstname` = 'Abdul' - `lastname` = 'Qureshi'";
 
         // Assert Result
         $this->assertEquals($expected, $result);

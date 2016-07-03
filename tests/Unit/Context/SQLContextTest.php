@@ -316,7 +316,7 @@ class SQLContextTest extends TestHelper
         $result = $this->testObject->iHaveAWhere($entity, $column);
 
         // Expected SQL.
-        $expectedSQL = "INSERT INTO dev_database.unique1 (column1) VALUES ('abc')";
+        $expectedSQL = "INSERT INTO dev_database.unique1 (`column1`) VALUES ('abc')";
 
         // Assert.
         $this->assertEquals($expectedSQL, $result);
