@@ -109,6 +109,24 @@ class DBManager implements Interfaces\DBManagerInterface
     }
 
     /**
+     * Get the first value from a PDO statement.
+     *
+     * @param Traversable $statement The statement to work with.
+     *
+     * @return mixed.
+     */
+    public function getFirstValueFromStatement(Traverable $statement)
+    {
+        $result = $statement->fetchAll();
+
+        if (! $result) {
+            return null;
+        }
+
+        return $result[0];
+    }
+
+    /**
      * @param Traversable $statement
      *
      * @return bool

@@ -50,6 +50,11 @@ class SQLHandlerTest extends TestHelper
             ->disableOriginalConstructor()
             ->getMock();
 
+        $this->dependencies['sqlBuilderMock']->expects($this->any())
+            ->method('replaceExternalQueryReferences')
+            ->with($this->isType('string'))
+            ->will($this->returnArgument(0));
+
         $this->dependencies['keyStoreMock'] = $this->getMockBuilder(KeyStoreInterface::class)
             ->disableOriginalConstructor()
             ->getMock();

@@ -370,4 +370,108 @@ class SQLBuilderTest extends PHPUnit_Framework_TestCase
             $this->assertEquals($val, $result);
         }
     }
+
+    /**
+     * testGetRefFromPlaceholder Test that getRefFromPlaceholder executes as expected.
+     */
+    public function testGetRefFromPlaceholder()
+    {
+        // Prepare / Mock
+        $placeholder = '';
+
+        // Execute
+        $result = $this->testObject->getRefFromPlaceholder($placeholder);
+
+        // Assert Result
+        //assert
+        $this->markTestIncomplete('This test has not been implemented yet.');
+    }
+
+    /**
+     * testGetSQLQueryForExternalReference Test that getSQLQueryForExternalReference executes as expected.
+     *
+     * @expectedException Exception
+     */
+    public function testGetSQLQueryForExternalReferenceInvalidFormatNoPipe()
+    {
+        // Prepare / Mock
+        $externalReference = '[kjhasjkdf]';
+
+        // Execute
+        $this->testObject->getSQLQueryForExternalReference($externalReference);
+    }
+
+    /**
+     * testGetSQLQueryForExternalReference Test that getSQLQueryForExternalReference executes as expected.
+     *
+     * @expectedException Exception
+     */
+    public function testGetSQLQueryForExternalReferenceInvalidFormatNoClosing()
+    {
+        // Prepare / Mock
+        $externalReference = '[asdf|asdf:asdf';
+
+        // Execute
+        $this->testObject->getSQLQueryForExternalReference($externalReference);
+    }
+
+    /**
+     * testGetSQLQueryForExternalReference Test that getSQLQueryForExternalReference executes as expected.
+     *
+     * @expectedException Exception
+     */
+    public function testGetSQLQueryForExternalReferenceInvalidFormatNoOpening()
+    {
+        // Prepare / Mock
+        $externalReference = '[asdfasdf]';
+
+        // Execute
+        $this->testObject->getSQLQueryForExternalReference($externalReference);
+    }
+
+    /**
+     * testGetSQLQueryForExternalReference Test that getSQLQueryForExternalReference executes as expected.
+     *
+     * @expectedException Exception
+     */
+    public function testGetSQLQueryForExternalReferenceInvalidFormatSimple()
+    {
+        // Prepare / Mock
+        $externalReference = 'alhaskjdf|kljahsdf';
+
+        // Execute
+        $this->testObject->getSQLQueryForExternalReference($externalReference);
+    }
+
+    /**
+     * testGetPlaceholderForRef Test that getPlaceholderForRef executes as expected.
+     */
+    public function testGetPlaceholderForRef()
+    {
+        // Prepare / Mock
+        $reference = '';
+
+        // Execute
+        $result = $this->testObject->getPlaceholderForRef($reference);
+
+        // Assert Result
+        //assert
+        $this->markTestIncomplete('This test has not been implemented yet.');
+    }
+
+    /**
+     * testReplaceExternalQueryReferences Test that replaceExternalQueryReferences executes as expected.
+     */
+    public function testReplaceExternalQueryReferences()
+    {
+        // Prepare / Mock
+        $query = '';
+
+        // Execute
+        $result = $this->testObject->replaceExternalQueryReferences($query);
+
+        // Assert Result
+        //assert
+        $this->markTestIncomplete('This test has not been implemented yet.');
+    }
 }

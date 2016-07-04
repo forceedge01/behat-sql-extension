@@ -61,4 +61,40 @@ interface SQLBuilderInterface
      * Returns the columns stored after conversion to array.
      */
     public function getColumns();
+
+    /**
+     * Get reference for a placeholder.
+     *
+     * @param string $placeholder The placeholder string.
+     *
+     * @return string|false Placeholder ref or false if the placeholder is not found.
+     */
+    public function getRefFromPlaceholder($placeholder);
+
+    /**
+     * Get single query for the external reference.
+     *
+     * @param string $externalRef The external ref enclosed in [].
+     *
+     * @return string
+     */
+    public function getSQLQueryForExternalReference($externalRef);
+
+    /**
+     * Get placeholder for reference.
+     *
+     * @param string $ref The reference string.
+     *
+     * @return string The placeholder.
+     */
+    public function getPlaceholderForRef($ref);
+
+    /**
+     * replaceExternalQueryReferences.
+     *
+     * @param string $query
+     *
+     * @return array
+     */
+    public function replaceExternalQueryReferences($query);
 }

@@ -13,12 +13,17 @@ class SQLBuilder implements Interfaces\SQLBuilderInterface
     private $columns = [];
 
     /**
+     * External references, format of an external ref [...|...:...].
+     */
+    private $refs = [];
+
+    /**
      * Constructs a clause based on the glue, to be used for where and update clause.
-     * 
+     *
      * @param string $commandType
      * @param string $glue
      * @param array $columns
-     * 
+     *
      * @return string
      */
     public function constructSQLClause($commandType, $glue, array $columns)
@@ -250,5 +255,102 @@ class SQLBuilder implements Interfaces\SQLBuilderInterface
     public function getColumns()
     {
         return $this->columns;
+    }
+
+    /**
+     * Get reference for a placeholder.
+     *
+     * @param string $placeholder The placeholder string.
+     *
+     * @return string|false Placeholder ref or false if the placeholder is not found.
+     */
+    public function getRefFromPlaceholder($placeholder)
+    {
+        if (strpos($placeholder, 'placeholder_') === false) {
+            return false;
+        }
+
+        list($garbage, $index) = explode('_', $placeholder);
+        unset($garbage);
+
+        return $this->refs[$index];
+    }
+
+    /**
+     * Get single query for the external reference.
+     *
+     * @param string $externalRef The external ref enclosed in [].
+     *
+     * @return string
+     */
+    public function getSQLQueryForExternalReference($externalRef)
+    {
+        // [user.id|user.email: its.inevitable@hotmail.com]
+        // [woody_crm.users.id|email:its.inevitable@hotmail.com,status:1]
+        if (substr($externalRef, 1) == '[' or
+            substr($externalRef, -1) != ']' or
+            strpos($externalRef, '|') === false) {
+            throw new Exception(
+                'Invalid external ref provided, external ref must be enclosed in "[]" and have be split by "|"'
+            );
+        }
+
+        list($columnAndTable, $criteria) = explode('|', trim($externalRef, '[]'));
+
+        // Get the table and column names.
+        $table = preg_match('#.+(?=\.)#', $columnAndTable, $table);
+        $array = explode('.', $columnAndTable);
+        $column = end($array);
+
+        // Construct where clause.
+        $whereClause = $this->constructSQLClause('SELECT', ' AND ', $this->convertToArray($criteria));
+
+        return sprintf('SELECT %s FROM %s WHERE %s', $column, $table, $whereClause);
+    }
+
+    /**
+     * Get placeholder for reference.
+     *
+     * @param string $externalRef The reference string.
+     *
+     * @return string The placeholder.
+     */
+    public function getPlaceholderForRef($externalRef)
+    {
+        // Search for existing refs.
+        $index = array_search($externalRef, $this->refs);
+
+        if (! $index) {
+            $this->refs[] = $externalRef;
+            $index = array_search($externalRef, $this->refs);
+        }
+
+        return sprintf('placeholder_%d', $index);
+    }
+
+    /**
+     * replaceExternalQueryReferences.
+     *
+     * @param string $query
+     *
+     * @return array
+     */
+    public function replaceExternalQueryReferences($query)
+    {
+        // Extract all matches for external refs.
+        $pattern = '#(\[[^\]]+\])#';
+        $refs = [];
+        preg_match_all($pattern, $query, $refs);
+
+        // If there are any external ref matches, then replace them with placeholders.
+        if ($refs) {
+            foreach ($refs as $ref) {
+                $placeholder = $this->getPlaceholderForRef($ref);
+                $query = str_replace($ref, $placeholder, $query);
+            }
+        }
+
+        // Return query with potential placeholders.
+        return $query;
     }
 }
