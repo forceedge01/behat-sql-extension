@@ -609,8 +609,6 @@ class SQLExtensionTest extends TestHelper
 
         $this->assertEquals('dev_abc.my_entity', $this->testObject->getEntity());
         $this->assertEquals($expectedResult, $result);
-        $this->assertEquals('id', $this->testObject->getKeyword('abc.my_entity.0'));
-        $this->assertEquals('id', $this->testObject->getKeyword('abc.my_entity_0'));
 
         $this->assertEquals('abc', $this->testObject->getKeyword('abc.my_entity.column1'));
         $this->assertEquals('abc', $this->testObject->getKeyword('abc.my_entity_column1'));
@@ -649,8 +647,6 @@ class SQLExtensionTest extends TestHelper
 
         $this->assertEquals('dev_abc.my_entity', $this->testObject->getEntity());
         $this->assertEquals($expectedResult, $result);
-        $this->assertEquals('id', $this->testObject->getKeyword('abc.my_entity.0'));
-        $this->assertEquals('id', $this->testObject->getKeyword('abc.my_entity_0'));
 
         $this->assertEquals($keyword, $this->testObject->getKeyword('abc.my_entity.column1'));
         $this->assertEquals($keyword, $this->testObject->getKeyword('abc.my_entity_column1'));

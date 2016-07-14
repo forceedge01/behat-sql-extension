@@ -407,9 +407,11 @@ class SQLHandler extends BehatContext implements Interfaces\SQLHandlerInterface
 
         // Set all columns as reusable.
         foreach ($record as $column => $value) {
-            $this->setKeyword(sprintf('%s.%s', $entity, $column), $value);
-            // For backward compatibility.
-            $this->setKeyword(sprintf('%s_%s', $entity, $column), $value);
+            if (! is_numeric($column)) {
+                $this->setKeyword(sprintf('%s.%s', $entity, $column), $value);
+                // For backward compatibility.
+                $this->setKeyword(sprintf('%s_%s', $entity, $column), $value);
+            }
         }
 
         return $record;
