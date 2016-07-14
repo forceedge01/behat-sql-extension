@@ -287,9 +287,8 @@ class SQLBuilder implements Interfaces\SQLBuilderInterface
     {
         // [user.id|user.email: its.inevitable@hotmail.com]
         // [woody_crm.users.id|email:its.inevitable@hotmail.com,status:1]
-        if (substr($externalRef, 1) == '[' or
-            substr($externalRef, -1) != ']' or
-            strpos($externalRef, '|') === false) {
+        $externalRefPattern = '#(\[[^\]]+\|.+?\])#';
+        if (!preg_match($externalRefPattern, $externalRef)) {
             throw new Exception(
                 'Invalid external ref provided, external ref must be enclosed in "[]" and have be split by "|"'
             );
@@ -338,13 +337,13 @@ class SQLBuilder implements Interfaces\SQLBuilderInterface
     public function replaceExternalQueryReferences($query)
     {
         // Extract all matches for external refs.
-        $pattern = '#(\[[^\]]+\])#';
+        $pattern = '#(\[[^\]]+\|.+?\])#';
         $refs = [];
         preg_match_all($pattern, $query, $refs);
 
         // If there are any external ref matches, then replace them with placeholders.
-        if ($refs) {
-            foreach ($refs as $ref) {
+        if (isset($refs[0])) {
+            foreach ($refs[0] as $ref) {
                 $placeholder = $this->getPlaceholderForRef($ref);
                 $query = str_replace($ref, $placeholder, $query);
             }

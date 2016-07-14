@@ -60,7 +60,7 @@ class DBManager implements Interfaces\DBManagerInterface
         if (! $this->connection) {
             list($dns, $username, $password) = $this->getConnectionString();
 
-            $this->connection = new \PDO($dns, $username, $password);
+            $this->connection = new PDO($dns, $username, $password);
         }
 
         return $this->connection;
@@ -228,6 +228,22 @@ class DBManager implements Interfaces\DBManagerInterface
     }
 
     /**
+     * @param array $data The array to look into.
+     * @param string $if The index to check in the array.
+     * @param mixed $else If the index is not found, use this value.
+     *
+     * @return mixed
+     */
+    private function arrayIfElse($data, $if, $else)
+    {
+        if (array_key_exists($if, $data)) {
+            return $data[$if];
+        }
+
+        return $else;
+    }
+
+    /**
      * Sets the database param from either the environment variable or params
      * passed in by behat.yml, params have precedence over env variable.
      *
@@ -237,18 +253,15 @@ class DBManager implements Interfaces\DBManagerInterface
      */
     private function setDBParams(array $dbParams = array())
     {
-        if (defined('SQLDBENGINE')) {
-            $this->params = [
-                'DBSCHEMA' => SQLDBSCHEMA,
-                'DBNAME' => SQLDBNAME,
-                'DBPREFIX' => SQLDBPREFIX
-            ];
-
+        if (defined('SQLDBENGINE') || $dbParams) {
             // Allow params to be over-ridable.
-            $this->params['DBHOST'] = (isset($dbParams['host']) ? $dbParams['host'] : SQLDBHOST);
-            $this->params['DBUSER'] = (isset($dbParams['username']) ? $dbParams['username'] : SQLDBUSERNAME);
-            $this->params['DBPASSWORD'] = (isset($dbParams['password']) ? $dbParams['password'] : SQLDBPASSWORD);
-            $this->params['DBENGINE'] = (isset($dbParams['engine']) ? $dbParams['engine'] : SQLDBENGINE);
+            $this->params['DBSCHEMA'] = $this->arrayIfElse($dbParams, 'schema', SQLDBSCHEMA);
+            $this->params['DBNAME'] = $this->arrayIfElse($dbParams, 'name', SQLDBNAME);
+            $this->params['DBPREFIX'] = $this->arrayIfElse($dbParams, 'prefix', SQLDBPREFIX);
+            $this->params['DBHOST'] = $this->arrayIfElse($dbParams, 'host', SQLDBHOST);
+            $this->params['DBUSER'] = $this->arrayIfElse($dbParams, 'username', SQLDBUSERNAME);
+            $this->params['DBPASSWORD'] = $this->arrayIfElse($dbParams, 'password', SQLDBPASSWORD);
+            $this->params['DBENGINE'] = $this->arrayIfElse($dbParams, 'engine', SQLDBENGINE);
         } else {
             $params = getenv('BEHAT_ENV_PARAMS');
 

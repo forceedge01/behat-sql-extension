@@ -14,7 +14,7 @@ class DBManagerTest extends TestHelper
     /**
      * @var object $testObject The object to be tested.
      */
-    private $testObject;
+    protected $testObject;
 
     /**
      * Setup unit testing.
@@ -51,6 +51,13 @@ class DBManagerTest extends TestHelper
         $result = $this->testObject->getConnection();
 
         $this->assertEquals($value, $result);
+    }
+
+    public function testGetConnection()
+    {
+        $this->testObject->setConnection(null);
+
+        $result = $this->testObject->getConnection();
     }
 
     public function testGetPrimaryKeyForTableReturnNothing()
@@ -192,7 +199,45 @@ class DBManagerTest extends TestHelper
             ->will($this->returnValue($this->getPdoStatementWithRows(2, [
                     ['column_name' => 'id', 'data_type' => 'int'],
                     ['column_name' => 'name', 'data_type' => 'string'
-                ]])));
+                    ]
+                ])));
+
+        $result = $this->testObject->getRequiredTableColumns($table);
+
+        $this->assertTrue(['name' => 'string'] === $result);
+    }
+
+    public function testGetRequiredTableColumnsNoSchemaInparams()
+    {
+        $table = 'myapp.user';
+        $expectedSql = "
+            SELECT 
+                column_name, data_type 
+            FROM 
+                information_schema.columns 
+            WHERE 
+                is_nullable = 'NO'
+            AND 
+                table_name = 'user'
+            AND 
+                table_schema = 'myapp';";
+
+        // Override the preset schema to be null as params take precedence over defined constants.
+        // This should make then make use of the 'myapp' table schema.
+        $dbParams = ['schema' => ''];
+        $this->accessMethod('setDBParams')->invokeArgs(
+            $this->testObject,
+            [$dbParams]
+        );
+
+        $this->testObject->getConnection()->expects($this->once())
+            ->method('prepare')
+            ->with($expectedSql)
+            ->will($this->returnValue($this->getPdoStatementWithRows(2, [
+                    ['column_name' => 'id', 'data_type' => 'int'],
+                    ['column_name' => 'name', 'data_type' => 'string'
+                    ]
+                ])));
 
         $result = $this->testObject->getRequiredTableColumns($table);
 
