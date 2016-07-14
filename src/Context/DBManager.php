@@ -143,7 +143,7 @@ class DBManager implements Interfaces\DBManagerInterface
         // Statement to extract all required columns for a table.
         $sqlStatement = "
             SELECT 
-                column_name, data_type 
+                `column_name`, `data_type` 
             FROM 
                 information_schema.columns 
             WHERE 

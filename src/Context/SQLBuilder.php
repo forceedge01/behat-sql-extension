@@ -14,11 +14,11 @@ class SQLBuilder implements Interfaces\SQLBuilderInterface
 
     /**
      * Constructs a clause based on the glue, to be used for where and update clause.
-     * 
+     *
      * @param string $commandType
      * @param string $glue
      * @param array $columns
-     * 
+     *
      * @return string
      */
     public function constructSQLClause($commandType, $glue, array $columns)
@@ -57,7 +57,7 @@ class SQLBuilder implements Interfaces\SQLBuilderInterface
 
             // Make up the sql.
             $comparator = sprintf($comparator, $notOperator);
-            $clause = sprintf('%s %s %s', $column, $comparator, $quotedValue);
+            $clause = sprintf('`%s` %s %s', $column, $comparator, $quotedValue);
             $whereClause[] = $clause;
         }
 

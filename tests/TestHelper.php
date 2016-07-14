@@ -118,7 +118,7 @@ class TestHelper extends PHPUnit_Framework_TestCase
 
     /**
      * Mock dependency methods.
-     * 
+     *
      * @param string $dependency
      * @param array $methods
      */
