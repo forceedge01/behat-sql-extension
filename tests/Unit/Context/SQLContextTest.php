@@ -136,8 +136,8 @@ class SQLContextTest extends TestHelper
             ));
 
         $this->mockDependencyValueMap('sqlBuilder', 'constructSQLClause', array(
-                array('select', ' AND ', $convertedQuery1, "email = 'its.inevitable@hotmail.com' AND name = 'Abdul'"),
-                array('select', ' AND ', $convertedQuery2, "email = 'forceedge01@gmail.com' AND name = 'Qureshi'")
+                array('select', ' AND ', $convertedQuery1, "`email` = 'its.inevitable@hotmail.com' AND `name` = 'Abdul'"),
+                array('select', ' AND ', $convertedQuery2, "`email` = 'forceedge01@gmail.com' AND `name` = 'Qureshi'")
             ));
 
         $sqls = $this->testObject->iHaveWhere($entity, $node);
@@ -197,8 +197,8 @@ class SQLContextTest extends TestHelper
             ));
 
         $this->mockDependencyValueMap('sqlBuilder', 'constructSQLClause', array(
-                array('select', ' AND ', $convertedQuery1, "email = 'its.inevitable@hotmail.com' AND name = 'Abdul'"),
-                array('select', ' AND ', $convertedQuery2, "email = 'forceedge01@gmail.com' AND name = 'Qureshi'")
+                array('select', ' AND ', $convertedQuery1, "`email` = 'its.inevitable@hotmail.com' AND `name` = 'Abdul'"),
+                array('select', ' AND ', $convertedQuery2, "`email` = 'forceedge01@gmail.com' AND `name` = 'Qureshi'")
             ));
 
         $sqls = $this->testObject->iHave($node);
@@ -244,7 +244,7 @@ class SQLContextTest extends TestHelper
                 ' AND ',
                 $convertedQuery1
             ),
-            "column1 = 'abc' AND column2 = 'xyz' AND column3 is NULL AND column4 = 'what\'s up doc'"
+            "`column1` = 'abc' AND `column2` = 'xyz' AND `column3` is NULL AND `column4` = 'what\'s up doc'"
         );
 
         $this->mockDependency('dbHelperMock', 'getRequiredTableColumns', null, []);
@@ -256,7 +256,7 @@ class SQLContextTest extends TestHelper
         $result = $this->testObject->iHaveAWhere($entity, $column);
 
         // Expected SQL.
-        $expectedSQL = "SELECT * FROM dev_database.unique WHERE column1 = 'abc' AND column2 = 'xyz' AND column3 is NULL AND column4 = 'what\'s up doc'";
+        $expectedSQL = "SELECT * FROM dev_database.unique WHERE `column1` = 'abc' AND `column2` = 'xyz' AND `column3` is NULL AND `column4` = 'what\'s up doc'";
 
         // Assert.
         $this->assertEquals($expectedSQL, $result);
@@ -321,7 +321,7 @@ class SQLContextTest extends TestHelper
         $result = $this->testObject->iHaveAWhere($entity, $column);
 
         // Expected SQL.
-        $expectedSQL = "INSERT INTO dev_database.unique1 (column1) VALUES ('abc')";
+        $expectedSQL = "INSERT INTO dev_database.unique1 (`column1`) VALUES ('abc')";
 
         // Assert.
         $this->assertEquals($expectedSQL, $result);
@@ -374,13 +374,13 @@ class SQLContextTest extends TestHelper
                 ' AND ',
                 $convertedQuery1
             ),
-            "column1 = 'abc' AND column2 = 'xyz' AND column3 is NULL AND column4 = 'what\\'s up doc'"
+            "`column1` = 'abc' AND `column2` = 'xyz' AND `column3` is NULL AND `column4` = 'what\\'s up doc'"
         );
 
         $result = $this->testObject->iDontHaveAWhere($entity, $column);
 
         // Expected SQL.
-        $expectedSQL = "DELETE FROM dev_database.someTable WHERE column1 = 'abc' AND column2 = 'xyz' AND column3 is NULL AND column4 = 'what\'s up doc'";
+        $expectedSQL = "DELETE FROM dev_database.someTable WHERE `column1` = 'abc' AND `column2` = 'xyz' AND `column3` is NULL AND `column4` = 'what\'s up doc'";
 
         // Assert.
         $this->assertEquals($expectedSQL, $result);
@@ -444,8 +444,8 @@ class SQLContextTest extends TestHelper
             ));
 
         $this->mockDependencyValueMap('sqlBuilder', 'constructSQLClause', array(
-                array('delete', ' AND ', $convertedQuery1, "email = 'its.inevitable@hotmail.com' AND name = 'Abdul'"),
-                array('delete', ' AND ', $convertedQuery2, "email = 'forceedge01@gmail.com' AND name = 'Qureshi'")
+                array('delete', ' AND ', $convertedQuery1, "`email` = 'its.inevitable@hotmail.com' AND `name` = 'Abdul'"),
+                array('delete', ' AND ', $convertedQuery2, "`email` = 'forceedge01@gmail.com' AND `name` = 'Qureshi'")
             ));
 
         $sqls = $this->testObject->iDontHaveWhere($entity, $node);
@@ -562,14 +562,14 @@ class SQLContextTest extends TestHelper
             ));
 
         $this->mockDependencyValueMap('sqlBuilder', 'constructSQLClause', array(
-                array('update', ', ', $convertedQuery1, "column1 = 'abc', column2 = 'xyz', column3 = NULL, column4 = 'what\'s up doc'"),
-                array('update', ' AND ', $convertedQuery2, "id = 134 AND photo is not NULL AND column = 'what\'s up doc'")
+                array('update', ', ', $convertedQuery1, "`column1` = 'abc', `column2` = 'xyz', `column3` = NULL, `column4` = 'what\'s up doc'"),
+                array('update', ' AND ', $convertedQuery2, "`id` = 134 AND `photo` is not NULL AND `column` = 'what\'s up doc'")
             ));
 
         $result = $this->testObject->iHaveAnExistingWithWhere($entity, $with, $columns);
 
         // Expected SQL.
-        $expectedSQL = "UPDATE dev_database.someTable2 SET column1 = 'abc', column2 = 'xyz', column3 = NULL, column4 = 'what\'s up doc' WHERE id = 134 AND photo is not NULL AND column = 'what\'s up doc'";
+        $expectedSQL = "UPDATE dev_database.someTable2 SET `column1` = 'abc', `column2` = 'xyz', `column3` = NULL, `column4` = 'what\'s up doc' WHERE `id` = 134 AND `photo` is not NULL AND `column` = 'what\'s up doc'";
 
         // Assert.
         $this->assertEquals($expectedSQL, $result);
@@ -603,7 +603,7 @@ class SQLContextTest extends TestHelper
                 ' AND ',
                 $convertedQuery1
             ),
-            "column1 = 'abc' AND column2 = 'xyz' AND column3 is NULL AND column4 = 'what\\'s up doc'"
+            "`column1` = 'abc' AND `column2` = 'xyz' AND `column3` is NULL AND `column4` = 'what\\'s up doc'"
         );
 
         $expectedResult = [['id' => 5, 'name' => 'Abdul']];
@@ -612,7 +612,7 @@ class SQLContextTest extends TestHelper
             ->method('fetchAll')
             ->will($this->returnValue($expectedResult));
 
-        $this->mockDependency('dbHelperMock', 'execute', ["SELECT * FROM dev_database.someTable2 WHERE column1 = 'abc' AND column2 = 'xyz' AND column3 is NULL AND column4 = 'what\'s up doc'"], $statement);
+        $this->mockDependency('dbHelperMock', 'execute', ["SELECT * FROM dev_database.someTable2 WHERE `column1` = 'abc' AND `column2` = 'xyz' AND `column3` is NULL AND `column4` = 'what\'s up doc'"], $statement);
 
         $this->mockDependency('dbHelperMock', 'throwErrorIfNoRowsAffected', [$statement]);
 
@@ -666,12 +666,12 @@ class SQLContextTest extends TestHelper
             'column3' => 'NULL'
         ]);
 
-        $this->mockDependency('sqlBuilder', 'constructSQLClause', null, "column1 = 'abc' AND column2 = 'xyz' AND column3 is NULL");
+        $this->mockDependency('sqlBuilder', 'constructSQLClause', null, "`column1` = 'abc' AND `column2` = 'xyz' AND `column3` is NULL");
 
         $result = $this->testObject->iShouldHaveAWithTable($entity, $with);
 
         // Expected SQL.
-        $expectedSQL = "SELECT * FROM dev_database.someTable4 WHERE column1 = 'abc' AND column2 = 'xyz' AND column3 is NULL";
+        $expectedSQL = "SELECT * FROM dev_database.someTable4 WHERE `column1` = 'abc' AND `column2` = 'xyz' AND `column3` is NULL";
 
         // Assert.
         $this->assertEquals($expectedSQL, $result);
@@ -708,12 +708,12 @@ class SQLContextTest extends TestHelper
             'column3' => '!NULL'
         ]);
 
-        $this->mockDependency('sqlBuilder', 'constructSQLClause', null, "column1 = 'abc' AND column2 = 'xyz' AND column3 is not NULL");
+        $this->mockDependency('sqlBuilder', 'constructSQLClause', null, "`column1` = 'abc' AND `column2` = 'xyz' AND `column3` is not NULL");
 
         $result = $this->testObject->iShouldHaveAWith($entity, $with);
 
         // Expected SQL.
-        $expectedSQL = "SELECT * FROM dev_database.someTable4 WHERE column1 = 'abc' AND column2 = 'xyz' AND column3 is not NULL";
+        $expectedSQL = "SELECT * FROM dev_database.someTable4 WHERE `column1` = 'abc' AND `column2` = 'xyz' AND `column3` is not NULL";
 
         // Assert.
         $this->assertEquals($expectedSQL, $result);
@@ -745,7 +745,7 @@ class SQLContextTest extends TestHelper
             'column3' => 'what\'s up doc'
         ]);
 
-        $this->mockDependency('sqlBuilder', 'constructSQLClause', null, "column1 = 'abc' AND column2 = 'xyz' AND column3 = 'what\'s up doc'");
+        $this->mockDependency('sqlBuilder', 'constructSQLClause', null, "`column1` = 'abc' AND `column2` = 'xyz' AND `column3` = 'what\'s up doc'");
 
         $this->testObject->iShouldNotHaveAWith($entity, $with);
     }
@@ -772,11 +772,11 @@ class SQLContextTest extends TestHelper
             'column3' => 'what\'s up doc'
         ]);
 
-        $this->mockDependency('sqlBuilder', 'constructSQLClause', null, "column1 = 'abc' AND column2 = 'xyz' AND column3 = 'what\'s up doc'");
+        $this->mockDependency('sqlBuilder', 'constructSQLClause', null, "`column1` = 'abc' AND `column2` = 'xyz' AND `column3` = 'what\'s up doc'");
 
         $result = $this->testObject->iShouldNotHaveAWith($entity, $with);
 
-        $expectedSQL = "SELECT * FROM dev_database.someTable3 WHERE column1 = 'abc' AND column2 = 'xyz' AND column3 = 'what\'s up doc'";
+        $expectedSQL = "SELECT * FROM dev_database.someTable3 WHERE `column1` = 'abc' AND `column2` = 'xyz' AND `column3` = 'what\'s up doc'";
 
         $this->assertEquals($expectedSQL, $result);
     }
@@ -823,7 +823,7 @@ class SQLContextTest extends TestHelper
             'column2' => 'xyz'
         ]);
 
-        $this->mockDependency('sqlBuilder', 'constructSQLClause', null, "column1 = 'abc' AND column2 = 'xyz'");
+        $this->mockDependency('sqlBuilder', 'constructSQLClause', null, "`column1` = 'abc' AND `column2` = 'xyz'");
 
         $this->testObject->iShouldNotHaveAWithTable($entity, $with);
     }
@@ -856,12 +856,12 @@ class SQLContextTest extends TestHelper
             'column2' => '%xyz%'
         ]);
 
-        $this->mockDependency('sqlBuilder', 'constructSQLClause', null, "column1 = 'abc' AND column2 LIKE '%xyz%'");
+        $this->mockDependency('sqlBuilder', 'constructSQLClause', null, "`column1` = 'abc' AND `column2` LIKE '%xyz%'");
 
         $result = $this->testObject->iShouldHaveAWith($entity, $with);
 
         // Expected SQL.
-        $expectedSQL = "SELECT * FROM dev_database.someTable4 WHERE column1 = 'abc' AND column2 LIKE '%xyz%'";
+        $expectedSQL = "SELECT * FROM dev_database.someTable4 WHERE `column1` = 'abc' AND `column2` LIKE '%xyz%'";
 
         // Assert.
         $this->assertEquals($expectedSQL, $result);

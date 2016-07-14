@@ -46,6 +46,9 @@ namespace Genesis\SQLExtension\Tests;
 
 use PHPUnit_Framework_TestCase;
 use Exception;
+use ReflectionClass;
+use ReflectionMethod;
+use ReflectionProperty;
 
 class TestHelper extends PHPUnit_Framework_TestCase
 {
@@ -118,7 +121,7 @@ class TestHelper extends PHPUnit_Framework_TestCase
 
     /**
      * Mock dependency methods.
-     * 
+     *
      * @param string $dependency
      * @param array $methods
      */
@@ -153,5 +156,34 @@ class TestHelper extends PHPUnit_Framework_TestCase
         $this->dependencies[$dependency]->expects($this->any())
             ->method($method)
             ->will($this->returnValueMap($valueMap));
+    }
+
+
+    /**
+     * @param string $method The method to make accessible.
+     *
+     * @return ReflectionMethod
+     */
+    protected function accessMethod($method)
+    {
+        $reflectionMethod = new ReflectionMethod(get_class($this->testObject), $method);
+        $reflectionMethod->setAccessible(true);
+
+        return $reflectionMethod;
+    }
+
+
+    /**
+     * @param string $property The property to make accesible.
+     *
+     * @return ReflectionProperty
+     */
+    protected function accessProperty($property)
+    {
+        $reflection = new ReflectionClass(get_class($this->testObject));
+        $propertyReflection = $reflection->getProperty($property);
+        $propertyReflection->setAccessible(true);
+
+        return $propertyReflection;
     }
 }

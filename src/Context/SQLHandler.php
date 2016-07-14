@@ -392,13 +392,11 @@ class SQLHandler extends BehatContext implements Interfaces\SQLHandlerInterface
         $result = $statement->fetchAll();
 
         if (! $result) {
-            throw new Exception(
-                sprintf(
-                    'Unable to fetch result using criteria "%s" on "%s"',
-                    $criteria,
-                    $entity
-                )
-            );
+            throw new Exceptions\RecordNotFoundException(sprintf(
+                'Unable to fetch result using criteria "%s" on "%s"',
+                $criteria,
+                $entity
+            ));
         }
 
         return $result;
@@ -417,10 +415,11 @@ class SQLHandler extends BehatContext implements Interfaces\SQLHandlerInterface
 
         // Set all columns as reusable.
         foreach ($record as $column => $value) {
-            $this->setKeyword(sprintf('%s.%s', $entity, $column), $value);
-            // For backward compatibility.
-            $this->debugLog(sprintf('DEPRECIATED: use %s.%s instead', $entity, $column));
-            $this->setKeyword(sprintf('%s_%s', $entity, $column), $value);
+            if (! is_numeric($column)) {
+                $this->setKeyword(sprintf('%s.%s', $entity, $column), $value);
+                // For backward compatibility.
+                $this->setKeyword(sprintf('%s_%s', $entity, $column), $value);
+            }
         }
 
         return $record;
@@ -478,9 +477,9 @@ class SQLHandler extends BehatContext implements Interfaces\SQLHandlerInterface
                 }
 
                 // Assign value back to the column.
-                $columnClause[$col] = $this->quoteOrNot($value);
+                $columnClause['`'.$col.'`'] = $this->quoteOrNot($value);
             } else {
-                $columnClause[$col] = $this->sampleData($type);
+                $columnClause['`'.$col.'`'] = $this->sampleData($type);
             }
         }
 

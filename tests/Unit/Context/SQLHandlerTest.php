@@ -402,7 +402,7 @@ class SQLHandlerTest extends TestHelper
             )));
 
         $expectedResult = array(
-            0 => 'id, name, email, role',
+            0 => '`id`, `name`, `email`, `role`',
             1 => '234234, "Abdul", "Abdul@random.com", "admin"'
         );
 

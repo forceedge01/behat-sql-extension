@@ -158,7 +158,7 @@ class DBManagerTest extends TestHelper
         $table = 'user';
         $expectedSql = "
             SELECT 
-                column_name, data_type 
+                `column_name`, `data_type` 
             FROM 
                 information_schema.columns 
             WHERE 
@@ -183,7 +183,7 @@ class DBManagerTest extends TestHelper
         $table = 'user';
         $expectedSql = "
             SELECT 
-                column_name, data_type 
+                `column_name`, `data_type` 
             FROM 
                 information_schema.columns 
             WHERE 
@@ -259,7 +259,7 @@ class DBManagerTest extends TestHelper
     }
 
     /**
-     * @expectedException \Exception
+     * @expectedException \Genesis\SQLExtension\Context\Exceptions\NoRowsAffectedException
      */
     public function testThrowErrorsIfNoRowsAffectedNoRowsAffected()
     {

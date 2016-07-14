@@ -161,7 +161,7 @@ class DBManager implements Interfaces\DBManagerInterface
         // Statement to extract all required columns for a table.
         $sqlStatement = "
             SELECT 
-                column_name, data_type 
+                `column_name`, `data_type` 
             FROM 
                 information_schema.columns 
             WHERE 
@@ -297,14 +297,9 @@ class DBManager implements Interfaces\DBManagerInterface
                 return $sqlStatement->errorInfo();
             }
 
-            throw new Exception(
-                sprintf(
-                    'No rows were effected!%sSQL: "%s",%sError: %s',
-                    PHP_EOL,
-                    $sqlStatement->queryString,
-                    PHP_EOL,
-                    $error
-                )
+            throw new Exceptions\NoRowsAffectedException(
+                $sqlStatement->queryString,
+                $error
             );
         }
 

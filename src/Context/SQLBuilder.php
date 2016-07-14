@@ -62,7 +62,7 @@ class SQLBuilder implements Interfaces\SQLBuilderInterface
 
             // Make up the sql.
             $comparator = sprintf($comparator, $notOperator);
-            $clause = sprintf('%s %s %s', $column, $comparator, $quotedValue);
+            $clause = sprintf('`%s` %s %s', $column, $comparator, $quotedValue);
             $whereClause[] = $clause;
         }
 
