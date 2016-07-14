@@ -214,7 +214,7 @@ class DBManagerTest extends TestHelper
     }
 
     /**
-     * @expectedException \Exception
+     * @expectedException \Genesis\SQLExtension\Context\Exceptions\NoRowsAffectedException
      */
     public function testThrowErrorsIfNoRowsAffectedNoRowsAffected()
     {

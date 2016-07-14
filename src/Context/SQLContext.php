@@ -358,11 +358,10 @@ class SQLContext extends SQLHandler implements Interfaces\SQLContextInterface
         // catch it and give it some context.
         $statement = $this->execute($sql);
         if (! $this->hasFetchedRows($statement)) {
-            throw new Exception(sprintf(
-                'Record not found with "%s" in "%s"',
+            throw new Exceptions\RecordNotFoundException(
                 $selectWhereClause,
                 $this->getEntity()
-            ));
+            );
         }
 
         return $sql;
@@ -398,11 +397,10 @@ class SQLContext extends SQLHandler implements Interfaces\SQLContextInterface
         $statement = $this->execute($sql);
 
         if ($this->hasFetchedRows($statement)) {
-            throw new Exception(sprintf(
-                'Unexpected record found with "%s" in "%s".',
+            throw new Exceptions\RecordFoundException(
                 $selectWhereClause,
                 $this->getEntity()
-            ));
+            );
         }
 
         return $sql;

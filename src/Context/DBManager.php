@@ -266,14 +266,9 @@ class DBManager implements Interfaces\DBManagerInterface
                 return $sqlStatement->errorInfo();
             }
 
-            throw new Exception(
-                sprintf(
-                    'No rows were effected!%sSQL: "%s",%sError: %s',
-                    PHP_EOL,
-                    $sqlStatement->queryString,
-                    PHP_EOL,
-                    $error
-                )
+            throw new Exceptions\NoRowsAffectedException(
+                $sqlStatement->queryString,
+                $error
             );
         }
 

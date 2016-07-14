@@ -44,8 +44,8 @@ class LocalKeyStoreTest extends PHPUnit_Framework_TestCase
 
     /**
      * Throw exception if no keys are set at all.
-     * 
-     * @expectedException Exception
+     *
+     * @expectedException \Genesis\SQLExtension\Context\Exceptions\KeywordNotFoundException
      */
     public function testGetKeywordNoKeywords()
     {
@@ -54,8 +54,8 @@ class LocalKeyStoreTest extends PHPUnit_Framework_TestCase
 
     /**
      * Throw exception if keys are found but not the one that we are looking for.
-     * 
-     * @expectedException Exception
+     *
+     * @expectedException \Genesis\SQLExtension\Context\Exceptions\KeywordNotFoundException
      */
     public function testGetKeywordNotFound()
     {

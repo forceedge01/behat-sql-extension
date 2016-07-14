@@ -2,8 +2,6 @@
 
 namespace Genesis\SQLExtension\Context;
 
-use Exception;
-
 class LocalKeyStore implements Interfaces\KeyStoreInterface
 {
     /**
@@ -32,14 +30,13 @@ class LocalKeyStore implements Interfaces\KeyStoreInterface
     {
         if (! isset($_SESSION['behat']['GenesisSqlExtension']['keywords'][$key])) {
             if (! isset($_SESSION['behat']['GenesisSqlExtension']['keywords'])) {
-                throw new Exception('No keywords found.');
+                throw new Exceptions\KeywordNotFoundException();
             }
 
-            throw new Exception(sprintf(
-                'Key "%s" not found in behat store, all keys available: %s',
+            throw new Exceptions\KeywordNotFoundException(
                 $key,
-                print_r($_SESSION['behat']['GenesisSqlExtension']['keywords'], true)
-            ));
+                $_SESSION['behat']['GenesisSqlExtension']['keywords']
+            );
         }
 
         $value = $_SESSION['behat']['GenesisSqlExtension']['keywords'][$key];
