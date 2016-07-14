@@ -409,7 +409,6 @@ class SQLHandler extends BehatContext implements Interfaces\SQLHandlerInterface
         foreach ($record as $column => $value) {
             $this->setKeyword(sprintf('%s.%s', $entity, $column), $value);
             // For backward compatibility.
-            $this->debugLog(sprintf('DEPRECIATED: use %s.%s instead', $entity, $column));
             $this->setKeyword(sprintf('%s_%s', $entity, $column), $value);
         }
 

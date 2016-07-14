@@ -23,7 +23,7 @@ class DebuggerTest extends TestHelper
         Debugger::log($message);
         $result = ob_get_clean();
 
-        $expectedMessage = 'DEBUG >>> ' . $message . PHP_EOL . PHP_EOL;
+        $expectedMessage = 'DEBUG >>> ' . $message . PHP_EOL;
 
         $this->assertInternalType('string', $result);
         $this->assertEquals($expectedMessage, $result);
