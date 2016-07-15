@@ -58,7 +58,7 @@ class DBManager implements Interfaces\DBManagerInterface
     public function getConnection()
     {
         if (! $this->connection) {
-            list($dns, $username, $password) = $this->getConnectionString();
+            list($dns, $username, $password) = $this->getConnectionDetails();
 
             $this->connection = new \PDO($dns, $username, $password);
         }
@@ -193,9 +193,9 @@ class DBManager implements Interfaces\DBManagerInterface
     /**
      * Creates the connection string for the pdo object.
      *
-     * @return string
+     * @return array
      */
-    private function getConnectionString()
+    private function getConnectionDetails()
     {
         return [
             sprintf(

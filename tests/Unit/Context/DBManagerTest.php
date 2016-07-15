@@ -14,7 +14,7 @@ class DBManagerTest extends TestHelper
     /**
      * @var object $testObject The object to be tested.
      */
-    private $testObject;
+    protected $testObject;
 
     /**
      * Setup unit testing.
@@ -40,7 +40,7 @@ class DBManagerTest extends TestHelper
         $this->assertTrue(is_array($result));
     }
 
-    public function testGetSetConnection()
+    public function testGetSetConnectionAlreadySet()
     {
         $value = 'abcd';
 
@@ -171,6 +171,39 @@ class DBManagerTest extends TestHelper
         $this->assertTrue([] === $result);
     }
 
+    public function testGetRequiredTableColumnsNoDBSchemaSet()
+    {
+        $table = 'awsomeschema.awsometable';
+        $expectedSql = "
+            SELECT 
+                `column_name`, `data_type` 
+            FROM 
+                information_schema.columns 
+            WHERE 
+                is_nullable = 'NO'
+            AND 
+                table_name = 'awsometable'
+            AND 
+                table_schema = 'awsomeschema';";
+
+        // Override schema value.
+        $property = $this->accessProperty('params');
+        $value = $property->getValue($this->testObject);
+        $property->setValue(
+            $this->testObject,
+            array_merge($value, ['DBSCHEMA' => null])
+        );
+
+        $this->testObject->getConnection()->expects($this->once())
+            ->method('prepare')
+            ->with($expectedSql)
+            ->will($this->returnValue($this->getPdoStatementWithRows(0, [])));
+
+        $result = $this->testObject->getRequiredTableColumns($table);
+
+        $this->assertTrue([] === $result);
+    }
+
     public function testGetRequiredTableColumnsResults()
     {
         $table = 'user';
@@ -192,7 +225,8 @@ class DBManagerTest extends TestHelper
             ->will($this->returnValue($this->getPdoStatementWithRows(2, [
                     ['column_name' => 'id', 'data_type' => 'int'],
                     ['column_name' => 'name', 'data_type' => 'string'
-                ]])));
+                    ]
+                ])));
 
         $result = $this->testObject->getRequiredTableColumns($table);
 
@@ -305,5 +339,40 @@ class DBManagerTest extends TestHelper
         $result = $this->testObject->throwExceptionIfErrors($sqlStatementMock);
 
         $this->assertFalse($result);
+    }
+
+    /**
+     * testGetConnectionDetails Test that getConnectionDetails executes as expected.
+     */
+    public function testGetConnectionDetails()
+    {
+        // Prepare / Mock
+        $paramsValue = [
+            'DBENGINE' => 'banana',
+            'DBNAME' => 'hot',
+            'DBHOST' => 'cup',
+            'DBUSER' => 'of',
+            'DBPASSWORD' => 'tea'
+        ];
+
+        $property = $this
+            ->accessProperty('params')
+            ->setValue(
+                $this->testObject,
+                $paramsValue
+            );
+
+        // Execute
+        $result = $this
+            ->accessMethod('getConnectionDetails')
+            ->invoke($this->testObject);
+
+        $expectedConnectionString = 'banana:dbname=hot;host=cup';
+
+        // Assert Result
+        $this->assertTrue(is_array($result));
+        $this->assertEquals($expectedConnectionString, $result[0]);
+        $this->assertEquals($paramsValue['DBUSER'], $result[1]);
+        $this->assertEquals($paramsValue['DBPASSWORD'], $result[2]);
     }
 }
