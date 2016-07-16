@@ -106,25 +106,25 @@ class SQLHistoryTest extends TestHelper
     public function testAddToHistory()
     {
         // Prepare / Mock
-        $this->testObject->addToHistory('select', 'SELECT * FROM user');
-        $this->testObject->addToHistory('select', 'SELECT * FROM ya');
-        $this->testObject->addToHistory('update', 'UPDATE user', 1232);
-        $this->testObject->addToHistory('delete', 'DELETE from user');
-        $this->testObject->addToHistory('insert', 'INSERT INTO user', 123);
+        $this->testObject->addToHistory('select', 'user', 'SELECT * FROM user');
+        $this->testObject->addToHistory('select', 'ya', 'SELECT * FROM ya');
+        $this->testObject->addToHistory('update', 'user', 'UPDATE user', 1232);
+        $this->testObject->addToHistory('delete', 'user', 'DELETE from user');
+        $this->testObject->addToHistory('insert', 'user', 'INSERT INTO user', 123);
 
         $expectedHistory = [
             'select' => [
-                ['sql' => 'SELECT * FROM user', 'last_id' => ''],
-                ['sql' => 'SELECT * FROM ya', 'last_id' => '']
+                ['sql' => 'SELECT * FROM user', 'table' => 'user', 'last_id' => null],
+                ['sql' => 'SELECT * FROM ya', 'table' => 'ya', 'last_id' => null]
             ],
             'insert' => [
-                ['sql' => 'INSERT INTO user', 'last_id' => 123]
+                ['sql' => 'INSERT INTO user', 'table' => 'user', 'last_id' => 123]
             ],
             'delete' => [
-                ['sql' => 'DELETE from user', 'last_id' => '']
+                ['sql' => 'DELETE from user', 'table' => 'user', 'last_id' => null]
             ],
             'update' => [
-                ['sql' => 'UPDATE user', 'last_id' => 1232]
+                ['sql' => 'UPDATE user', 'table' => 'user', 'last_id' => 1232]
             ]
         ];
 

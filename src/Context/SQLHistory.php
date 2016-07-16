@@ -60,14 +60,19 @@ class SQLHistory implements Interfaces\SQLHistoryInterface
 
     /**
      * @param string $commandType The command type.
+     * @param string $table The table on which the operation was performed.
      * @param string $sql The sql executed.
      * @param int|null $id The last id.
      *
      * @return $this
      */
-    public function addToHistory($commandType, $sql, $id = null)
+    public function addToHistory($commandType, $table, $sql, $id = null)
     {
-        $this->history[$commandType][] = ['sql' => $sql, 'last_id' => $id];
+        $this->history[$commandType][] = [
+            'sql' => $sql,
+            'table' => $table,
+            'last_id' => $id
+        ];
 
         return $this;
     }

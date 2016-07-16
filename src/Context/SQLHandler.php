@@ -261,7 +261,12 @@ class SQLHandler extends BehatContext implements Interfaces\SQLHandlerInterface
         $this->lastQuery = $sql;
         $statement = $this->dbManager->execute($sql);
         $this->lastId = $this->dbManager->getLastInsertId($this->getEntity());
-        $this->get('sqlHistory')->addToHistory($this->getCommandType(), $sql, $this->lastId);
+        $this->get('sqlHistory')->addToHistory(
+            $this->getCommandType(),
+            $this->getUserInputEntity($this->getEntity()),
+            $sql,
+            $this->lastId
+        );
 
         // If their is an id, save it!
         if ($this->lastId) {
