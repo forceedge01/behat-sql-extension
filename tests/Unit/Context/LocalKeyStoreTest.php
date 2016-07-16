@@ -67,9 +67,9 @@ class LocalKeyStoreTest extends PHPUnit_Framework_TestCase
     /**
      * Test that the value is returned unchanged if key is not set.
      */
-    public function testgetKeywordFromConfigForKeyIfExistsNotFound()
+    public function testgetKeywordIfExistsNotFound()
     {
-        $key = $this->testObject->getKeywordFromConfigForKeyIfExists('not_exists');
+        $key = $this->testObject->getKeywordIfExists('not_exists');
 
         $this->assertEquals('not_exists', $key);
     }
@@ -77,12 +77,47 @@ class LocalKeyStoreTest extends PHPUnit_Framework_TestCase
     /**
      * Test that the value is returned as is if not a keyword.
      */
-    public function testgetKeywordFromConfigForKeyIfExistsFoundString()
+    public function testgetKeywordIfExistsFoundString()
     {
         $_SESSION['behat']['GenesisSqlExtension']['keywords']['one'] = 'the word one';
 
-        $key = $this->testObject->getKeywordFromConfigForKeyIfExists('{one}');
+        $key = $this->testObject->getKeywordIfExists('{one}');
 
         $this->assertEquals('the word one', $key);
+    }
+
+    /**
+     * testParseKeywordsInString Test that parseKeywordsInString executes as expected.
+     */
+    public function testParseKeywordsInString()
+    {
+        // Prepare / Mock
+        $string = 'no keywords in this string';
+
+        // Execute
+        $result = $this->testObject->parseKeywordsInString($string);
+
+        // Assert Result
+        $this->assertEquals($string, $result);
+    }
+
+    /**
+     * testParseKeywordsInString Test that parseKeywordsInString executes as expected.
+     */
+    public function testParseKeywordsInStringKeywordsPlaced()
+    {
+        // Prepare / Mock
+        $string = 'keywords {yes} in this string {another}';
+        $another = 'another keyword';
+        $yes = 'yes keyword';
+
+        $_SESSION['behat']['GenesisSqlExtension']['keywords']['another'] = $another;
+        $_SESSION['behat']['GenesisSqlExtension']['keywords']['yes'] = $yes;
+
+        // Execute
+        $result = $this->testObject->parseKeywordsInString($string);
+
+        // Assert Result
+        $this->assertEquals('keywords yes keyword in this string another keyword', $result);
     }
 }

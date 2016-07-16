@@ -51,7 +51,7 @@ class LocalKeyStore implements Interfaces\KeyStoreInterface
      *
      * @return string|null
      */
-    public function getKeywordFromConfigForKeyIfExists($key)
+    public function getKeywordIfExists($key)
     {
         if (! isset($_SESSION['behat']['GenesisSqlExtension']['keywords'])) {
             return $key;
@@ -66,5 +66,28 @@ class LocalKeyStore implements Interfaces\KeyStoreInterface
         }
 
         return $key;
+    }
+
+    /**
+     * Provide a string with keywords to be parsed.
+     *
+     * @param string $string The string to parse.
+     *
+     * @return string
+     */
+    public function parseKeywordsInString($string)
+    {
+        $matches = [];
+
+        // Extract potential keywords
+        preg_match_all('/({.+?})/', $string, $matches);
+
+        if (isset($matches[0])) {
+            foreach ($matches[0] as $match) {
+                $string = str_replace($match, $this->getKeywordIfExists($match), $string);
+            }
+        }
+
+        return $string;
     }
 }

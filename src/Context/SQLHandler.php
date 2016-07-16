@@ -231,7 +231,7 @@ class SQLHandler extends BehatContext implements Interfaces\SQLHandlerInterface
      */
     public function checkForKeyword($key)
     {
-        return $this->keyStore->getKeywordFromConfigForKeyIfExists($key);
+        return $this->keyStore->getKeywordIfExists($key);
     }
 
     /**

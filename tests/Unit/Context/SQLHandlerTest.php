@@ -145,7 +145,7 @@ class SQLHandlerTest extends TestHelper
         $expected = ['abc' => 123];
 
         $this->mockDependency('sqlBuilderMock', 'convertToArray', [$queries], $expected);
-        $this->mockDependency('keyStoreMock', 'getKeywordFromConfigForKeyIfExists', [123], 123);
+        $this->mockDependency('keyStoreMock', 'getKeywordIfExists', [123], 123);
 
         // Execute
         $result = $this->testObject->filterAndConvertToArray($queries);
