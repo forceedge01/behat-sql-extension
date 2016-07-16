@@ -696,4 +696,43 @@ class SQLExtensionTest extends TestHelper
         $this->assertNotNull($this->testObject->getEntity());
         $this->assertEquals('select', $this->testObject->getCommandType());
     }
+
+    /**
+     * testInsertResolvesExternalRefs Test that insert executes as expected.
+     *
+     * @group externalRef
+     */
+    public function testShouldHaveResolvesExternalRefs()
+    {
+        // Set keyword
+        $keyword = 'hjlasjdkfhlajksfdhklasdfj';
+        $this->testObject->setKeyword('abc', $keyword);
+
+        // Set external ref.
+        $externalRefId = 3443;
+        $entity = 'database.unique';
+        $column = "column1:{abc},column2:[user.id|email:its.its.inevitable@hotmail.com],column3:what\'s up doc";
+
+        $expectedResult = [
+            0 => 3443,
+            'id' => 3443
+        ];
+
+        $this->testObject->get('dbManager')->getConnection()->expects($this->any())
+            ->method('prepare')
+            ->with($this->isType('string'))
+            ->willReturn($this->getPdoStatementWithRows(1, [
+                $expectedResult
+            ]));
+
+        $result = $this->testObject->iShouldHaveAWith($entity, $column);
+
+        // Expected SQL.
+        $expectedSQL = "SELECT * FROM dev_database.unique WHERE `column1` = 'hjlasjdkfhlajksfdhklasdfj' AND `column2` = 3443 AND `column3` = 'what\'s up doc'";
+
+        // Assert.
+        $this->assertEquals($expectedSQL, $result);
+        $this->assertNotNull($this->testObject->getEntity());
+        $this->assertEquals('select', $this->testObject->getCommandType());
+    }
 }
