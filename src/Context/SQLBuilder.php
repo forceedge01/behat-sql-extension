@@ -273,6 +273,10 @@ class SQLBuilder implements Interfaces\SQLBuilderInterface
         list($garbage, $index) = explode('_', $placeholder);
         unset($garbage);
 
+        if (! array_key_exists($index, $this->refs)) {
+            return false;
+        }
+
         return $this->refs[$index];
     }
 
@@ -287,24 +291,26 @@ class SQLBuilder implements Interfaces\SQLBuilderInterface
     {
         // [user.id|user.email: its.inevitable@hotmail.com]
         // [woody_crm.users.id|email:its.inevitable@hotmail.com,status:1]
-        $externalRefPattern = '#(\[[^\]]+\|.+?\])#';
-        if (!preg_match($externalRefPattern, $externalRef)) {
+        $externalRefPattern = '#^(\[[^\]]+\|(.+\:.+)+\])$#';
+        if (! preg_match($externalRefPattern, $externalRef)) {
             throw new Exception(
-                'Invalid external ref provided, external ref must be enclosed in "[]" and have be split by "|"'
+                'Invalid external ref provided, external ref must be enclosed in "[]" and criteria split by "|".
+                Example format [{table}.{column1}|{column2}:{value}]'
             );
         }
 
         list($columnAndTable, $criteria) = explode('|', trim($externalRef, '[]'));
 
         // Get the table and column names.
-        $table = preg_match('#.+(?=\.)#', $columnAndTable, $table);
+        $table = null;
+        preg_match('#.+(?=\.)#', $columnAndTable, $table);
         $array = explode('.', $columnAndTable);
         $column = end($array);
 
         // Construct where clause.
         $whereClause = $this->constructSQLClause('SELECT', ' AND ', $this->convertToArray($criteria));
 
-        return sprintf('SELECT %s FROM %s WHERE %s', $column, $table, $whereClause);
+        return sprintf('SELECT %s FROM %s WHERE %s', $columnAndTable, $table[0], $whereClause);
     }
 
     /**
@@ -317,14 +323,10 @@ class SQLBuilder implements Interfaces\SQLBuilderInterface
     public function getPlaceholderForRef($externalRef)
     {
         // Search for existing refs.
+        $this->refs[] = $externalRef;
         $index = array_search($externalRef, $this->refs);
 
-        if (! $index) {
-            $this->refs[] = $externalRef;
-            $index = array_search($externalRef, $this->refs);
-        }
-
-        return sprintf('placeholder_%d', $index);
+        return sprintf('{ext_ref_placeholder_%d}', $index);
     }
 
     /**
@@ -334,10 +336,10 @@ class SQLBuilder implements Interfaces\SQLBuilderInterface
      *
      * @return array
      */
-    public function replaceExternalQueryReferences($query)
+    public function parseExternalQueryReferences($query)
     {
         // Extract all matches for external refs.
-        $pattern = '#(\[[^\]]+\|.+?\])#';
+        $pattern = '#(\[[^\]]+\|.+?\]+?)#';
         $refs = [];
         preg_match_all($pattern, $query, $refs);
 

@@ -419,4 +419,34 @@ class DBManagerTest extends TestHelper
         $this->assertEquals($paramsValue['DBUSER'], $result[1]);
         $this->assertEquals($paramsValue['DBPASSWORD'], $result[2]);
     }
+
+    /**
+     * testGetFirstValueFromStatement Test that getFirstValueFromStatement executes as expected.
+     */
+    public function testGetFirstValueFromStatementNoRows()
+    {
+        // Prepare / Mock
+        $statement = $this->getPdoStatementWithRows(false, []);
+
+        // Execute
+        $result = $this->testObject->getFirstValueFromStatement($statement);
+
+        // Assert Result
+        $this->assertNull($result);
+    }
+
+    /**
+     * testGetFirstValueFromStatement Test that getFirstValueFromStatement executes as expected.
+     */
+    public function testGetFirstValueFromStatementWithRows()
+    {
+        // Prepare / Mock
+        $statement = $this->getPdoStatementWithRows(true, [['id' => 123], ['id' => 7726]]);
+
+        // Execute
+        $result = $this->testObject->getFirstValueFromStatement($statement);
+
+        // Assert Result
+        $this->assertEquals(['id' => 123], $result);
+    }
 }

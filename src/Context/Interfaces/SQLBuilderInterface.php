@@ -90,11 +90,11 @@ interface SQLBuilderInterface
     public function getPlaceholderForRef($ref);
 
     /**
-     * replaceExternalQueryReferences.
+     * parseExternalQueryReferences.
      *
      * @param string $query
      *
      * @return array
      */
-    public function replaceExternalQueryReferences($query);
+    public function parseExternalQueryReferences($query);
 }

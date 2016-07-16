@@ -142,18 +142,18 @@ class SQLHandlerTest extends TestHelper
     }
 
     /**
-     * testFilterAndConvertToArray Test that filterAndConvertToArray executes as expected.
+     * testConvertToFilteredArray Test that convertToFilteredArray executes as expected.
      */
-    public function testFilterAndConvertToArray()
+    public function testConvertToFilteredArray()
     {
         $queries = 'abc:123';
         $expected = ['abc' => 123];
 
         $this->mockDependency('sqlBuilderMock', 'convertToArray', [$queries], $expected);
-        $this->mockDependency('keyStoreMock', 'getKeywordFromConfigForKeyIfExists', [123], 123);
+        $this->mockDependency('keyStoreMock', 'getKeywordIfExists', [123], 123);
 
         // Execute
-        $result = $this->testObject->filterAndConvertToArray($queries);
+        $result = $this->testObject->convertToFilteredArray($queries);
 
         $this->assertEquals($expected, $result);
     }

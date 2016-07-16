@@ -20,14 +20,14 @@ function time()
 
 namespace Genesis\SQLExtension\Tests\Unit\Context;
 
-use PHPUnit_Framework_TestCase;
 use Genesis\SQLExtension\Context\SQLBuilder;
 use Behat\Gherkin\Node\TableNode;
+use Genesis\SQLExtension\Tests\TestHelper;
 
 /**
  * @group sqlBuilder
  */
-class SQLBuilderTest extends PHPUnit_Framework_TestCase
+class SQLBuilderTest extends TestHelper
 {
     const TYPE_STRING_TIME = 234234234;
     const INT_NUMBER = 23423;
@@ -36,13 +36,16 @@ class SQLBuilderTest extends PHPUnit_Framework_TestCase
     /**
      * @var object $testObject The object to be tested.
      */
-    private $testObject;
+    protected $testObject;
 
     /**
      * Set up the testing object.
      */
     public function setUp()
     {
+        $_SESSION['behat']['GenesisSqlExtension']['keywords'] = [];
+        $_SESSION['behat']['GenesisSqlExtension']['notQuotableKeywords'] = [];
+
         $this->testObject = new SQLBuilder();
     }
 
@@ -51,9 +54,6 @@ class SQLBuilderTest extends PHPUnit_Framework_TestCase
      */
     public function testConstructSQLClauseLikeValues()
     {
-        $_SESSION['behat']['GenesisSqlExtension']['keywords'] = [];
-        $_SESSION['behat']['GenesisSqlExtension']['notQuotableKeywords'] = [];
-
         // Prepare / Mock
         $commandType = 'select';
         $glue = ' AND ';
@@ -374,7 +374,7 @@ class SQLBuilderTest extends PHPUnit_Framework_TestCase
     /**
      * testGetRefFromPlaceholder Test that getRefFromPlaceholder executes as expected.
      */
-    public function testGetRefFromPlaceholder()
+    public function testGetRefFromPlaceholderInvalidPlaceholder()
     {
         // Prepare / Mock
         $placeholder = '';
@@ -383,8 +383,42 @@ class SQLBuilderTest extends PHPUnit_Framework_TestCase
         $result = $this->testObject->getRefFromPlaceholder($placeholder);
 
         // Assert Result
-        //assert
-        $this->markTestIncomplete('This test has not been implemented yet.');
+        $this->assertFalse($result);
+    }
+
+    /**
+     * testGetRefFromPlaceholder Test that getRefFromPlaceholder executes as expected.
+     */
+    public function testGetRefFromPlaceholderNotFound()
+    {
+        // Prepare / Mock
+        $placeholder = 'placeholder_user.id';
+
+        // Execute
+        $result = $this->testObject->getRefFromPlaceholder($placeholder);
+
+        // Assert Result
+        $this->assertFalse($result);
+    }
+
+    /**
+     * testGetRefFromPlaceholder Test that getRefFromPlaceholder executes as expected.
+     */
+    public function testGetRefFromPlaceholderFound()
+    {
+        $this->accessProperty('refs')->setValue(
+            $this->testObject,
+            ['user.id' => 123]
+        );
+
+        // Prepare / Mock
+        $placeholder = 'placeholder_user.id';
+
+        // Execute
+        $result = $this->testObject->getRefFromPlaceholder($placeholder);
+
+        // Assert Result
+        $this->assertEquals(123, $result);
     }
 
     /**
@@ -444,34 +478,103 @@ class SQLBuilderTest extends PHPUnit_Framework_TestCase
     }
 
     /**
+     * testGetSQLQueryForExternalReference Test that getSQLQueryForExternalReference executes as expected.
+     *
+     * @expectedException Exception
+     */
+    public function testGetSQLQueryForExternalReferenceValidFormatNoColon()
+    {
+        // Prepare / Mock
+        $externalReference = '[alhaskjdf|kljahsdf]';
+
+        // Execute
+        $this->testObject->getSQLQueryForExternalReference($externalReference);
+    }
+
+    /**
+     * testGetSQLQueryForExternalReference Test that getSQLQueryForExternalReference executes as expected.
+     *
+     * @expectedException Exception
+     */
+    public function testGetSQLQueryForExternalReferenceInvalidFormatColon()
+    {
+        // Prepare / Mock
+        $externalReference = '[alhaskjdf|kljahsdf:]';
+
+        // Execute
+        $this->testObject->getSQLQueryForExternalReference($externalReference);
+    }
+
+    /**
+     * testGetSQLQueryForExternalReference Test that getSQLQueryForExternalReference executes as expected.
+     */
+    public function testGetSQLQueryForExternalReferenceValid()
+    {
+        // Prepare / Mock
+        $reference = '[user.id|email: abdul@easyfundraising.org.uk, status: 1]';
+
+        // Execute
+        $result = $this->testObject->getSQLQueryForExternalReference($reference);
+
+        // Assert Result
+        $expectedSQL = "SELECT user.id FROM user WHERE `email` = 'abdul@easyfundraising.org.uk' AND `status` = 1";
+
+        $this->assertEquals($expectedSQL, $result);
+    }
+
+    /**
      * testGetPlaceholderForRef Test that getPlaceholderForRef executes as expected.
      */
     public function testGetPlaceholderForRef()
     {
         // Prepare / Mock
-        $reference = '';
+        $reference = '[user.id|email:!abdul@easyfundraising.org.uk]';
+        $reference2 = '[user.id|email:!abdul@easyfundraising.org.uk, status:1]';
 
         // Execute
         $result = $this->testObject->getPlaceholderForRef($reference);
+        $result1 = $this->testObject->getPlaceholderForRef($reference);
+        $result2 = $this->testObject->getPlaceholderForRef($reference2);
 
         // Assert Result
-        //assert
-        $this->markTestIncomplete('This test has not been implemented yet.');
+        $this->assertEquals('{ext_ref_placeholder_0}', $result);
+        $this->assertEquals('{ext_ref_placeholder_0}', $result1);
+        $this->assertEquals('{ext_ref_placeholder_2}', $result2);
     }
 
     /**
      * testReplaceExternalQueryReferences Test that replaceExternalQueryReferences executes as expected.
      */
-    public function testReplaceExternalQueryReferences()
+    public function testParseExternalQueryReferences()
     {
         // Prepare / Mock
-        $query = '';
+        $query = 'company_id: [company.id|name: best], username: forceedge, status_id: [status.id|state: active]';
 
         // Execute
-        $result = $this->testObject->replaceExternalQueryReferences($query);
+        $result = $this->testObject->parseExternalQueryReferences($query);
 
         // Assert Result
+        $expectedQuery = 'company_id: {ext_ref_placeholder_0}, username: forceedge, status_id: {ext_ref_placeholder_1}';
+
         //assert
-        $this->markTestIncomplete('This test has not been implemented yet.');
+        $this->assertEquals($expectedQuery, $result);
+    }
+
+    /**
+     * testReplaceExternalQueryReferences Test that replaceExternalQueryReferences executes as expected.
+     */
+    public function testParseExternalQueryReferencesNoRefs()
+    {
+        // Prepare / Mock
+        $query = 'company_id: 123, username: forceedge, status_id: 3';
+
+        // Execute
+        $result = $this->testObject->parseExternalQueryReferences($query);
+
+        // Assert Result
+        $expectedQuery = 'company_id: 123, username: forceedge, status_id: 3';
+
+        //assert
+        $this->assertEquals($expectedQuery, $result);
     }
 }

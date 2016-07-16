@@ -176,7 +176,7 @@ class SQLHandler extends BehatContext implements Interfaces\SQLHandlerInterface
      *
      * @return array
      */
-    public function filterAndConvertToArray($query)
+    public function convertToFilteredArray($query)
     {
         // Match all external query references.
         $query = $this->get('sqlBuilder')->replaceExternalQueryReferences($query);
@@ -192,6 +192,18 @@ class SQLHandler extends BehatContext implements Interfaces\SQLHandlerInterface
         }
 
         return $filteredColumns;
+    }
+
+    /**
+     * @param string $query
+     *
+     * @depreciated Use convertToFilteredArray instead.
+     */
+    public function filterAndConvertToArray($query)
+    {
+        $this->debugLog(sprintf('Depreciated method "%s", use convertToFilteredArray instead.', __FUNCTION__));
+
+        return $this->convertToFilteredArray($query);
     }
 
     /**
@@ -241,7 +253,7 @@ class SQLHandler extends BehatContext implements Interfaces\SQLHandlerInterface
      */
     public function checkForKeyword($key)
     {
-        return $this->keyStore->getKeywordFromConfigForKeyIfExists($key);
+        return $this->keyStore->getKeywordIfExists($key);
     }
 
     /**

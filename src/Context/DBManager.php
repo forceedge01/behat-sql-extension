@@ -115,7 +115,7 @@ class DBManager implements Interfaces\DBManagerInterface
      *
      * @return mixed.
      */
-    public function getFirstValueFromStatement(Traverable $statement)
+    public function getFirstValueFromStatement(Traversable $statement)
     {
         $result = $statement->fetchAll();
 
