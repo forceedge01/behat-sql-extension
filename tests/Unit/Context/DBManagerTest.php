@@ -54,13 +54,6 @@ class DBManagerTest extends TestHelper
         $this->assertEquals($value, $result);
     }
 
-    public function testGetConnection()
-    {
-        $this->testObject->setConnection(null);
-
-        $result = $this->testObject->getConnection();
-    }
-
     public function testGetPrimaryKeyForTableReturnNothing()
     {
         $database = 'my_app';
