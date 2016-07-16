@@ -29,7 +29,8 @@ class SQLExtensionTest extends TestHelper
         $this->testObject = new Context\SQLContext(
             new Context\DBManager($databaseParams),
             new Context\SQLBuilder(),
-            new Context\LocalKeyStore()
+            new Context\LocalKeyStore(),
+            new Context\SQLHistory()
         );
 
         // This PDO object comes from the testHelper class.

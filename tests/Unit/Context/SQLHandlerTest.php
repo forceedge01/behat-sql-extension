@@ -5,6 +5,7 @@ namespace Genesis\SQLExtension\Tests\Unit\Context;
 use Genesis\SQLExtension\Context\Interfaces\DBManagerInterface;
 use Genesis\SQLExtension\Context\Interfaces\KeyStoreInterface;
 use Genesis\SQLExtension\Context\Interfaces\SQLBuilderInterface;
+use Genesis\SQLExtension\Context\Interfaces\SQLHistoryInterface;
 use Genesis\SQLExtension\Context\SQLHandler;
 use Exception;
 use Genesis\SQLExtension\Tests\TestHelper;
@@ -54,10 +55,15 @@ class SQLHandlerTest extends TestHelper
             ->disableOriginalConstructor()
             ->getMock();
 
+        $this->dependencies['sqlHistoryMock'] = $this->getMockBuilder(SQLHistoryInterface::class)
+            ->disableOriginalConstructor()
+            ->getMock();
+
         $this->testObject = new SQLHandler(
             $this->dependencies['dbHelperMock'],
             $this->dependencies['sqlBuilderMock'],
-            $this->dependencies['keyStoreMock']
+            $this->dependencies['keyStoreMock'],
+            $this->dependencies['sqlHistoryMock']
         );
     }
 

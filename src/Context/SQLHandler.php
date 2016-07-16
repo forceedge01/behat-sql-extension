@@ -79,20 +79,28 @@ class SQLHandler extends BehatContext implements Interfaces\SQLHandlerInterface
     private $keyStore;
 
     /**
+     * Holds the history of commands executed.
+     */
+    private $sqlHistory;
+
+    /**
      * Construct the object.
      *
      * @param Interfaces\DBManagerInterface $dbManager
      * @param Interfaces\SQLBuilderInterface $sqlBuilder
      * @param Interfaces\KeyStoreInterface $keyStore
+     * @param Interfaces\SQLHistoryInterface $sqlHistory
      */
     public function __construct(
         Interfaces\DBManagerInterface $dbManager,
         Interfaces\SQLBuilderInterface $sqlBuilder,
-        Interfaces\KeyStoreInterface $keyStore
+        Interfaces\KeyStoreInterface $keyStore,
+        Interfaces\SQLHistoryInterface $sqlHistory
     ) {
         $this->dbManager = $dbManager;
         $this->keyStore = $keyStore;
         $this->sqlBuilder = $sqlBuilder;
+        $this->sqlHistory = $sqlHistory;
     }
 
     /**
@@ -253,6 +261,7 @@ class SQLHandler extends BehatContext implements Interfaces\SQLHandlerInterface
         $this->lastQuery = $sql;
         $statement = $this->dbManager->execute($sql);
         $this->lastId = $this->dbManager->getLastInsertId($this->getEntity());
+        $this->get('sqlHistory')->addToHistory($this->getCommandType(), $sql, $this->lastId);
 
         // If their is an id, save it!
         if ($this->lastId) {
