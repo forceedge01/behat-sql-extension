@@ -7,6 +7,7 @@ use Genesis\SQLExtension\Tests\TestHelper;
 
 /**
  * @group debugger
+ * @group unit
  */
 class DebuggerTest extends TestHelper
 {

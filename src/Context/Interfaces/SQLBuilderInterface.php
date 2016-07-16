@@ -81,20 +81,27 @@ interface SQLBuilderInterface
     public function getSQLQueryForExternalReference($externalRef);
 
     /**
-     * Get placeholder for reference.
-     *
-     * @param string $ref The reference string.
-     *
-     * @return string The placeholder.
-     */
-    public function getPlaceholderForRef($ref);
-
-    /**
      * parseExternalQueryReferences.
      *
      * @param string $query
      *
-     * @return array
+     * @return string
      */
     public function parseExternalQueryReferences($query);
+
+    /**
+     * @param string $value The value to check.
+     *
+     * @return bool
+     */
+    public function isExternalReferencePlaceholder($value);
+
+    /**
+     * Check if the value provided is an external ref.
+     *
+     * @param string $value The value to check.
+     *
+     * @return bool
+     */
+    public function isExternalReference($value);
 }

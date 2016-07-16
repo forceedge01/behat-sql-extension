@@ -9,6 +9,7 @@ use Genesis\SQLExtension\Tests\TestHelper;
 
 /**
  * @group sqlExtension
+ * @group integration
  */
 class SQLExtensionTest extends TestHelper
 {
@@ -620,11 +621,13 @@ class SQLExtensionTest extends TestHelper
 
     /**
      * test that the keywords resolve using any call.
+     *
+     * @group keyword
      */
     public function testThatKeywordsResolve()
     {
         $keyword = 'hjlasjdkfhlajksfdhklasdfj';
-        $this->testObject->setKeyword('{abc}', $keyword);
+        $this->testObject->setKeyword('abc', $keyword);
 
         // Prepare / Mock
         $entity = 'abc.my_entity';
@@ -653,5 +656,44 @@ class SQLExtensionTest extends TestHelper
 
         $this->assertEquals('random', $this->testObject->getKeyword('abc.my_entity_column2'));
         $this->assertEquals('random', $this->testObject->getKeyword('abc.my_entity.column2'));
+    }
+
+    /**
+     * testInsertResolvesExternalRefs Test that insert executes as expected.
+     *
+     * @group externalRef
+     */
+    public function testInsertResolvesExternalRefs()
+    {
+        // Set keyword
+        $keyword = 'hjlasjdkfhlajksfdhklasdfj';
+        $this->testObject->setKeyword('abc', $keyword);
+
+        // Set external ref.
+        $externalRefId = 3443;
+        $entity = 'database.unique';
+        $column = "column1:{abc},column2:[user.id|email:its.its.inevitable@hotmail.com],column3:what\'s up doc";
+
+        $expectedResult = [
+            0 => 3443,
+            'id' => 3443
+        ];
+
+        $this->testObject->get('dbManager')->getConnection()->expects($this->any())
+            ->method('prepare')
+            ->with($this->isType('string'))
+            ->willReturn($this->getPdoStatementWithRows(1, [
+                $expectedResult
+            ]));
+
+        $result = $this->testObject->insert($entity, $column);
+
+        // Expected SQL.
+        $expectedSQL = "SELECT * FROM dev_database.unique WHERE `column1` = 'hjlasjdkfhlajksfdhklasdfj' AND `column2` = 3443 AND `column3` = 'what\'s up doc'";
+
+        // Assert.
+        $this->assertEquals($expectedSQL, $result);
+        $this->assertNotNull($this->testObject->getEntity());
+        $this->assertEquals('select', $this->testObject->getCommandType());
     }
 }

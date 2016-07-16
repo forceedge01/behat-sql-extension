@@ -33,40 +33,67 @@ class SQLBuilder implements Interfaces\SQLBuilderInterface
         foreach ($columns as $column => $value) {
             $newValue = ltrim($value, '!');
             $quotedValue = $this->quoteOrNot($newValue);
-            $comparator = '%s=';
-            $notOperator = '';
-
-            // Check if the supplied value is null and that the construct is not for insert and update,
-            // if so change the format.
-            if (strtolower($newValue) == 'null' and
-                trim($glue) != ',' and
-                in_array($commandType, ['update', 'select', 'delete'])) {
-                $comparator = 'is%s';
-            }
-
-            // Check if a not is applied to the value.
-            if (strpos($value, '!') === 0) {
-                if (strtolower($newValue) == 'null' and
-                trim($glue) != ',' and
-                in_array($commandType, ['update', 'select', 'delete'])) {
-                    $notOperator = ' not';
-                } else {
-                    $notOperator = '!';
-                }
-            }
-
-            // Check if the value is surrounded by wildcards. If so, we'll want to use a LIKE comparator.
-            if (preg_match('/^%.+%$/', $value)) {
-                $comparator = 'LIKE';
-            }
+            $comparator = $this->getComparatorFromValue(
+                $value,
+                $glue,
+                $commandType
+            );
 
             // Make up the sql.
-            $comparator = sprintf($comparator, $notOperator);
-            $clause = sprintf('`%s` %s %s', $column, $comparator, $quotedValue);
+            $clause = sprintf(
+                '`%s` %s %s',
+                $column,
+                $comparator,
+                $quotedValue
+            );
+
             $whereClause[] = $clause;
         }
 
         return implode($glue, $whereClause);
+    }
+
+    /**
+     * Gets the comparator based on the value provided.
+     * This could be =, LIKE, != or something else based on the value.
+     *
+     * @param string $value The value that holds the comparator info.
+     * @param string $glue The glue used for the clause construction.
+     * @param string $commandType The command type being constructed.
+     *
+     * @return string
+     */
+    private function getComparatorFromValue($value, $glue, $commandType)
+    {
+        $comparator = '%s=';
+        $notOperator = '';
+        $newValue = ltrim($value, '!');
+
+        // Check if the supplied value is null and that the construct is not for insert and update,
+        // if so change the format.
+        if (strtolower($newValue) == 'null' and
+            trim($glue) != ',' and
+            in_array($commandType, ['update', 'select', 'delete'])) {
+            $comparator = 'is%s';
+        }
+
+        // Check if a not is applied to the value.
+        if (strpos($value, '!') === 0) {
+            if (strtolower($newValue) == 'null' and
+            trim($glue) != ',' and
+            in_array($commandType, ['update', 'select', 'delete'])) {
+                $notOperator = ' not';
+            } else {
+                $notOperator = '!';
+            }
+        }
+
+        // Check if the value is surrounded by wildcards. If so, we'll want to use a LIKE comparator.
+        if (preg_match('/^%.+%$/', $value)) {
+            $comparator = 'LIKE';
+        }
+
+        return sprintf($comparator, $notOperator);
     }
 
     /**
@@ -266,7 +293,7 @@ class SQLBuilder implements Interfaces\SQLBuilderInterface
      */
     public function getRefFromPlaceholder($placeholder)
     {
-        if (strpos($placeholder, 'placeholder_') === false) {
+        if (strpos($placeholder, 'ext-ref-placeholder_') === false) {
             return false;
         }
 
@@ -281,6 +308,39 @@ class SQLBuilder implements Interfaces\SQLBuilderInterface
     }
 
     /**
+     * Check if the value provided is an external ref.
+     *
+     * @param string $value The value to check.
+     *
+     * @return bool
+     */
+    public function isExternalReference($value)
+    {
+        // [user.id|user.email: its.inevitable@hotmail.com]
+        // [woody_crm.users.id|email:its.inevitable@hotmail.com,status:1]
+        $externalRefPattern = '#^(\[[^\]]+\|(.+\:.+)+\])$#';
+        if (preg_match($externalRefPattern, $value)) {
+            return true;
+        }
+
+        return false;
+    }
+
+    /**
+     * @param string $value The value to check.
+     *
+     * @return bool
+     */
+    public function isExternalReferencePlaceholder($value)
+    {
+        if (strpos($value, 'ext-ref-placeholder_') === 0) {
+            return true;
+        }
+
+        return false;
+    }
+
+    /**
      * Get single query for the external reference.
      *
      * @param string $externalRef The external ref enclosed in [].
@@ -289,10 +349,7 @@ class SQLBuilder implements Interfaces\SQLBuilderInterface
      */
     public function getSQLQueryForExternalReference($externalRef)
     {
-        // [user.id|user.email: its.inevitable@hotmail.com]
-        // [woody_crm.users.id|email:its.inevitable@hotmail.com,status:1]
-        $externalRefPattern = '#^(\[[^\]]+\|(.+\:.+)+\])$#';
-        if (! preg_match($externalRefPattern, $externalRef)) {
+        if (! $this->isExternalReference($externalRef)) {
             throw new Exception(
                 'Invalid external ref provided, external ref must be enclosed in "[]" and criteria split by "|".
                 Example format [{table}.{column1}|{column2}:{value}]'
@@ -320,13 +377,13 @@ class SQLBuilder implements Interfaces\SQLBuilderInterface
      *
      * @return string The placeholder.
      */
-    public function getPlaceholderForRef($externalRef)
+    private function getPlaceholderForRef($externalRef)
     {
         // Search for existing refs.
         $this->refs[] = $externalRef;
         $index = array_search($externalRef, $this->refs);
 
-        return sprintf('{ext_ref_placeholder_%d}', $index);
+        return sprintf('ext-ref-placeholder_%d', $index);
     }
 
     /**
@@ -334,7 +391,7 @@ class SQLBuilder implements Interfaces\SQLBuilderInterface
      *
      * @param string $query
      *
-     * @return array
+     * @return string
      */
     public function parseExternalQueryReferences($query)
     {

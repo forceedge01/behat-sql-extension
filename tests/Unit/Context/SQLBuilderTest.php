@@ -26,6 +26,7 @@ use Genesis\SQLExtension\Tests\TestHelper;
 
 /**
  * @group sqlBuilder
+ * @group unit
  */
 class SQLBuilderTest extends TestHelper
 {
@@ -412,7 +413,7 @@ class SQLBuilderTest extends TestHelper
         );
 
         // Prepare / Mock
-        $placeholder = 'placeholder_user.id';
+        $placeholder = 'ext-ref-placeholder_user.id';
 
         // Execute
         $result = $this->testObject->getRefFromPlaceholder($placeholder);
@@ -532,14 +533,14 @@ class SQLBuilderTest extends TestHelper
         $reference2 = '[user.id|email:!abdul@easyfundraising.org.uk, status:1]';
 
         // Execute
-        $result = $this->testObject->getPlaceholderForRef($reference);
-        $result1 = $this->testObject->getPlaceholderForRef($reference);
-        $result2 = $this->testObject->getPlaceholderForRef($reference2);
+        $result = $this->accessMethod('getPlaceholderForRef')->invokeArgs($this->testObject, [$reference]);
+        $result1 = $this->accessMethod('getPlaceholderForRef')->invokeArgs($this->testObject, [$reference]);
+        $result2 = $this->accessMethod('getPlaceholderForRef')->invokeArgs($this->testObject, [$reference2]);
 
         // Assert Result
-        $this->assertEquals('{ext_ref_placeholder_0}', $result);
-        $this->assertEquals('{ext_ref_placeholder_0}', $result1);
-        $this->assertEquals('{ext_ref_placeholder_2}', $result2);
+        $this->assertEquals('ext-ref-placeholder_0', $result);
+        $this->assertEquals('ext-ref-placeholder_0', $result1);
+        $this->assertEquals('ext-ref-placeholder_2', $result2);
     }
 
     /**
@@ -554,7 +555,7 @@ class SQLBuilderTest extends TestHelper
         $result = $this->testObject->parseExternalQueryReferences($query);
 
         // Assert Result
-        $expectedQuery = 'company_id: {ext_ref_placeholder_0}, username: forceedge, status_id: {ext_ref_placeholder_1}';
+        $expectedQuery = 'company_id: ext-ref-placeholder_0, username: forceedge, status_id: ext-ref-placeholder_1';
 
         //assert
         $this->assertEquals($expectedQuery, $result);

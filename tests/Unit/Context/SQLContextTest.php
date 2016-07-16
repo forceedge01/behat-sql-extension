@@ -12,6 +12,7 @@ use Genesis\SQLExtension\Tests\TestHelper;
 
 /**
  * @group sqlContext
+ * @group unit
  */
 class SQLContextTest extends TestHelper
 {

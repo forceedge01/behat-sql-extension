@@ -188,7 +188,27 @@ class SQLHandler extends BehatContext implements Interfaces\SQLHandlerInterface
 
         // Check for keywords.
         foreach ($columns as $column => $value) {
-            $filteredColumns[$column] = $this->checkForKeyword($value);
+            $keywordValue = $this->checkForKeyword($value);
+
+            // Check if the value provided is a keyword or an external ref, if so get value.
+            if ($keywordValue != $value) {
+                $value = $keywordValue;
+            } elseif ($this->get('sqlBuilder')->isExternalReferencePlaceholder($value)) {
+                $externalRef = $this->get('sqlBuilder')->getRefFromPlaceholder($value);
+
+                // Execute query and get value back.
+                $query = $this
+                    ->get('sqlBuilder')
+                    ->getSQLQueryForExternalReference(
+                        $externalRef
+                    );
+
+                $statement = $this->get('dbManager')->execute($query);
+
+                $value = $this->get('dbManager')->getFirstValueFromStatement($statement)[0];
+            }
+
+            $filteredColumns[$column] = $value;
         }
 
         return $filteredColumns;
@@ -423,7 +443,10 @@ class SQLHandler extends BehatContext implements Interfaces\SQLHandlerInterface
         $columnClause = [];
 
         // Get all columns for insertion
-        $allColumns = array_merge($this->getRequiredTableColumns($table), $this->sqlBuilder->getColumns());
+        $allColumns = array_merge(
+            $this->getRequiredTableColumns($table),
+            $this->sqlBuilder->getColumns()
+        );
 
         // Set values for columns
         foreach ($allColumns as $col => $type) {
@@ -435,17 +458,6 @@ class SQLHandler extends BehatContext implements Interfaces\SQLHandlerInterface
                 // If the value is not a keyword then use the value provided as is.
                 if (! $value) {
                     $value = $this->sqlBuilder->getColumns()[$col];
-                }
-
-                // Check if the value being passed in is a placeholder, if so resolve it.
-                $externalRef = $this->get('sqlBuilder')->getRefFromPlaceholder($value);
-
-                // External reference resolution.
-                if ($externalRef) {
-                    // Execute query and get value back.
-                    $query = $this->get('sqlBuilder')->getSingleQueryForExternalReference($externalRef);
-                    $statement = $this->get('dbManager')->execute($query);
-                    $value = $this->get('dbManager')->getFirstValueFromStatement($statement);
                 }
 
                 // Assign value back to the column.

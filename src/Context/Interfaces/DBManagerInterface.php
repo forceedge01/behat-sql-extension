@@ -68,4 +68,13 @@ interface DBManagerInterface
      * @return boolean
      */
     public function throwExceptionIfErrors(Traversable $sqlStatement);
+
+    /**
+     * Get the first value from a PDO statement.
+     *
+     * @param Traversable $statement The statement to work with.
+     *
+     * @return mixed.
+     */
+    public function getFirstValueFromStatement(Traversable $statement);
 }

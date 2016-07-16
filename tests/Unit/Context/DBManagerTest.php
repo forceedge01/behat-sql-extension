@@ -8,6 +8,7 @@ use Genesis\SQLExtension\Tests\TestHelper;
 
 /**
  * @group DBManager
+ * @group unit
  */
 class DBManagerTest extends TestHelper
 {

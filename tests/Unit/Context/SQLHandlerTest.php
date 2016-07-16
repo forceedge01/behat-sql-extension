@@ -11,6 +11,7 @@ use Genesis\SQLExtension\Tests\TestHelper;
 
 /**
  * @group sqlHandler
+ * @group unit
  */
 class SQLHandlerTest extends TestHelper
 {
@@ -48,10 +49,10 @@ class SQLHandlerTest extends TestHelper
             ->disableOriginalConstructor()
             ->getMock();
 
-        $this->dependencies['sqlBuilderMock']->expects($this->any())
-            ->method('parseExternalQueryReferences')
-            ->with($this->isType('string'))
-            ->will($this->returnArgument(0));
+        // $this->dependencies['sqlBuilderMock']->expects($this->any())
+        //     ->method('parseExternalQueryReferences')
+        //     ->with($this->isType('string'))
+        //     ->will($this->returnArgument(0));
 
         $this->dependencies['keyStoreMock'] = $this->getMockBuilder(KeyStoreInterface::class)
             ->disableOriginalConstructor()
@@ -149,6 +150,41 @@ class SQLHandlerTest extends TestHelper
 
         $this->mockDependency('sqlBuilderMock', 'convertToArray', [$queries], $expected);
         $this->mockDependency('keyStoreMock', 'getKeywordIfExists', [123], 123);
+
+        $this->mockDependency('sqlBuilderMock', 'parseExternalQueryReferences', [$queries], $queries);
+        $this->mockDependency('sqlBuilderMock', 'isExternalReferencePlaceholder', [123], false);
+
+        // Execute
+        $result = $this->testObject->convertToFilteredArray($queries);
+
+        $this->assertEquals($expected, $result);
+    }
+
+    /**
+     * testConvertToFilteredArray Test that convertToFilteredArray executes as expected.
+     *
+     * @group externalRef
+     */
+    public function testConvertToFilteredArrayWithExternalRef()
+    {
+        $queries = 'abc:[user.abc_id|email:abdul@email.com]';
+        $expected = ['abc' => 123];
+        $expectedExtRefPlaceholder = 'abc:ext-ref-placeholder_0';
+        $expectedConvertArray = ['abc' => 'ext-ref-placeholder_0'];
+        $externalRefQuery = 'SELECT user.abc_id FROM user WHERE `email` = "abdul@email.com"';
+
+        $this->mockDependency('sqlBuilderMock', 'parseExternalQueryReferences', [$queries], $expectedExtRefPlaceholder);
+        $this->mockDependency('sqlBuilderMock', 'convertToArray', [$expectedExtRefPlaceholder], $expectedConvertArray);
+        $this->mockDependency('sqlBuilderMock', 'isExternalReferencePlaceholder', [$expectedConvertArray['abc']], true);
+        $this->mockDependency('sqlBuilderMock', 'getRefFromPlaceholder', [$expectedConvertArray['abc']], '[user.abc_id|email:abdul@email.com]');
+        $this->mockDependency('sqlBuilderMock', 'getSQLQueryForExternalReference', ['[user.abc_id|email:abdul@email.com]'], $externalRefQuery);
+
+        $statementMock = $this->getPdoStatementWithRows(true, [['id' => 123]]);
+
+        $this->mockDependency('dbHelperMock', 'execute', [$externalRefQuery], $statementMock);
+        $this->mockDependency('dbHelperMock', 'getFirstValueFromStatement', [$statementMock], [123]);
+
+        $this->mockDependency('keyStoreMock', 'getKeywordIfExists', ['ext-ref-placeholder_0'], 'ext-ref-placeholder_0');
 
         // Execute
         $result = $this->testObject->convertToFilteredArray($queries);
@@ -373,6 +409,47 @@ class SQLHandlerTest extends TestHelper
      * testGetTableColumns Test that getTableColumns executes as expected.
      */
     public function testGetTableColumns()
+    {
+        // Prepare / Mock
+        $entity = 'user';
+
+        $this->mockDependency('dbHelperMock', 'getRequiredTableColumns', ['user'], ['id' => 'int', 'name' => 'string', 'email' => 'string']);
+
+        $sqlBuilderMock = $this->dependencies['sqlBuilderMock'];
+
+        $sqlBuilderMock->expects($this->any())
+            ->method('getColumns')
+            ->willReturn(['name' => 'Abdul', 'role' => 'admin']);
+
+        $sqlBuilderMock->expects($this->any())
+            ->method('quoteOrNot')
+            ->will($this->returnValueMap(array(
+                array('Abdul', '"Abdul"'),
+                array('admin', '"admin"')
+            )));
+
+        $sqlBuilderMock->expects($this->any())
+            ->method('sampleData')
+            ->will($this->returnValueMap(array(
+                array('int', 234234),
+                array('string', '"Abdul@random.com"')
+            )));
+
+        $expectedResult = array(
+            0 => '`id`, `name`, `email`, `role`',
+            1 => '234234, "Abdul", "Abdul@random.com", "admin"'
+        );
+
+        // Execute
+        $result = $this->testObject->getTableColumns($entity);
+
+        $this->assertEquals($expectedResult, $result);
+    }
+
+    /**
+     * testGetTableColumns Test that getTableColumns executes as expected.
+     */
+    public function testGetTableColumnsWithExternalRefs()
     {
         // Prepare / Mock
         $entity = 'user';
