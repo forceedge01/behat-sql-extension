@@ -330,7 +330,7 @@ class SQLBuilder implements Interfaces\SQLBuilderInterface
     }
 
     /**
-     * replaceExternalQueryReferences.
+     * parseExternalQueryReferences.
      *
      * @param string $query
      *

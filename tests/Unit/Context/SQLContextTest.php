@@ -54,7 +54,7 @@ class SQLContextTest extends TestHelper
             ->getMock();
 
         $this->dependencies['sqlBuilder']->expects($this->any())
-            ->method('replaceExternalQueryReferences')
+            ->method('parseExternalQueryReferences')
             ->with($this->isType('string'))
             ->will($this->returnArgument(0));
 

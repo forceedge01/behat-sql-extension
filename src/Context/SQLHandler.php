@@ -179,7 +179,7 @@ class SQLHandler extends BehatContext implements Interfaces\SQLHandlerInterface
     public function convertToFilteredArray($query)
     {
         // Match all external query references.
-        $query = $this->get('sqlBuilder')->replaceExternalQueryReferences($query);
+        $query = $this->get('sqlBuilder')->parseExternalQueryReferences($query);
 
         // Convert column string to array.
         $columns = $this->get('sqlBuilder')->convertToArray($query);

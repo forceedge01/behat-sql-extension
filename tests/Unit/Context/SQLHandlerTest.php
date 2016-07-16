@@ -51,7 +51,7 @@ class SQLHandlerTest extends TestHelper
             ->getMock();
 
         $this->dependencies['sqlBuilderMock']->expects($this->any())
-            ->method('replaceExternalQueryReferences')
+            ->method('parseExternalQueryReferences')
             ->with($this->isType('string'))
             ->will($this->returnArgument(0));
 

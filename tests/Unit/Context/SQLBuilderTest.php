@@ -543,7 +543,7 @@ class SQLBuilderTest extends TestHelper
     }
 
     /**
-     * testReplaceExternalQueryReferences Test that replaceExternalQueryReferences executes as expected.
+     * testParseExternalQueryReferences Test that parseExternalQueryReferences executes as expected.
      */
     public function testParseExternalQueryReferences()
     {
@@ -561,7 +561,7 @@ class SQLBuilderTest extends TestHelper
     }
 
     /**
-     * testReplaceExternalQueryReferences Test that replaceExternalQueryReferences executes as expected.
+     * testparseExternalQueryReferences Test that parseExternalQueryReferences executes as expected.
      */
     public function testParseExternalQueryReferencesNoRefs()
     {
