@@ -110,6 +110,7 @@ class SQLContext extends SQLHandler implements Interfaces\SQLContextInterface
 
         // Extract duplicate key and run update using it
         if ($key = $this->getKeyFromDuplicateError($result)) {
+            // DEPCRECIATED, Probably need to get rid of this logic.
             $this->debugLog(sprintf('Duplicate key found, running update using key "%s"', $key));
 
             $this->iHaveAnExistingWithWhere(
@@ -120,7 +121,6 @@ class SQLContext extends SQLHandler implements Interfaces\SQLContextInterface
 
             $whereClause = sprintf('%s = %s', $key, $this->quoteOrNot($columns[$key]));
         }
-
 
         try {
             $this->setKeywordsFromCriteria($this->getEntity(), $whereClause);

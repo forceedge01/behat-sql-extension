@@ -28,6 +28,8 @@ class SQLHandlerTest extends TestHelper
         error_reporting(E_ALL | E_STRICT);
         ini_set('display_errors', 'On');
 
+        $_SESSION['behat']['GenesisSqlExtension']['last_id'] = [];
+
         $this->dependencies['dbHelperMock'] = $this->getMockBuilder(DBManagerInterface::class)
             ->disableOriginalConstructor()
             ->getMock();
@@ -35,10 +37,6 @@ class SQLHandlerTest extends TestHelper
         $this->dependencies['dbHelperMock']->expects($this->any())
             ->method('getPrimaryKeyForTable')
             ->will($this->returnValue('id'));
-
-        $this->dependencies['dbHelperMock']->expects($this->any())
-            ->method('execute')
-            ->will($this->returnValue($this->getPdoStatementWithRows(true, [[123]])));
 
         $this->dependencies['dbHelperMock']->expects($this->any())
             ->method('getParams')
@@ -78,7 +76,7 @@ class SQLHandlerTest extends TestHelper
 
     /**
      * Test that the Get call works as expected.
-     * 
+     *
      * @expectedException Exception
      */
     public function testGetUnknownDependency()
@@ -410,5 +408,131 @@ class SQLHandlerTest extends TestHelper
         $result = $this->testObject->getTableColumns($entity);
 
         $this->assertEquals($expectedResult, $result);
+    }
+
+    /**
+     * testConvertToQuery Test that convertToQuery executes as expected.
+     */
+    public function testConvertToQueryNoColumns()
+    {
+        // Prepare / Mock
+        $columns = [];
+
+        // Execute
+        $result = $this->testObject->convertToQuery($columns);
+
+        // Assert Result
+        $this->assertEquals('', $result);
+    }
+
+    /**
+     * testConvertToQuery Test that convertToQuery executes as expected.
+     */
+    public function testConvertToQueryWithColumns()
+    {
+        // Prepare / Mock
+        $columnsValuePair = [
+            'column1' => 'abc',
+            'column2' => 'xyz'
+        ];
+
+        // Execute
+        $result = $this->testObject->convertToQuery($columnsValuePair);
+
+        $expectedQuery = 'column1:abc,column2:xyz';
+
+        // Assert Result
+        $this->assertEquals($expectedQuery, $result);
+    }
+
+    /**
+     * testGetLastIds Test that getLastIds executes as expected.
+     */
+    public function testGetLastIdsNoEntity()
+    {
+        // Execute
+        $result = $this->testObject->getLastIds();
+
+        // Assert Result
+        $this->assertEquals([], $result);
+    }
+
+    /**
+     * testGetLastIds Test that getLastIds executes as expected.
+     */
+    public function testGetLastIdsWithEntityNotFound()
+    {
+        $entity = 'user';
+
+        // Execute
+        $result = $this->testObject->getLastIds($entity);
+
+        // Assert Result
+        $this->assertFalse($result);
+    }
+
+    /**
+     * testGetLastIds Test that getLastIds executes as expected.
+     */
+    public function testGetLastIdsWithEntityFound()
+    {
+        $_SESSION['behat']['GenesisSqlExtension']['last_id']['user'] = 123123;
+        $entity = 'user';
+
+        // Execute
+        $result = $this->testObject->getLastIds($entity);
+
+        // Assert Result
+        $this->assertEquals(123123, $result);
+    }
+
+    /**
+     * testFetchByCriteria Test that fetchByCriteria executes as expected.
+     *
+     * @expectedException Genesis\SQLExtension\Context\Exceptions\RecordNotFoundException
+     */
+    public function testFetchByCriteriaNoRows()
+    {
+        // Prepare / Mock
+        $entity = 'user';
+        $criteria = 'name = "Abdul"';
+
+        $this->dependencies['dbHelperMock']
+            ->expects($this->once())
+            ->method('execute')
+            ->will($this->returnValue(
+                $this->getPdoStatementWithRows(
+                    false
+                )
+            ));
+
+        // Execute
+        $this->testObject->fetchByCriteria($entity, $criteria);
+    }
+
+    /**
+     * testFetchByCriteria Test that fetchByCriteria executes as expected.
+     */
+    public function testFetchByCriteriaWithRows()
+    {
+        // Prepare / Mock
+        $entity = 'user';
+        $criteria = 'name = "Abdul"';
+
+        $expectedRecord = [['id' => 123]];
+        $this->dependencies['dbHelperMock']
+            ->expects($this->once())
+            ->method('execute')
+            ->will($this->returnValue(
+                $this->getPdoStatementWithRows(
+                    true,
+                    $expectedRecord
+                )
+            ));
+
+        // Execute
+        $result = $this->testObject->fetchByCriteria($entity, $criteria);
+
+        $this->assertEquals($expectedRecord, $result);
     }
 }

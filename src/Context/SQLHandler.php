@@ -295,22 +295,6 @@ class SQLHandler extends BehatContext implements Interfaces\SQLHandlerInterface
     }
 
     /**
-     * Get all id's inserted for an entity.
-     */
-    public function getLastIds($entity = null)
-    {
-        if ($entity) {
-            if (isset($_SESSION['behat']['GenesisSqlExtension']['last_id'][$entity])) {
-                return $_SESSION['behat']['GenesisSqlExtension']['last_id'][$entity];
-            }
-
-            return false;
-        }
-
-        return $_SESSION['behat']['GenesisSqlExtension']['last_id'];
-    }
-
-    /**
      * Check for any mysql errors.
      */
     public function throwErrorIfNoRowsAffected(Traversable $sqlStatement, $ignoreDuplicate = false)
@@ -388,30 +372,6 @@ class SQLHandler extends BehatContext implements Interfaces\SQLHandlerInterface
             $entity,
             $result[0]
         );
-    }
-
-    /**
-     * Get a record by a criteria.
-     *
-     * @param string $entity
-     * @param string $criteria
-     */
-    public function fetchByCriteria($entity, $criteria)
-    {
-        $sql = sprintf('SELECT * FROM %s WHERE %s', $entity, $criteria);
-        $statement = $this->execute($sql);
-        $this->throwErrorIfNoRowsAffected($statement);
-        $result = $statement->fetchAll();
-
-        if (! $result) {
-            throw new Exceptions\RecordNotFoundException(sprintf(
-                'Unable to fetch result using criteria "%s" on "%s"',
-                $criteria,
-                $entity
-            ));
-        }
-
-        return $result;
     }
 
     /**
@@ -521,24 +481,6 @@ class SQLHandler extends BehatContext implements Interfaces\SQLHandlerInterface
     public function convertTableNodeToQueries(TableNode $node)
     {
         return $this->sqlBuilder->convertTableNodeToQueries($node);
-    }
-
-    /**
-     * Convert an array to a genesis query.
-     *
-     * @param array $columns
-     *
-     * @return string
-     */
-    public function convertToQuery(array $columns)
-    {
-        $query = '';
-
-        foreach ($columns as $column => $value) {
-            $query .= sprintf('%s:%s,', $column, $value);
-        }
-
-        return trim($query, ',');
     }
 
     /**
@@ -659,5 +601,61 @@ class SQLHandler extends BehatContext implements Interfaces\SQLHandlerInterface
     private function getParams()
     {
         return $this->dbManager->getParams();
+    }
+
+    /**
+     * Convert an array to a genesis query.
+     *
+     * @param array $columns
+     *
+     * @return string
+     */
+    public function convertToQuery(array $columnsValuePair)
+    {
+        $query = '';
+
+        foreach ($columnsValuePair as $column => $value) {
+            $query .= sprintf('%s:%s,', $column, $value);
+        }
+
+        return trim($query, ',');
+    }
+
+    /**
+     * Get all id's inserted for an entity.
+     */
+    public function getLastIds($entity = null)
+    {
+        if ($entity) {
+            if (isset($_SESSION['behat']['GenesisSqlExtension']['last_id'][$entity])) {
+                return $_SESSION['behat']['GenesisSqlExtension']['last_id'][$entity];
+            }
+
+            return false;
+        }
+
+        return $_SESSION['behat']['GenesisSqlExtension']['last_id'];
+    }
+
+    /**
+     * Get a record by a criteria.
+     *
+     * @param string $entity
+     * @param string $criteria The SQL criteria.
+     */
+    public function fetchByCriteria($entity, $criteria)
+    {
+        $sql = sprintf('SELECT * FROM %s WHERE %s', $entity, $criteria);
+        $statement = $this->execute($sql);
+        $result = $statement->fetchAll();
+
+        if (! $result) {
+            throw new Exceptions\RecordNotFoundException(
+                $criteria,
+                $entity
+            );
+        }
+
+        return $result;
     }
 }
