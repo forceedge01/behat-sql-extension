@@ -12,15 +12,24 @@ interface KeyStoreInterface
 
     /**
      * @param string $key
-     * 
+     *
      * @return mixed
      */
     public function getKeyword($key);
 
     /**
      * @param string $key
-     * 
+     *
      * @return boolean
      */
-    public function getKeywordFromConfigForKeyIfExists($key);
+    public function getKeywordIfExists($key);
+
+    /**
+     * Provide a string with keywords to be parsed.
+     *
+     * @param string $string The string to parse.
+     *
+     * @return string
+     */
+    public function parseKeywordsInString($string);
 }

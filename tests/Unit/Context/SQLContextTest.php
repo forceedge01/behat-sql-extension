@@ -58,7 +58,7 @@ class SQLContextTest extends TestHelper
             ->getMock();
 
         $this->dependencies['keyStoreMock']->expects($this->any())
-            ->method('getKeywordFromConfigForKeyIfExists')
+            ->method('getKeywordIfExists')
             ->will($this->returnArgument(0));
 
         $this->dependencies['keyStoreMock']->expects($this->any())
