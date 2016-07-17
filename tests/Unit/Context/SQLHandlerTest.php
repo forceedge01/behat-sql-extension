@@ -12,6 +12,7 @@ use Genesis\SQLExtension\Tests\TestHelper;
 
 /**
  * @group sqlHandler
+ * @group unit
  */
 class SQLHandlerTest extends TestHelper
 {
@@ -29,6 +30,8 @@ class SQLHandlerTest extends TestHelper
         error_reporting(E_ALL | E_STRICT);
         ini_set('display_errors', 'On');
 
+        $_SESSION['behat']['GenesisSqlExtension']['last_id'] = [];
+
         $this->dependencies['dbHelperMock'] = $this->getMockBuilder(DBManagerInterface::class)
             ->disableOriginalConstructor()
             ->getMock();
@@ -36,10 +39,6 @@ class SQLHandlerTest extends TestHelper
         $this->dependencies['dbHelperMock']->expects($this->any())
             ->method('getPrimaryKeyForTable')
             ->will($this->returnValue('id'));
-
-        $this->dependencies['dbHelperMock']->expects($this->any())
-            ->method('execute')
-            ->will($this->returnValue($this->getPdoStatementWithRows(true, [[123]])));
 
         $this->dependencies['dbHelperMock']->expects($this->any())
             ->method('getParams')
@@ -50,6 +49,11 @@ class SQLHandlerTest extends TestHelper
         $this->dependencies['sqlBuilderMock'] = $this->getMockBuilder(SQLBuilderInterface::class)
             ->disableOriginalConstructor()
             ->getMock();
+
+        // $this->dependencies['sqlBuilderMock']->expects($this->any())
+        //     ->method('parseExternalQueryReferences')
+        //     ->with($this->isType('string'))
+        //     ->will($this->returnArgument(0));
 
         $this->dependencies['keyStoreMock'] = $this->getMockBuilder(KeyStoreInterface::class)
             ->disableOriginalConstructor()
@@ -79,7 +83,7 @@ class SQLHandlerTest extends TestHelper
 
     /**
      * Test that the Get call works as expected.
-     * 
+     *
      * @expectedException Exception
      */
     public function testGetUnknownDependency()
@@ -143,9 +147,9 @@ class SQLHandlerTest extends TestHelper
     }
 
     /**
-     * testFilterAndConvertToArray Test that filterAndConvertToArray executes as expected.
+     * testConvertToFilteredArray Test that convertToFilteredArray executes as expected.
      */
-    public function testFilterAndConvertToArray()
+    public function testConvertToFilteredArray()
     {
         $queries = 'abc:123';
         $expected = ['abc' => 123];
@@ -153,8 +157,43 @@ class SQLHandlerTest extends TestHelper
         $this->mockDependency('sqlBuilderMock', 'convertToArray', [$queries], $expected);
         $this->mockDependency('keyStoreMock', 'getKeywordIfExists', [123], 123);
 
+        $this->mockDependency('sqlBuilderMock', 'parseExternalQueryReferences', [$queries], $queries);
+        $this->mockDependency('sqlBuilderMock', 'isExternalReferencePlaceholder', [123], false);
+
         // Execute
-        $result = $this->testObject->filterAndConvertToArray($queries);
+        $result = $this->testObject->convertToFilteredArray($queries);
+
+        $this->assertEquals($expected, $result);
+    }
+
+    /**
+     * testConvertToFilteredArray Test that convertToFilteredArray executes as expected.
+     *
+     * @group externalRef
+     */
+    public function testConvertToFilteredArrayWithExternalRef()
+    {
+        $queries = 'abc:[user.abc_id|email:abdul@email.com]';
+        $expected = ['abc' => 123];
+        $expectedExtRefPlaceholder = 'abc:ext-ref-placeholder_0';
+        $expectedConvertArray = ['abc' => 'ext-ref-placeholder_0'];
+        $externalRefQuery = 'SELECT user.abc_id FROM user WHERE `email` = "abdul@email.com"';
+
+        $this->mockDependency('sqlBuilderMock', 'parseExternalQueryReferences', [$queries], $expectedExtRefPlaceholder);
+        $this->mockDependency('sqlBuilderMock', 'convertToArray', [$expectedExtRefPlaceholder], $expectedConvertArray);
+        $this->mockDependency('sqlBuilderMock', 'isExternalReferencePlaceholder', [$expectedConvertArray['abc']], true);
+        $this->mockDependency('sqlBuilderMock', 'getRefFromPlaceholder', [$expectedConvertArray['abc']], '[user.abc_id|email:abdul@email.com]');
+        $this->mockDependency('sqlBuilderMock', 'getSQLQueryForExternalReference', ['[user.abc_id|email:abdul@email.com]'], $externalRefQuery);
+
+        $statementMock = $this->getPdoStatementWithRows(true, [['id' => 123]]);
+
+        $this->mockDependency('dbHelperMock', 'execute', [$externalRefQuery], $statementMock);
+        $this->mockDependency('dbHelperMock', 'getFirstValueFromStatement', [$statementMock], [123]);
+
+        $this->mockDependency('keyStoreMock', 'getKeywordIfExists', ['ext-ref-placeholder_0'], 'ext-ref-placeholder_0');
+
+        // Execute
+        $result = $this->testObject->convertToFilteredArray($queries);
 
         $this->assertEquals($expected, $result);
     }
@@ -411,5 +450,172 @@ class SQLHandlerTest extends TestHelper
         $result = $this->testObject->getTableColumns($entity);
 
         $this->assertEquals($expectedResult, $result);
+    }
+
+    /**
+     * testGetTableColumns Test that getTableColumns executes as expected.
+     */
+    public function testGetTableColumnsWithExternalRefs()
+    {
+        // Prepare / Mock
+        $entity = 'user';
+
+        $this->mockDependency('dbHelperMock', 'getRequiredTableColumns', ['user'], ['id' => 'int', 'name' => 'string', 'email' => 'string']);
+
+        $sqlBuilderMock = $this->dependencies['sqlBuilderMock'];
+
+        $sqlBuilderMock->expects($this->any())
+            ->method('getColumns')
+            ->willReturn(['name' => 'Abdul', 'role' => 'admin']);
+
+        $sqlBuilderMock->expects($this->any())
+            ->method('quoteOrNot')
+            ->will($this->returnValueMap(array(
+                array('Abdul', '"Abdul"'),
+                array('admin', '"admin"')
+            )));
+
+        $sqlBuilderMock->expects($this->any())
+            ->method('sampleData')
+            ->will($this->returnValueMap(array(
+                array('int', 234234),
+                array('string', '"Abdul@random.com"')
+            )));
+
+        $expectedResult = array(
+            0 => '`id`, `name`, `email`, `role`',
+            1 => '234234, "Abdul", "Abdul@random.com", "admin"'
+        );
+
+        // Execute
+        $result = $this->testObject->getTableColumns($entity);
+
+        $this->assertEquals($expectedResult, $result);
+    }
+
+    /**
+     * testConvertToQuery Test that convertToQuery executes as expected.
+     */
+    public function testConvertToQueryNoColumns()
+    {
+        // Prepare / Mock
+        $columns = [];
+
+        // Execute
+        $result = $this->testObject->convertToQuery($columns);
+
+        // Assert Result
+        $this->assertEquals('', $result);
+    }
+
+    /**
+     * testConvertToQuery Test that convertToQuery executes as expected.
+     */
+    public function testConvertToQueryWithColumns()
+    {
+        // Prepare / Mock
+        $columnsValuePair = [
+            'column1' => 'abc',
+            'column2' => 'xyz'
+        ];
+
+        // Execute
+        $result = $this->testObject->convertToQuery($columnsValuePair);
+
+        $expectedQuery = 'column1:abc,column2:xyz';
+
+        // Assert Result
+        $this->assertEquals($expectedQuery, $result);
+    }
+
+    /**
+     * testGetLastIds Test that getLastIds executes as expected.
+     */
+    public function testGetLastIdsNoEntity()
+    {
+        // Execute
+        $result = $this->testObject->getLastIds();
+
+        // Assert Result
+        $this->assertEquals([], $result);
+    }
+
+    /**
+     * testGetLastIds Test that getLastIds executes as expected.
+     */
+    public function testGetLastIdsWithEntityNotFound()
+    {
+        $entity = 'user';
+
+        // Execute
+        $result = $this->testObject->getLastIds($entity);
+
+        // Assert Result
+        $this->assertFalse($result);
+    }
+
+    /**
+     * testGetLastIds Test that getLastIds executes as expected.
+     */
+    public function testGetLastIdsWithEntityFound()
+    {
+        $_SESSION['behat']['GenesisSqlExtension']['last_id']['user'] = 123123;
+        $entity = 'user';
+
+        // Execute
+        $result = $this->testObject->getLastIds($entity);
+
+        // Assert Result
+        $this->assertEquals(123123, $result);
+    }
+
+    /**
+     * testFetchByCriteria Test that fetchByCriteria executes as expected.
+     *
+     * @expectedException Genesis\SQLExtension\Context\Exceptions\RecordNotFoundException
+     */
+    public function testFetchByCriteriaNoRows()
+    {
+        // Prepare / Mock
+        $entity = 'user';
+        $criteria = 'name = "Abdul"';
+
+        $this->dependencies['dbHelperMock']
+            ->expects($this->once())
+            ->method('execute')
+            ->will($this->returnValue(
+                $this->getPdoStatementWithRows(
+                    false
+                )
+            ));
+
+        // Execute
+        $this->testObject->fetchByCriteria($entity, $criteria);
+    }
+
+    /**
+     * testFetchByCriteria Test that fetchByCriteria executes as expected.
+     */
+    public function testFetchByCriteriaWithRows()
+    {
+        // Prepare / Mock
+        $entity = 'user';
+        $criteria = 'name = "Abdul"';
+
+        $expectedRecord = [['id' => 123]];
+        $this->dependencies['dbHelperMock']
+            ->expects($this->once())
+            ->method('execute')
+            ->will($this->returnValue(
+                $this->getPdoStatementWithRows(
+                    true,
+                    $expectedRecord
+                )
+            ));
+
+        // Execute
+        $result = $this->testObject->fetchByCriteria($entity, $criteria);
+
+        $this->assertEquals($expectedRecord, $result);
     }
 }

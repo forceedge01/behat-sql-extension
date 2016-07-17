@@ -13,6 +13,11 @@ class SQLBuilder implements Interfaces\SQLBuilderInterface
     private $columns = [];
 
     /**
+     * External references, format of an external ref [...|...:...].
+     */
+    private $refs = [];
+
+    /**
      * Constructs a clause based on the glue, to be used for where and update clause.
      *
      * @param string $commandType
@@ -28,40 +33,67 @@ class SQLBuilder implements Interfaces\SQLBuilderInterface
         foreach ($columns as $column => $value) {
             $newValue = ltrim($value, '!');
             $quotedValue = $this->quoteOrNot($newValue);
-            $comparator = '%s=';
-            $notOperator = '';
-
-            // Check if the supplied value is null and that the construct is not for insert and update,
-            // if so change the format.
-            if (strtolower($newValue) == 'null' and
-                trim($glue) != ',' and
-                in_array($commandType, ['update', 'select', 'delete'])) {
-                $comparator = 'is%s';
-            }
-
-            // Check if a not is applied to the value.
-            if (strpos($value, '!') === 0) {
-                if (strtolower($newValue) == 'null' and
-                trim($glue) != ',' and
-                in_array($commandType, ['update', 'select', 'delete'])) {
-                    $notOperator = ' not';
-                } else {
-                    $notOperator = '!';
-                }
-            }
-
-            // Check if the value is surrounded by wildcards. If so, we'll want to use a LIKE comparator.
-            if (preg_match('/^%.+%$/', $value)) {
-                $comparator = 'LIKE';
-            }
+            $comparator = $this->getComparatorFromValue(
+                $value,
+                $glue,
+                $commandType
+            );
 
             // Make up the sql.
-            $comparator = sprintf($comparator, $notOperator);
-            $clause = sprintf('`%s` %s %s', $column, $comparator, $quotedValue);
+            $clause = sprintf(
+                '`%s` %s %s',
+                $column,
+                $comparator,
+                $quotedValue
+            );
+
             $whereClause[] = $clause;
         }
 
         return implode($glue, $whereClause);
+    }
+
+    /**
+     * Gets the comparator based on the value provided.
+     * This could be =, LIKE, != or something else based on the value.
+     *
+     * @param string $value The value that holds the comparator info.
+     * @param string $glue The glue used for the clause construction.
+     * @param string $commandType The command type being constructed.
+     *
+     * @return string
+     */
+    private function getComparatorFromValue($value, $glue, $commandType)
+    {
+        $comparator = '%s=';
+        $notOperator = '';
+        $newValue = ltrim($value, '!');
+
+        // Check if the supplied value is null and that the construct is not for insert and update,
+        // if so change the format.
+        if (strtolower($newValue) == 'null' and
+            trim($glue) != ',' and
+            in_array($commandType, ['update', 'select', 'delete'])) {
+            $comparator = 'is%s';
+        }
+
+        // Check if a not is applied to the value.
+        if (strpos($value, '!') === 0) {
+            if (strtolower($newValue) == 'null' and
+            trim($glue) != ',' and
+            in_array($commandType, ['update', 'select', 'delete'])) {
+                $notOperator = ' not';
+            } else {
+                $notOperator = '!';
+            }
+        }
+
+        // Check if the value is surrounded by wildcards. If so, we'll want to use a LIKE comparator.
+        if (preg_match('/^%.+%$/', $value)) {
+            $comparator = 'LIKE';
+        }
+
+        return sprintf($comparator, $notOperator);
     }
 
     /**
@@ -250,5 +282,133 @@ class SQLBuilder implements Interfaces\SQLBuilderInterface
     public function getColumns()
     {
         return $this->columns;
+    }
+
+    /**
+     * Get reference for a placeholder.
+     *
+     * @param string $placeholder The placeholder string.
+     *
+     * @return string|false Placeholder ref or false if the placeholder is not found.
+     */
+    public function getRefFromPlaceholder($placeholder)
+    {
+        if (strpos($placeholder, 'ext-ref-placeholder_') === false) {
+            return false;
+        }
+
+        list($garbage, $index) = explode('_', $placeholder);
+        unset($garbage);
+
+        if (! array_key_exists($index, $this->refs)) {
+            return false;
+        }
+
+        return $this->refs[$index];
+    }
+
+    /**
+     * Check if the value provided is an external ref.
+     *
+     * @param string $value The value to check.
+     *
+     * @return bool
+     */
+    public function isExternalReference($value)
+    {
+        // [user.id|user.email: its.inevitable@hotmail.com]
+        // [woody_crm.users.id|email:its.inevitable@hotmail.com,status:1]
+        $externalRefPattern = '#^(\[[^\]]+\|(.+\:.+)+\])$#';
+        if (preg_match($externalRefPattern, $value)) {
+            return true;
+        }
+
+        return false;
+    }
+
+    /**
+     * @param string $value The value to check.
+     *
+     * @return bool
+     */
+    public function isExternalReferencePlaceholder($value)
+    {
+        if (strpos($value, 'ext-ref-placeholder_') === 0) {
+            return true;
+        }
+
+        return false;
+    }
+
+    /**
+     * Get single query for the external reference.
+     *
+     * @param string $externalRef The external ref enclosed in [].
+     *
+     * @return string
+     */
+    public function getSQLQueryForExternalReference($externalRef)
+    {
+        if (! $this->isExternalReference($externalRef)) {
+            throw new Exception(
+                'Invalid external ref provided, external ref must be enclosed in "[]" and criteria split by "|".
+                Example format [{table}.{column1}|{column2}:{value}]'
+            );
+        }
+
+        list($columnAndTable, $criteria) = explode('|', trim($externalRef, '[]'));
+
+        // Get the table and column names.
+        $table = null;
+        preg_match('#.+(?=\.)#', $columnAndTable, $table);
+        $array = explode('.', $columnAndTable);
+        $column = end($array);
+
+        // Construct where clause.
+        $whereClause = $this->constructSQLClause('SELECT', ' AND ', $this->convertToArray($criteria));
+
+        return sprintf('SELECT %s FROM %s WHERE %s', $columnAndTable, $table[0], $whereClause);
+    }
+
+    /**
+     * Get placeholder for reference.
+     *
+     * @param string $externalRef The reference string.
+     *
+     * @return string The placeholder.
+     */
+    private function getPlaceholderForRef($externalRef)
+    {
+        // Search for existing refs.
+        $this->refs[] = $externalRef;
+        $index = array_search($externalRef, $this->refs);
+
+        return sprintf('ext-ref-placeholder_%d', $index);
+    }
+
+    /**
+     * parseExternalQueryReferences.
+     *
+     * @param string $query
+     *
+     * @return string
+     */
+    public function parseExternalQueryReferences($query)
+    {
+        // Extract all matches for external refs.
+        $pattern = '#(\[[^\]]+\|.+?\]+?)#';
+        $refs = [];
+        preg_match_all($pattern, $query, $refs);
+
+        // If there are any external ref matches, then replace them with placeholders.
+        if (isset($refs[0])) {
+            foreach ($refs[0] as $ref) {
+                $placeholder = $this->getPlaceholderForRef($ref);
+                $query = str_replace($ref, $placeholder, $query);
+            }
+        }
+
+        // Return query with potential placeholders.
+        return $query;
     }
 }
