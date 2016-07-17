@@ -37,7 +37,7 @@ class Extension implements ExtensionInterface
             DEFINE('SQLDBPREFIX', $config['connection_details']['dbprefix']);
             session_start();
             // Store any keywords set in behat.yml file
-            if (isset($config['keywords']) and $config['keywords']) {
+            if (isset($config['keywords']) && $config['keywords']) {
                 foreach ($config['keywords'] as $keyword => $value) {
                     $_SESSION['behat']['GenesisSqlExtension']['keywords'][$keyword] = $value;
                 }

@@ -135,7 +135,7 @@ class SQLBuilder implements Interfaces\SQLBuilderInterface
      */
     public function quoteOrNot($val)
     {
-        return ((is_string($val) || is_numeric($val)) and !$this->isNotQuotable($val)) ?
+        return ((is_string($val) || is_numeric($val)) && !$this->isNotQuotable($val)) ?
             sprintf(
                 "'%s'",
                 str_replace(
