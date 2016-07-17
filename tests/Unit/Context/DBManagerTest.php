@@ -8,6 +8,7 @@ use Genesis\SQLExtension\Tests\TestHelper;
 
 /**
  * @group DBManager
+ * @group unit
  */
 class DBManagerTest extends TestHelper
 {
@@ -233,6 +234,43 @@ class DBManagerTest extends TestHelper
         $this->assertTrue(['name' => 'string'] === $result);
     }
 
+    public function testGetRequiredTableColumnsNoSchemaInparams()
+    {
+        $table = 'myapp.user';
+        $expectedSql = "
+            SELECT 
+                `column_name`, `data_type` 
+            FROM 
+                information_schema.columns 
+            WHERE 
+                is_nullable = 'NO'
+            AND 
+                table_name = 'user'
+            AND 
+                table_schema = 'myapp';";
+
+        // Override the preset schema to be null as params take precedence over defined constants.
+        // This should make then make use of the 'myapp' table schema.
+        $dbParams = ['schema' => ''];
+        $this->accessMethod('setDBParams')->invokeArgs(
+            $this->testObject,
+            [$dbParams]
+        );
+
+        $this->testObject->getConnection()->expects($this->once())
+            ->method('prepare')
+            ->with($expectedSql)
+            ->will($this->returnValue($this->getPdoStatementWithRows(2, [
+                    ['column_name' => 'id', 'data_type' => 'int'],
+                    ['column_name' => 'name', 'data_type' => 'string'
+                    ]
+                ])));
+
+        $result = $this->testObject->getRequiredTableColumns($table);
+
+        $this->assertTrue(['name' => 'string'] === $result);
+    }
+
     public function testGetLastInsertId()
     {
         $table = 'user';
@@ -374,5 +412,35 @@ class DBManagerTest extends TestHelper
         $this->assertEquals($expectedConnectionString, $result[0]);
         $this->assertEquals($paramsValue['DBUSER'], $result[1]);
         $this->assertEquals($paramsValue['DBPASSWORD'], $result[2]);
+    }
+
+    /**
+     * testGetFirstValueFromStatement Test that getFirstValueFromStatement executes as expected.
+     */
+    public function testGetFirstValueFromStatementNoRows()
+    {
+        // Prepare / Mock
+        $statement = $this->getPdoStatementWithRows(false, []);
+
+        // Execute
+        $result = $this->testObject->getFirstValueFromStatement($statement);
+
+        // Assert Result
+        $this->assertNull($result);
+    }
+
+    /**
+     * testGetFirstValueFromStatement Test that getFirstValueFromStatement executes as expected.
+     */
+    public function testGetFirstValueFromStatementWithRows()
+    {
+        // Prepare / Mock
+        $statement = $this->getPdoStatementWithRows(true, [['id' => 123], ['id' => 7726]]);
+
+        // Execute
+        $result = $this->testObject->getFirstValueFromStatement($statement);
+
+        // Assert Result
+        $this->assertEquals(['id' => 123], $result);
     }
 }

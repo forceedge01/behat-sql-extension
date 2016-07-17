@@ -12,6 +12,7 @@ use Genesis\SQLExtension\Tests\TestHelper;
 
 /**
  * @group sqlContext
+ * @group unit
  */
 class SQLContextTest extends TestHelper
 {
@@ -52,6 +53,11 @@ class SQLContextTest extends TestHelper
         $this->dependencies['sqlBuilder'] = $this->getMockBuilder(SQLBuilderInterface::class)
             ->disableOriginalConstructor()
             ->getMock();
+
+        $this->dependencies['sqlBuilder']->expects($this->any())
+            ->method('parseExternalQueryReferences')
+            ->with($this->isType('string'))
+            ->will($this->returnArgument(0));
 
         $this->dependencies['keyStoreMock'] = $this->getMockBuilder(KeyStoreInterface::class)
             ->disableOriginalConstructor()
@@ -246,8 +252,6 @@ class SQLContextTest extends TestHelper
 
         $this->mockDependency('sqlBuilder', 'getColumns', null, ['column1' => 'abc']);
 
-        // print_r($this->testObject->get('sqlBuilder')->getColumns());
-
         $result = $this->testObject->iHaveAWhere($entity, $column);
 
         // Expected SQL.
@@ -295,6 +299,77 @@ class SQLContextTest extends TestHelper
 
         $this->mockDependency('sqlBuilder', 'convertToArray',
                 array('column1:abc'), $convertedQuery1);
+
+        $this->mockDependency(
+            'sqlBuilder',
+            'constructSQLClause',
+            array(
+                'select',
+                ' AND ',
+                $convertedQuery1
+            ),
+            "column1 = 'abc'"
+        );
+
+        $this->mockDependency('dbHelperMock', 'getRequiredTableColumns', null, []);
+
+        $this->mockDependency('sqlBuilder', 'getColumns', null, ['column1' => 'abc']);
+
+        $this->mockDependency('sqlBuilder', 'quoteOrNot', null, "'abc'");
+
+        $result = $this->testObject->iHaveAWhere($entity, $column);
+
+        // Expected SQL.
+        $expectedSQL = "INSERT INTO dev_database.unique1 (`column1`) VALUES ('abc')";
+
+        // Assert.
+        $this->assertEquals($expectedSQL, $result);
+        $this->assertNotNull($this->testObject->getEntity());
+        $this->assertEquals('insert', $this->testObject->getCommandType());
+    }
+
+    /**
+     * Test that this method works with values provided.
+     *
+     * @group duplicate
+     */
+    public function testIHaveAWhereDuplicateRecord()
+    {
+        $entity = 'database.unique1';
+        $column = "column1:abc";
+
+        $this->dependencies['dbHelperMock']->expects($this->any())
+            ->method('getRequiredTableColumns')
+            ->with($this->isType('string'))
+            ->will($this->returnValue([]));
+
+        $this->dependencies['dbHelperMock']->expects($this->any())
+            ->method('hasFetchedRows')
+            ->will($this->onConsecutiveCalls(
+                false,
+                true,
+                false
+            ));
+
+        $this->dependencies['dbHelperMock']->expects($this->any())
+            ->method('execute')
+            ->with($this->isType('string'))
+            ->will($this->onConsecutiveCalls(
+                $this->getPdoStatementWithRows(0),
+                $this->getPdoStatementWithRows(1, [['id' => 237463]]),
+                $this->getPdoStatementWithRows(1, [['id' => 237463]])
+            ));
+
+        $convertedQuery1 = [
+            'column1' => 'abc'
+        ];
+
+        $this->mockDependency(
+            'sqlBuilder',
+            'convertToArray',
+            array('column1:abc'),
+            $convertedQuery1
+        );
 
         $this->mockDependency(
             'sqlBuilder',
@@ -714,6 +789,42 @@ class SQLContextTest extends TestHelper
         $this->assertEquals($expectedSQL, $result);
         $this->assertNotNull($this->testObject->getEntity());
         $this->assertEquals('select', $this->testObject->getCommandType());
+    }
+
+    /**
+     * Test that this method works with values provided.
+     *
+     * @expectedException Genesis\SQLExtension\Context\Exceptions\RecordNotFoundException
+     */
+    public function testiShouldHaveAWithWithNoRecordFound()
+    {
+        $entity = 'database.someTable4';
+        $with = "column1:abc,column2:xyz,column3:!NULL";
+
+        $this->mockDependency(
+            'sqlBuilder',
+            'convertTableNodeToSingleContextClause',
+            [$with],
+            'column1:abc,column2:xyz,column3:!NULL'
+        );
+
+        $this->mockDependencyMethods(
+            'dbHelperMock',
+            [
+                'execute' => $this->getPdoStatementWithRows(false),
+                'hasFetchedRows' => false
+            ]
+        );
+
+        $this->mockDependency('sqlBuilder', 'convertToArray', ['column1:abc,column2:xyz,column3:!NULL'], [
+            'column1' => 'abc',
+            'column2' => 'xyz',
+            'column3' => '!NULL'
+        ]);
+
+        $this->mockDependency('sqlBuilder', 'constructSQLClause', null, "`column1` = 'abc' AND `column2` = 'xyz' AND `column3` is not NULL");
+
+        $this->testObject->iShouldHaveAWith($entity, $with);
     }
 
     /**

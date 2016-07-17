@@ -149,7 +149,7 @@ interface SQLHandlerInterface
      *
      * @return array
      */
-    public function filterAndConvertToArray($columns);
+    public function convertToFilteredArray($columns);
 
     /**
      * @param  TableNode $node The node with all fields and data.

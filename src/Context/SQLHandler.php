@@ -169,19 +169,61 @@ class SQLHandler extends BehatContext implements Interfaces\SQLHandlerInterface
         return $this->sqlBuilder->constructSQLClause($commandType, $glue, $columns);
     }
 
-    public function filterAndConvertToArray($queries)
+    /**
+     * Filter keywords and convert to array.
+     *
+     * @param string $query The queries to fitler.
+     *
+     * @return array
+     */
+    public function convertToFilteredArray($query)
     {
+        // Match all external query references.
+        $query = $this->get('sqlBuilder')->parseExternalQueryReferences($query);
+
         // Convert column string to array.
-        $columns = $this->sqlBuilder->convertToArray($queries);
+        $columns = $this->get('sqlBuilder')->convertToArray($query);
 
         $filteredColumns = [];
 
         // Check for keywords.
         foreach ($columns as $column => $value) {
-            $filteredColumns[$column] = $this->checkForKeyword($value);
+            $keywordValue = $this->checkForKeyword($value);
+
+            // Check if the value provided is a keyword or an external ref, if so get value.
+            if ($keywordValue != $value) {
+                $value = $keywordValue;
+            } elseif ($this->get('sqlBuilder')->isExternalReferencePlaceholder($value)) {
+                $externalRef = $this->get('sqlBuilder')->getRefFromPlaceholder($value);
+
+                // Execute query and get value back.
+                $query = $this
+                    ->get('sqlBuilder')
+                    ->getSQLQueryForExternalReference(
+                        $externalRef
+                    );
+
+                $statement = $this->get('dbManager')->execute($query);
+
+                $value = $this->get('dbManager')->getFirstValueFromStatement($statement)[0];
+            }
+
+            $filteredColumns[$column] = $value;
         }
 
         return $filteredColumns;
+    }
+
+    /**
+     * @param string $query
+     *
+     * @depreciated Use convertToFilteredArray instead.
+     */
+    public function filterAndConvertToArray($query)
+    {
+        $this->debugLog(sprintf('Depreciated method "%s", use convertToFilteredArray instead.', __FUNCTION__));
+
+        return $this->convertToFilteredArray($query);
     }
 
     /**
@@ -273,22 +315,6 @@ class SQLHandler extends BehatContext implements Interfaces\SQLHandlerInterface
     }
 
     /**
-     * Get all id's inserted for an entity.
-     */
-    public function getLastIds($entity = null)
-    {
-        if ($entity) {
-            if (isset($_SESSION['behat']['GenesisSqlExtension']['last_id'][$entity])) {
-                return $_SESSION['behat']['GenesisSqlExtension']['last_id'][$entity];
-            }
-
-            return false;
-        }
-
-        return $_SESSION['behat']['GenesisSqlExtension']['last_id'];
-    }
-
-    /**
      * Check for any mysql errors.
      */
     public function throwErrorIfNoRowsAffected(Traversable $sqlStatement, $ignoreDuplicate = false)
@@ -323,7 +349,7 @@ class SQLHandler extends BehatContext implements Interfaces\SQLHandlerInterface
      */
     public function quoteOrNot($val)
     {
-        return $this->sqlBuilder->quoteOrNot($val);
+        return $this->get('sqlBuilder')->quoteOrNot($val);
     }
 
     /**
@@ -369,30 +395,6 @@ class SQLHandler extends BehatContext implements Interfaces\SQLHandlerInterface
     }
 
     /**
-     * Get a record by a criteria.
-     *
-     * @param string $entity
-     * @param string $criteria
-     */
-    public function fetchByCriteria($entity, $criteria)
-    {
-        $sql = sprintf('SELECT * FROM %s WHERE %s', $entity, $criteria);
-        $statement = $this->execute($sql);
-        $this->throwErrorIfNoRowsAffected($statement);
-        $result = $statement->fetchAll();
-
-        if (! $result) {
-            throw new Exceptions\RecordNotFoundException(sprintf(
-                'Unable to fetch result using criteria "%s" on "%s"',
-                $criteria,
-                $entity
-            ));
-        }
-
-        return $result;
-    }
-
-    /**
      * Set the record as keywords for re-use.
      *
      * @param string $entity
@@ -432,14 +434,19 @@ class SQLHandler extends BehatContext implements Interfaces\SQLHandlerInterface
     /**
      * Gets table columns and its values.
      *
+     * @param string $entity The table to get the columns of.
+     *
      * @return array
      */
-    public function getTableColumns($entity)
+    public function getTableColumns($table)
     {
         $columnClause = [];
 
         // Get all columns for insertion
-        $allColumns = array_merge($this->getRequiredTableColumns($entity), $this->sqlBuilder->getColumns());
+        $allColumns = array_merge(
+            $this->getRequiredTableColumns($table),
+            $this->sqlBuilder->getColumns()
+        );
 
         // Set values for columns
         foreach ($allColumns as $col => $type) {
@@ -486,24 +493,6 @@ class SQLHandler extends BehatContext implements Interfaces\SQLHandlerInterface
     public function convertTableNodeToQueries(TableNode $node)
     {
         return $this->sqlBuilder->convertTableNodeToQueries($node);
-    }
-
-    /**
-     * Convert an array to a genesis query.
-     *
-     * @param array $columns
-     *
-     * @return string
-     */
-    public function convertToQuery(array $columns)
-    {
-        $query = '';
-
-        foreach ($columns as $column => $value) {
-            $query .= sprintf('%s:%s,', $column, $value);
-        }
-
-        return trim($query, ',');
     }
 
     /**
@@ -624,5 +613,61 @@ class SQLHandler extends BehatContext implements Interfaces\SQLHandlerInterface
     private function getParams()
     {
         return $this->dbManager->getParams();
+    }
+
+    /**
+     * Convert an array to a genesis query.
+     *
+     * @param array $columns
+     *
+     * @return string
+     */
+    public function convertToQuery(array $columnsValuePair)
+    {
+        $query = '';
+
+        foreach ($columnsValuePair as $column => $value) {
+            $query .= sprintf('%s:%s,', $column, $value);
+        }
+
+        return trim($query, ',');
+    }
+
+    /**
+     * Get all id's inserted for an entity.
+     */
+    public function getLastIds($entity = null)
+    {
+        if ($entity) {
+            if (isset($_SESSION['behat']['GenesisSqlExtension']['last_id'][$entity])) {
+                return $_SESSION['behat']['GenesisSqlExtension']['last_id'][$entity];
+            }
+
+            return false;
+        }
+
+        return $_SESSION['behat']['GenesisSqlExtension']['last_id'];
+    }
+
+    /**
+     * Get a record by a criteria.
+     *
+     * @param string $entity
+     * @param string $criteria The SQL criteria.
+     */
+    public function fetchByCriteria($entity, $criteria)
+    {
+        $sql = sprintf('SELECT * FROM %s WHERE %s', $entity, $criteria);
+        $statement = $this->execute($sql);
+        $result = $statement->fetchAll();
+
+        if (! $result) {
+            throw new Exceptions\RecordNotFoundException(
+                $criteria,
+                $entity
+            );
+        }
+
+        return $result;
     }
 }

@@ -68,7 +68,7 @@ class SQLContext extends SQLHandler implements Interfaces\SQLContextInterface
         $this->setCommandType('select');
 
         // Convert columns given to an array.
-        $columns = $this->filterAndConvertToArray($columns);
+        $columns = $this->convertToFilteredArray($columns);
 
         // Check if the record exists.
         $whereClause = $this->constructSQLClause($this->getCommandType(), ' AND ', $columns);
@@ -110,6 +110,7 @@ class SQLContext extends SQLHandler implements Interfaces\SQLContextInterface
 
         // Extract duplicate key and run update using it
         if ($key = $this->getKeyFromDuplicateError($result)) {
+            // DEPCRECIATED, Probably need to get rid of this logic.
             $this->debugLog(sprintf('Duplicate key found, running update using key "%s"', $key));
 
             $this->iHaveAnExistingWithWhere(
@@ -120,7 +121,6 @@ class SQLContext extends SQLHandler implements Interfaces\SQLContextInterface
 
             $whereClause = sprintf('%s = %s', $key, $this->quoteOrNot($columns[$key]));
         }
-
 
         try {
             $this->setKeywordsFromCriteria($this->getEntity(), $whereClause);
@@ -161,7 +161,7 @@ class SQLContext extends SQLHandler implements Interfaces\SQLContextInterface
         $this->setCommandType('delete');
 
         // Construct the where clause.
-        $columns = $this->filterAndConvertToArray($columns);
+        $columns = $this->convertToFilteredArray($columns);
         $whereClause = $this->constructSQLClause($this->getCommandType(), ' AND ', $columns);
 
         // Construct the delete statement.
@@ -242,11 +242,11 @@ class SQLContext extends SQLHandler implements Interfaces\SQLContextInterface
         $this->setCommandType('update');
 
         // Build up the update clause.
-        $with = $this->filterAndConvertToArray($with);
+        $with = $this->convertToFilteredArray($with);
         $updateClause = $this->constructSQLClause($this->getCommandType(), ', ', $with);
 
         // Build up the where clause.
-        $columns = $this->filterAndConvertToArray($columns);
+        $columns = $this->convertToFilteredArray($columns);
         $whereClause = $this->constructSQLClause($this->getCommandType(), ' AND ', $columns);
 
         // Build up the update statement.
@@ -291,7 +291,7 @@ class SQLContext extends SQLHandler implements Interfaces\SQLContextInterface
         $this->setCommandType('select');
 
         // Create array out of the with string given.
-        $columns = $this->filterAndConvertToArray($where);
+        $columns = $this->convertToFilteredArray($where);
 
         // Create a usable sql clause.
         $selectWhereClause = $this->constructSQLClause($this->getCommandType(), ' AND ', $columns);
@@ -339,7 +339,7 @@ class SQLContext extends SQLHandler implements Interfaces\SQLContextInterface
         $this->setEntity($entity);
 
         // Create array out of the with string given.
-        $columns = $this->filterAndConvertToArray($with);
+        $columns = $this->convertToFilteredArray($with);
 
         // Set the clause type.
         $this->setCommandType('select');
@@ -377,7 +377,7 @@ class SQLContext extends SQLHandler implements Interfaces\SQLContextInterface
         $this->setEntity($entity);
 
         // Create array out of the with string given.
-        $columns = $this->filterAndConvertToArray($with);
+        $columns = $this->convertToFilteredArray($with);
 
         // Set clause type.
         $this->setCommandType('select');

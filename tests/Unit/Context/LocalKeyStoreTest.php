@@ -7,6 +7,7 @@ use PHPUnit_Framework_TestCase;
 
 /**
  * @group localKeyStore
+ * @group unit
  */
 class LocalKeyStoreTest extends PHPUnit_Framework_TestCase
 {
