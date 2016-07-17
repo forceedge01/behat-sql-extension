@@ -114,17 +114,17 @@ class SQLHistoryTest extends TestHelper
 
         $expectedHistory = [
             'select' => [
-                ['sql' => 'SELECT * FROM user', 'table' => 'user', 'last_id' => null],
-                ['sql' => 'SELECT * FROM ya', 'table' => 'ya', 'last_id' => null]
+                ['table' => 'user', 'sql' => 'SELECT * FROM user', 'last_id' => null],
+                ['table' => 'ya', 'sql' => 'SELECT * FROM ya', 'last_id' => null]
             ],
             'insert' => [
-                ['sql' => 'INSERT INTO user', 'table' => 'user', 'last_id' => 123]
+                ['table' => 'user', 'sql' => 'INSERT INTO user', 'last_id' => 123]
             ],
             'delete' => [
-                ['sql' => 'DELETE from user', 'table' => 'user', 'last_id' => null]
+                ['table' => 'user', 'sql' => 'DELETE from user', 'last_id' => null]
             ],
             'update' => [
-                ['sql' => 'UPDATE user', 'table' => 'user', 'last_id' => 1232]
+                ['table' => 'user', 'sql' => 'UPDATE user', 'last_id' => 1232]
             ]
         ];
 

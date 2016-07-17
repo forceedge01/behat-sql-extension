@@ -69,8 +69,8 @@ class SQLHistory implements Interfaces\SQLHistoryInterface
     public function addToHistory($commandType, $table, $sql, $id = null)
     {
         $this->history[$commandType][] = [
-            'sql' => $sql,
             'table' => $table,
+            'sql' => $sql,
             'last_id' => $id
         ];
 
