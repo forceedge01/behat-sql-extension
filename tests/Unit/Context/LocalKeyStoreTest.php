@@ -111,6 +111,7 @@ class LocalKeyStoreTest extends PHPUnit_Framework_TestCase
         $string = 'keywords {yes} in this string {another}';
         $another = 'another keyword';
         $yes = 'yes keyword';
+
         $_SESSION['behat']['GenesisSqlExtension']['keywords']['another'] = $another;
         $_SESSION['behat']['GenesisSqlExtension']['keywords']['yes'] = $yes;
 
