@@ -60,7 +60,7 @@ class DBManager implements Interfaces\DBManagerInterface
         if (! $this->connection) {
             list($dns, $username, $password) = $this->getConnectionDetails();
 
-            $this->connection = new PDO($dns, $username, $password);
+            $this->connection = new \PDO($dns, $username, $password);
         }
 
         return $this->connection;
