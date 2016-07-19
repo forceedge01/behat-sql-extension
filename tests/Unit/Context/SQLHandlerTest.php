@@ -20,6 +20,7 @@ class SQLHandlerTest extends TestHelper
      */
     private $testObject;
 
+
     /**
      * Setup test object.
      */
@@ -48,11 +49,6 @@ class SQLHandlerTest extends TestHelper
         $this->dependencies['sqlBuilderMock'] = $this->getMockBuilder(SQLBuilderInterface::class)
             ->disableOriginalConstructor()
             ->getMock();
-
-        // $this->dependencies['sqlBuilderMock']->expects($this->any())
-        //     ->method('parseExternalQueryReferences')
-        //     ->with($this->isType('string'))
-        //     ->will($this->returnArgument(0));
 
         $this->dependencies['keyStoreMock'] = $this->getMockBuilder(KeyStoreInterface::class)
             ->disableOriginalConstructor()
@@ -303,17 +299,37 @@ class SQLHandlerTest extends TestHelper
      */
     public function testSetEntity()
     {
+        $this->dependencies['sqlBuilderMock']->expects($this->any())
+            ->method('getPrefixedDatabaseName')
+            ->with($this->isType('string'), $this->isType('string'))
+            ->will($this->returnValue('dev_abc'));
+
+        $this->dependencies['sqlBuilderMock']->expects($this->any())
+            ->method('getTableName')
+            ->with($this->isType('string'))
+            ->will($this->returnValue('abc'));
+
         $this->testObject->setEntity('abc');
 
-        $this->assertEquals('dev_abc', $this->testObject->getEntity());
-        $this->assertEquals('mydb', $this->testObject->getDatabaseName());
+        $this->assertEquals('dev_mydb.abc', $this->testObject->getEntity());
+        $this->assertEquals('dev_mydb', $this->testObject->getDatabaseName());
         $this->assertEquals('abc', $this->testObject->getTableName());
+    }
 
-        $this->testObject->setEntity('random_abc');
+    /**
+     * Test that this method works as expected.
+     */
+    public function testSetEntityWithDatabasePrependend()
+    {
+        $this->dependencies['sqlBuilderMock']->expects($this->any())
+            ->method('getPrefixedDatabaseName')
+            ->with($this->isType('string'), $this->isType('string'))
+            ->will($this->returnValue('dev_abc'));
 
-        $this->assertEquals('dev_random_abc', $this->testObject->getEntity());
-        $this->assertEquals('mydb', $this->testObject->getDatabaseName());
-        $this->assertEquals('random_abc', $this->testObject->getTableName());
+        $this->dependencies['sqlBuilderMock']->expects($this->any())
+            ->method('getTableName')
+            ->with($this->isType('string'))
+            ->will($this->returnValue('user'));
 
         $this->testObject->setEntity('abc.user');
 
@@ -418,10 +434,6 @@ class SQLHandlerTest extends TestHelper
         $sqlBuilderMock = $this->dependencies['sqlBuilderMock'];
 
         $sqlBuilderMock->expects($this->any())
-            ->method('getColumns')
-            ->willReturn(['name' => 'Abdul', 'role' => 'admin']);
-
-        $sqlBuilderMock->expects($this->any())
             ->method('quoteOrNot')
             ->will($this->returnValueMap(array(
                 array('Abdul', '"Abdul"'),
@@ -441,7 +453,7 @@ class SQLHandlerTest extends TestHelper
         );
 
         // Execute
-        $result = $this->testObject->getTableColumns($entity);
+        $result = $this->testObject->getTableColumns($entity, ['name' => 'Abdul', 'role' => 'admin']);
 
         $this->assertEquals($expectedResult, $result);
     }
@@ -459,10 +471,6 @@ class SQLHandlerTest extends TestHelper
         $sqlBuilderMock = $this->dependencies['sqlBuilderMock'];
 
         $sqlBuilderMock->expects($this->any())
-            ->method('getColumns')
-            ->willReturn(['name' => 'Abdul', 'role' => 'admin']);
-
-        $sqlBuilderMock->expects($this->any())
             ->method('quoteOrNot')
             ->will($this->returnValueMap(array(
                 array('Abdul', '"Abdul"'),
@@ -482,7 +490,7 @@ class SQLHandlerTest extends TestHelper
         );
 
         // Execute
-        $result = $this->testObject->getTableColumns($entity);
+        $result = $this->testObject->getTableColumns($entity, ['name' => 'Abdul', 'role' => 'admin']);
 
         $this->assertEquals($expectedResult, $result);
     }

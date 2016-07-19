@@ -8,11 +8,6 @@ use Exception;
 class SQLBuilder implements Interfaces\SQLBuilderInterface
 {
     /**
-     * Holds columns converted to array.
-     */
-    private $columns = [];
-
-    /**
      * External references, format of an external ref [...|...:...].
      */
     private $refs = [];
@@ -107,7 +102,7 @@ class SQLBuilder implements Interfaces\SQLBuilderInterface
     {
         // Temporary placeholder to protect escaped commas.
         $commaEscapeCode = '%|-|';
-        $this->columns = [];
+        $columnValuePair = [];
         // as a rule, each array element after this should have the ":" separator.
         // Would it be better to use preg_match here?
         $query = str_replace('\,', $commaEscapeCode, $query);
@@ -120,10 +115,10 @@ class SQLBuilder implements Interfaces\SQLBuilderInterface
 
             list($col, $val) = explode(':', $column, self::EXPLODE_MAX_LIMIT);
 
-            $this->columns[trim($col)] = str_replace($commaEscapeCode, ',', trim($val));
+            $columnValuePair[trim($col)] = str_replace($commaEscapeCode, ',', trim($val));
         }
 
-        return $this->columns;
+        return $columnValuePair;
     }
 
     /**
@@ -275,16 +270,6 @@ class SQLBuilder implements Interfaces\SQLBuilderInterface
     }
 
     /**
-     * Returns the columns stored after conversion to array.
-     *
-     * @return array
-     */
-    public function getColumns()
-    {
-        return $this->columns;
-    }
-
-    /**
      * Get reference for a placeholder.
      *
      * @param string $placeholder The placeholder string.
@@ -344,10 +329,11 @@ class SQLBuilder implements Interfaces\SQLBuilderInterface
      * Get single query for the external reference.
      *
      * @param string $externalRef The external ref enclosed in [].
+     * @param string $prefix The database prefix.
      *
      * @return string
      */
-    public function getSQLQueryForExternalReference($externalRef)
+    public function getSQLQueryForExternalReference($externalRef, $prefix = null)
     {
         if (! $this->isExternalReference($externalRef)) {
             throw new Exception(
@@ -358,16 +344,42 @@ class SQLBuilder implements Interfaces\SQLBuilderInterface
 
         list($columnAndTable, $criteria) = explode('|', trim($externalRef, '[]'));
 
-        // Get the table and column names.
+        // Get the table name.
         $table = null;
         preg_match('#.+(?=\.)#', $columnAndTable, $table);
+        $qualifiedTableName = $this->getQualifiedTableName($prefix, $table[0]);
+
+        // Get the column name to fetch.
         $array = explode('.', $columnAndTable);
         $column = end($array);
 
         // Construct where clause.
         $whereClause = $this->constructSQLClause('SELECT', ' AND ', $this->convertToArray($criteria));
+        $query = sprintf('SELECT %s FROM %s WHERE %s', $column, $qualifiedTableName, $whereClause);
 
-        return sprintf('SELECT %s FROM %s WHERE %s', $columnAndTable, $table[0], $whereClause);
+        Debugger::log(sprintf('Built query "%s" for external ref "%s"', $query, $externalRef));
+
+        return $query;
+    }
+
+    /**
+     * Get the qualified table name.
+     *
+     * @param string $prefix The db prefix.
+     * @param string $table The table name.
+     *
+     * @return string
+     */
+    public function getQualifiedTableName($prefix, $table)
+    {
+        $dbname = $this->getPrefixedDatabaseName($prefix, $table);
+        $table = $this->getTableName($table);
+
+        if (! $dbname) {
+            return $table;
+        }
+
+        return sprintf('%s.%s', $dbname, $table);
     }
 
     /**
@@ -395,20 +407,65 @@ class SQLBuilder implements Interfaces\SQLBuilderInterface
      */
     public function parseExternalQueryReferences($query)
     {
+        Debugger::log(sprintf('Find external refs in: "%s"', $query));
+
         // Extract all matches for external refs.
         $pattern = '#(\[[^\]]+\|.+?\]+?)#';
         $refs = [];
         preg_match_all($pattern, $query, $refs);
 
         // If there are any external ref matches, then replace them with placeholders.
-        if (isset($refs[0])) {
+        if (isset($refs[0]) and !empty($refs[0])) {
+            Debugger::log('External refs found: ' . print_r($refs[0], true));
             foreach ($refs[0] as $ref) {
                 $placeholder = $this->getPlaceholderForRef($ref);
                 $query = str_replace($ref, $placeholder, $query);
             }
+
+            Debugger::log(sprintf('External refs placed: "%s"', $query));
         }
+
+        Debugger::log('No external refs found');
 
         // Return query with potential placeholders.
         return $query;
+    }
+
+
+    /**
+     * Prepends the prefix.
+     *
+     * @param string $prefix The prefix to prepend.
+     * @param string $table The table to prefix.
+     *
+     * @return string|null If no database name is given, returns null.
+     */
+    public function getPrefixedDatabaseName($prefix, $entity)
+    {
+        if (strpos($entity, '.') !== false) {
+            $database = explode('.', $entity, 2)[0];
+
+            return $prefix . $database;
+        } else {
+            return null;
+        }
+    }
+
+
+    /**
+     * Get table name from entity.
+     *
+     * @param string $entity The entity to extract the table name from.
+     *
+     * @return string
+     */
+    public function getTableName($entity)
+    {
+        // Set the database and table name.
+        if (strpos($entity, '.') !== false) {
+            return explode('.', $entity, 2)[1];
+        }
+
+        return $entity;
     }
 }
