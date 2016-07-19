@@ -518,7 +518,7 @@ class SQLBuilderTest extends TestHelper
         $result = $this->testObject->getSQLQueryForExternalReference($reference);
 
         // Assert Result
-        $expectedSQL = "SELECT user.id FROM user WHERE `email` = 'abdul@easyfundraising.org.uk' AND `status` = 1";
+        $expectedSQL = "SELECT id FROM user WHERE `email` = 'abdul@easyfundraising.org.uk' AND `status` = 1";
 
         $this->assertEquals($expectedSQL, $result);
     }

@@ -90,7 +90,6 @@ class SQLHandler extends BehatContext implements Interfaces\SQLHandlerInterface
         Interfaces\SQLBuilderInterface $sqlBuilder,
         Interfaces\KeyStoreInterface $keyStore
     ) {
-        define('DEBUG_MODE', true);
         $this->dbManager = $dbManager;
         $this->keyStore = $keyStore;
         $this->sqlBuilder = $sqlBuilder;
@@ -547,17 +546,15 @@ class SQLHandler extends BehatContext implements Interfaces\SQLHandlerInterface
      *
      * @return string
      */
-    private function getPrefixedTableName($prefix, $entity)
+    private function getPrefixedDatabaseName($prefix, $entity)
     {
         // If the entity does not already contain the database name, add that.
         if (strpos($entity, '.')  === false) {
-            $prefix .= $this->getParams()['DBNAME'];
+            return $prefix .= $this->getParams()['DBNAME'];
         }
 
-        $table = $this->get('sqlBuilder')
-            ->getPrefixedTableName($prefix, $entity);
-
-        return $table;
+        return $this->get('sqlBuilder')
+            ->getPrefixedDatabaseName($prefix, $entity);
     }
 
     /**
@@ -567,10 +564,10 @@ class SQLHandler extends BehatContext implements Interfaces\SQLHandlerInterface
     {
         $this->debugLog(sprintf('ENTITY: %s', $entity));
 
-        $this->databaseName = $this->getPrefixedTableName($this->getParams()['DBPREFIX'], $entity);
+        $this->databaseName = $this->getPrefixedDatabaseName($this->getParams()['DBPREFIX'], $entity);
         $this->tableName = $this->get('sqlBuilder')->getTableName($entity);
 
-        $this->entity = $this->makeSQLSafe($this->databaseName);
+        $this->entity = $this->makeSQLSafe($this->databaseName . '.' . $this->tableName);
         $this->debugLog(sprintf('SET ENTITY: %s', $this->entity));
 
         // Set the primary key for the current table.

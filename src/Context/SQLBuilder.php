@@ -347,7 +347,7 @@ class SQLBuilder implements Interfaces\SQLBuilderInterface
         // Get the table name.
         $table = null;
         preg_match('#.+(?=\.)#', $columnAndTable, $table);
-        $table = $this->getPrefixedTableName($prefix, $table[0]);
+        $table = $this->getPrefixedDatabaseName($prefix, $table[0]);
 
         // Get the column name to fetch.
         $array = explode('.', $columnAndTable);
@@ -420,21 +420,15 @@ class SQLBuilder implements Interfaces\SQLBuilderInterface
      *
      * @return string
      */
-    public function getPrefixedTableName($prefix, $table)
+    public function getPrefixedDatabaseName($prefix, $entity)
     {
-        $expectedEntity = $prefix . $table;
+        if (strpos($entity, '.') !== false) {
+            $database = explode('.', $entity, 2)[0];
 
-        // Concatinate the entity with the sqldbprefix value only if not already done.
-        if ($expectedEntity !== $table) {
-            return $expectedEntity;
+            return $prefix . $database;
+        } else {
+            return $entity;
         }
-
-        // Set the database and table name.
-        if (strpos($table, '.') !== false) {
-            return explode('.', $table, 2)[0];
-        }
-
-        return false;
     }
 
 
