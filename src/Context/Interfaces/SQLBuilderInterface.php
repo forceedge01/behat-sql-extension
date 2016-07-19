@@ -58,11 +58,6 @@ interface SQLBuilderInterface
     public function sampleData($type);
 
     /**
-     * Returns the columns stored after conversion to array.
-     */
-    public function getColumns();
-
-    /**
      * Get reference for a placeholder.
      *
      * @param string $placeholder The placeholder string.
