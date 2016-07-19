@@ -423,9 +423,9 @@ class SQLBuilder implements Interfaces\SQLBuilderInterface
             }
 
             Debugger::log(sprintf('External refs placed: "%s"', $query));
+        } else {
+            Debugger::log('No external refs found');
         }
-
-        Debugger::log('No external refs found');
 
         // Return query with potential placeholders.
         return $query;
