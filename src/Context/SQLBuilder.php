@@ -347,7 +347,7 @@ class SQLBuilder implements Interfaces\SQLBuilderInterface
         // Get the table name.
         $table = null;
         preg_match('#.+(?=\.)#', $columnAndTable, $table);
-        $table = $this->getPrefixedDatabaseName($prefix, $table[0]);
+        $qualifiedTableName = $this->getQualifiedTableName($prefix, $table[0]);
 
         // Get the column name to fetch.
         $array = explode('.', $columnAndTable);
@@ -355,11 +355,31 @@ class SQLBuilder implements Interfaces\SQLBuilderInterface
 
         // Construct where clause.
         $whereClause = $this->constructSQLClause('SELECT', ' AND ', $this->convertToArray($criteria));
-        $query = sprintf('SELECT %s FROM %s WHERE %s', $column, $table, $whereClause);
+        $query = sprintf('SELECT %s FROM %s WHERE %s', $column, $qualifiedTableName, $whereClause);
 
         Debugger::log(sprintf('Built query "%s" for external ref "%s"', $query, $externalRef));
 
         return $query;
+    }
+
+    /**
+     * Get the qualified table name.
+     *
+     * @param string $prefix The db prefix.
+     * @param string $table The table name.
+     *
+     * @return string
+     */
+    public function getQualifiedTableName($prefix, $table)
+    {
+        $dbname = $this->getPrefixedDatabaseName($prefix, $table);
+        $table = $this->getTableName($table);
+
+        if (! $dbname) {
+            return $table;
+        }
+
+        return sprintf('%s.%s', $dbname, $table);
     }
 
     /**
@@ -418,7 +438,7 @@ class SQLBuilder implements Interfaces\SQLBuilderInterface
      * @param string $prefix The prefix to prepend.
      * @param string $table The table to prefix.
      *
-     * @return string
+     * @return string|null If no database name is given, returns null.
      */
     public function getPrefixedDatabaseName($prefix, $entity)
     {
@@ -427,7 +447,7 @@ class SQLBuilder implements Interfaces\SQLBuilderInterface
 
             return $prefix . $database;
         } else {
-            return $entity;
+            return null;
         }
     }
 
