@@ -353,10 +353,13 @@ class SQLBuilder implements Interfaces\SQLBuilderInterface
         $array = explode('.', $columnAndTable);
         $column = end($array);
 
-        // Construct where clause.
-        $whereClause = $this->constructSQLClause('SELECT', ' AND ', $this->convertToArray($criteria));
+        $sqlCommand = Representations\SQLCommand::instance()
+            ->setType('select')
+            ->setTable($qualifiedTableName)
+            ->addColumn($column)
+            ->setWhere($this->convertToArray($criteria));
 
-        $query = sprintf('SELECT %s FROM %s WHERE %s', $column, $qualifiedTableName, $whereClause);
+        $query = $this->getQuery($sqlCommand);
 
         Debugger::log(sprintf('Built query "%s" for external ref "%s"', $query, $externalRef));
 
@@ -447,9 +450,9 @@ class SQLBuilder implements Interfaces\SQLBuilderInterface
             $database = explode('.', $entity, 2)[0];
 
             return $prefix . $database;
-        } else {
-            return null;
         }
+
+        return null;
     }
 
 
@@ -481,13 +484,13 @@ class SQLBuilder implements Interfaces\SQLBuilderInterface
             $elements = [];
 
             foreach ($element as $col) {
-                $elements[] = sprintf('`%s`', $col);
+                $elements[] = sprintf('`%s`', implode('`.`', explode('.', $col)));
             }
 
             return $elements;
         }
 
-        return sprintf('`%s`', $element);
+        return sprintf('`%s`', implode('`.`', explode('.', $element)));
     }
 
     /**

@@ -127,8 +127,6 @@ class SQLContext extends SQLHandler implements Interfaces\SQLContextInterface
             $sqlCommand
                 ->setWhere([])
                 ->addWhere($key, $this->quoteOrNot($columns[$key]));
-
-            // $whereClause = sprintf('%s = %s', $key, $this->quoteOrNot($columns[$key]));
         }
 
         try {
