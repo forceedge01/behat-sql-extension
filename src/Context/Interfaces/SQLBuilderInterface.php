@@ -58,11 +58,6 @@ interface SQLBuilderInterface
     public function sampleData($type);
 
     /**
-     * Returns the columns stored after conversion to array.
-     */
-    public function getColumns();
-
-    /**
      * Get reference for a placeholder.
      *
      * @param string $placeholder The placeholder string.
@@ -104,4 +99,25 @@ interface SQLBuilderInterface
      * @return bool
      */
     public function isExternalReference($value);
+
+
+    /**
+     * Prepends the prefix.
+     *
+     * @param string $prefix The prefix to prepend.
+     * @param string $table The table to prefix.
+     *
+     * @return string
+     */
+    public function getPrefixedDatabaseName($prefix, $table);
+
+
+    /**
+     * Get table name from entity.
+     *
+     * @param string $entity The entity to extract the table name from.
+     *
+     * @return string
+     */
+    public function getTableName($entity);
 }

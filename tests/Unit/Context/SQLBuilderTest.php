@@ -518,7 +518,24 @@ class SQLBuilderTest extends TestHelper
         $result = $this->testObject->getSQLQueryForExternalReference($reference);
 
         // Assert Result
-        $expectedSQL = "SELECT user.id FROM user WHERE `email` = 'abdul@easyfundraising.org.uk' AND `status` = 1";
+        $expectedSQL = "SELECT id FROM user WHERE `email` = 'abdul@easyfundraising.org.uk' AND `status` = 1";
+
+        $this->assertEquals($expectedSQL, $result);
+    }
+
+    /**
+     * testGetSQLQueryForExternalReference Test that getSQLQueryForExternalReference executes as expected.
+     */
+    public function testGetSQLQueryForExternalReferenceValidWithDBName()
+    {
+        // Prepare / Mock
+        $reference = '[mydb.user.id|email: abdul@easyfundraising.org.uk, status: 1]';
+
+        // Execute
+        $result = $this->testObject->getSQLQueryForExternalReference($reference);
+
+        // Assert Result
+        $expectedSQL = "SELECT id FROM mydb.user WHERE `email` = 'abdul@easyfundraising.org.uk' AND `status` = 1";
 
         $this->assertEquals($expectedSQL, $result);
     }

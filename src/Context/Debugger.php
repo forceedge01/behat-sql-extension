@@ -11,7 +11,7 @@ class Debugger implements Interfaces\DebuggerInterface
      */
     public static function log($message)
     {
-        if (defined('DEBUG_MODE') and DEBUG_MODE == 1) {
+        if (defined('DEBUG_MODE') && DEBUG_MODE == 1) {
             echo 'DEBUG >>> ' . $message . PHP_EOL;
         }
     }

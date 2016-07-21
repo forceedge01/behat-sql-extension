@@ -94,11 +94,10 @@ class SQLContext extends SQLHandler implements Interfaces\SQLContextInterface
         }
 
         $this->debugLog('No record found, trying to insert.');
-
         $this->setCommandType('insert');
 
         // If the record does not already exist, create it.
-        list($columnNames, $columnValues) = $this->getTableColumns($this->getEntity());
+        list($columnNames, $columnValues) = $this->getTableColumns($this->getEntity(), $columns);
 
         // Build up the sql.
         $sql = sprintf('INSERT INTO %s (%s) VALUES (%s)', $this->getEntity(), $columnNames, $columnValues);

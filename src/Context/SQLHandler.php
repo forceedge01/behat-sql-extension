@@ -202,18 +202,25 @@ class SQLHandler extends BehatContext implements Interfaces\SQLHandlerInterface
             if ($keywordValue != $value) {
                 $value = $keywordValue;
             } elseif ($this->get('sqlBuilder')->isExternalReferencePlaceholder($value)) {
+                Debugger::log(sprintf('Resolving external ref: "%s"', $value));
+
                 $externalRef = $this->get('sqlBuilder')->getRefFromPlaceholder($value);
 
                 // Execute query and get value back.
                 $query = $this
                     ->get('sqlBuilder')
                     ->getSQLQueryForExternalReference(
-                        $externalRef
+                        $externalRef,
+                        $this->getParams()['DBPREFIX']
                     );
 
-                $statement = $this->get('dbManager')->execute($query);
+                $statement = $this->execute($query);
+                $this->throwExceptionIfErrors($statement);
+                $this->throwErrorIfNoRowsAffected($statement);
 
                 $value = $this->get('dbManager')->getFirstValueFromStatement($statement)[0];
+
+                Debugger::log(sprintf('Resolved external ref value: "%s"', $value));
             }
 
             $filteredColumns[$column] = $value;
@@ -449,29 +456,30 @@ class SQLHandler extends BehatContext implements Interfaces\SQLHandlerInterface
      * Gets table columns and its values.
      *
      * @param string $entity The table to get the columns of.
+     * @param array $overridingColumns The overriding columns.
      *
      * @return array
      */
-    public function getTableColumns($table)
+    public function getTableColumns($table, array $overridingColumns = array())
     {
         $columnClause = [];
 
         // Get all columns for insertion
         $allColumns = array_merge(
             $this->getRequiredTableColumns($table),
-            $this->sqlBuilder->getColumns()
+            $overridingColumns
         );
 
         // Set values for columns
         foreach ($allColumns as $col => $type) {
             // Check if a column is provided, if not use sample data to fill in.
-            if (isset($this->sqlBuilder->getColumns()[$col])) {
+            if (isset($overridingColumns[$col])) {
                 // If the value is provided get value and check if its a keyword.
-                $value = $this->checkForKeyword($this->sqlBuilder->getColumns()[$col]);
+                $value = $this->checkForKeyword($overridingColumns[$col]);
 
                 // If the value is not a keyword then use the value provided as is.
                 if (! $value) {
-                    $value = $this->sqlBuilder->getColumns()[$col];
+                    $value = $overridingColumns[$col];
                 }
 
                 // Assign value back to the column.
@@ -548,28 +556,33 @@ class SQLHandler extends BehatContext implements Interfaces\SQLHandlerInterface
     }
 
     /**
+     * Get the database name, prefix or not depending on config.
+     *
+     * @return string
+     */
+    private function getPrefixedDatabaseName($prefix, $entity)
+    {
+        // If the entity does not already contain the database name, add that.
+        if (strpos($entity, '.')  === false) {
+            return $prefix .= $this->getParams()['DBNAME'];
+        }
+
+        return $this->get('sqlBuilder')
+            ->getPrefixedDatabaseName($prefix, $entity);
+    }
+
+    /**
      * Set the entity for further processing.
      */
     public function setEntity($entity)
     {
         $this->debugLog(sprintf('ENTITY: %s', $entity));
 
-        $expectedEntity = $this->makeSQLSafe($this->getParams()['DBPREFIX'] . $entity);
+        $this->databaseName = $this->getPrefixedDatabaseName($this->getParams()['DBPREFIX'], $entity);
+        $this->tableName = $this->get('sqlBuilder')->getTableName($entity);
 
-        $this->debugLog(sprintf('SET ENTITY: %s', $expectedEntity));
-
-        // Concatinate the entity with the sqldbprefix value only if not already done.
-        if ($expectedEntity !== $this->entity) {
-            $this->entity = $expectedEntity;
-        }
-
-        // Set the database and table name.
-        if (strpos($this->entity, '.') !== false) {
-            list($this->databaseName, $this->tableName) = explode('.', $this->entity, 2);
-        } else {
-            $this->databaseName = $this->getParams()['DBNAME'];
-            $this->tableName = $entity;
-        }
+        $this->entity = $this->makeSQLSafe($this->databaseName . '.' . $this->tableName);
+        $this->debugLog(sprintf('SET ENTITY: %s', $this->entity));
 
         // Set the primary key for the current table.
         $primaryKey = $this->dbManager->getPrimaryKeyForTable($this->databaseName, $this->tableName);
@@ -579,7 +592,6 @@ class SQLHandler extends BehatContext implements Interfaces\SQLHandlerInterface
         }
 
         $this->primaryKey = $primaryKey;
-
         $this->debugLog(sprintf('PRIMARY KEY: %s', $this->primaryKey));
 
         return $this;
