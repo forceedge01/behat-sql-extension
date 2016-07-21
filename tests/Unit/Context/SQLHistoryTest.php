@@ -102,6 +102,17 @@ class SQLHistoryTest extends TestHelper
 
     /**
      * testAddToHistory Test that addToHistory executes as expected.
+     *
+     * @expectedException Exception
+     */
+    public function testAddToHistoryInvalidCommandType()
+    {
+        // Execute
+        $this->testObject->addToHistory('random', 'user', 'SELECT * FROM user');
+    }
+
+    /**
+     * testAddToHistory Test that addToHistory executes as expected.
      */
     public function testAddToHistory()
     {
@@ -112,19 +123,41 @@ class SQLHistoryTest extends TestHelper
         $this->testObject->addToHistory('delete', 'user', 'DELETE from user');
         $this->testObject->addToHistory('insert', 'user', 'INSERT INTO user', 123);
 
+        $sqlHistory1 = \Genesis\SQLExtension\Context\Representations\History::instance()
+            ->setEntity('user')
+            ->setSql('SELECT * FROM user');
+
+        $sqlHistory2 = \Genesis\SQLExtension\Context\Representations\History::instance()
+            ->setEntity('ya')
+            ->setSql('SELECT * FROM ya');
+
+        $sqlHistory3 = \Genesis\SQLExtension\Context\Representations\History::instance()
+            ->setEntity('user')
+            ->setSql('UPDATE user')
+            ->setLastId(1232);
+
+        $sqlHistory4 = \Genesis\SQLExtension\Context\Representations\History::instance()
+            ->setEntity('user')
+            ->setSql('DELETE from user');
+
+        $sqlHistory5 = \Genesis\SQLExtension\Context\Representations\History::instance()
+            ->setEntity('user')
+            ->setSql('INSERT INTO user')
+            ->setLastId(123);
+
         $expectedHistory = [
             'select' => [
-                ['table' => 'user', 'sql' => 'SELECT * FROM user', 'last_id' => null],
-                ['table' => 'ya', 'sql' => 'SELECT * FROM ya', 'last_id' => null]
+                $sqlHistory1,
+                $sqlHistory2
             ],
             'insert' => [
-                ['table' => 'user', 'sql' => 'INSERT INTO user', 'last_id' => 123]
+                $sqlHistory5
             ],
             'delete' => [
-                ['table' => 'user', 'sql' => 'DELETE from user', 'last_id' => null]
+                $sqlHistory4
             ],
             'update' => [
-                ['table' => 'user', 'sql' => 'UPDATE user', 'last_id' => 1232]
+                $sqlHistory3
             ]
         ];
 
@@ -133,5 +166,8 @@ class SQLHistoryTest extends TestHelper
 
         // Assert Result
         $this->assertEquals($expectedHistory, $result);
+        $this->assertEquals('user', $result['insert'][0]->getEntity());
+        $this->assertEquals('INSERT INTO user', $result['insert'][0]->getSql());
+        $this->assertEquals(123, $result['insert'][0]->getLastId());
     }
 }

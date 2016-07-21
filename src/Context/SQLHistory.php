@@ -2,6 +2,8 @@
 
 namespace Genesis\SQLExtension\Context;
 
+use Exception;
+
 /*
  * This file is part of the Behat\SQLExtension
  *
@@ -68,11 +70,19 @@ class SQLHistory implements Interfaces\SQLHistoryInterface
      */
     public function addToHistory($commandType, $table, $sql, $id = null)
     {
-        $this->history[$commandType][] = [
-            'table' => $table,
-            'sql' => $sql,
-            'last_id' => $id
-        ];
+        if (! array_key_exists($commandType, $this->history)) {
+            throw new Exception(
+                'Invalid command type given, allowed types are: ' .
+                print_r(array_keys($this->history), true)
+            );
+        }
+
+        $history = Representations\History::instance()
+            ->setEntity($table)
+            ->setSql($sql)
+            ->setLastId($id);
+
+        $this->history[$commandType][] = $history;
 
         return $this;
     }
