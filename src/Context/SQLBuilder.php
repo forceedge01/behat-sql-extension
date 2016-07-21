@@ -23,7 +23,7 @@ class SQLBuilder implements Interfaces\SQLBuilderInterface
      */
     public function constructSQLClause($commandType, $glue, array $columns)
     {
-        $whereClause = [];
+        $genericClause = [];
 
         foreach ($columns as $column => $value) {
             $newValue = ltrim($value, '!');
@@ -42,10 +42,10 @@ class SQLBuilder implements Interfaces\SQLBuilderInterface
                 $quotedValue
             );
 
-            $whereClause[] = $clause;
+            $genericClause[] = $clause;
         }
 
-        return implode($glue, $whereClause);
+        return implode($glue, $genericClause);
     }
 
     /**
@@ -331,7 +331,7 @@ class SQLBuilder implements Interfaces\SQLBuilderInterface
      * @param string $externalRef The external ref enclosed in [].
      * @param string $prefix The database prefix.
      *
-     * @return string
+     * @return Interfaces\Representations\SQLCommandInterface
      */
     public function getSQLQueryForExternalReference($externalRef, $prefix = null)
     {
@@ -355,6 +355,7 @@ class SQLBuilder implements Interfaces\SQLBuilderInterface
 
         // Construct where clause.
         $whereClause = $this->constructSQLClause('SELECT', ' AND ', $this->convertToArray($criteria));
+
         $query = sprintf('SELECT %s FROM %s WHERE %s', $column, $qualifiedTableName, $whereClause);
 
         Debugger::log(sprintf('Built query "%s" for external ref "%s"', $query, $externalRef));
@@ -467,5 +468,98 @@ class SQLBuilder implements Interfaces\SQLBuilderInterface
         }
 
         return $entity;
+    }
+
+    /**
+     * @param mixed $element The element.
+     *
+     * @return string
+     */
+    public function makeSQLSafe($element)
+    {
+        if (is_array($element)) {
+            $elements = [];
+
+            foreach ($element as $col) {
+                $elements[] = sprintf('`%s`', $col);
+            }
+
+            return $elements;
+        }
+
+        return sprintf('`%s`', $element);
+    }
+
+    /**
+     * Build up sql query from sql command object.
+     *
+     * @param Interfaces\Representations\SQLCommandInterface $sqlCommand The sql command.
+     *
+     * @return string
+     */
+    public function getQuery(Interfaces\Representations\SQLCommandInterface $sqlCommand)
+    {
+        $type = $sqlCommand->getType();
+        $table = $sqlCommand->getTable();
+        $columns = $sqlCommand->getColumnsOnly();
+        $values = $sqlCommand->getValuesOnly();
+
+        $query = '';
+        switch (strtolower($sqlCommand->getType())) {
+            case 'select':
+                if ($columns[0] === '*') {
+                    $columns = $columns[0];
+                } else {
+                    $columns = implode(', ', $this->makeSQLSafe($columns));
+                }
+
+                $query = sprintf(
+                    'SELECT %s FROM %s',
+                    $columns,
+                    $this->makeSQLSafe($table)
+                );
+                break;
+            case 'insert':
+                array_walk($values, function (&$value) {
+                    $value = $this->quoteOrNot($value);
+                });
+
+                $query = sprintf(
+                    'INSERT INTO %s (%s) VALUES (%s)',
+                    $this->makeSQLSafe($table),
+                    implode(', ', $this->makeSQLSafe($columns)),
+                    implode(', ', $values)
+                );
+                break;
+            case 'update':
+                $query = sprintf(
+                    'UPDATE %s SET %s',
+                    $this->makeSQLSafe($table),
+                    $this->constructSQLClause($type, ', ', $sqlCommand->getColumns())
+                );
+                break;
+            case 'delete':
+                $query = sprintf(
+                    'DELETE FROM %s',
+                    $this->makeSQLSafe($table)
+                );
+                break;
+            default:
+                throw new Exception('Unrecognized SQL command type given ' . $sqlCommand->getType());
+        }
+
+        if ($sqlCommand->getWhere()) {
+            $query .= ' WHERE ' . $this->constructSQLClause($type, ' AND ', $sqlCommand->getWhere());
+        }
+
+        if ($sqlCommand->getOrder()) {
+            $query .= ' ORDER BY ' . $sqlCommand->getOrder();
+        }
+
+        if ($sqlCommand->getLimit()) {
+            $query .= ' LIMIT ' . $sqlCommand->getLimit();
+        }
+
+        return $query;
     }
 }

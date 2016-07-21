@@ -21,6 +21,7 @@ function time()
 namespace Genesis\SQLExtension\Tests\Unit\Context;
 
 use Genesis\SQLExtension\Context\SQLBuilder;
+use Genesis\SQLExtension\Context\Representations\SQLCommand;
 use Behat\Gherkin\Node\TableNode;
 use Genesis\SQLExtension\Tests\TestHelper;
 
@@ -593,6 +594,182 @@ class SQLBuilderTest extends TestHelper
         $expectedQuery = 'company_id: 123, username: forceedge, status_id: 3';
 
         //assert
+        $this->assertEquals($expectedQuery, $result);
+    }
+
+    /**
+     * testGetQuery Test that getQuery executes as expected.
+     *
+     * @expectedException Exception
+     */
+    public function testGetQueryInvalidType()
+    {
+        // Prepare / Mock
+        $sqlCommand = SQLCommand::instance()
+            ->setType('random');
+
+        // Execute
+        $this->testObject->getQuery($sqlCommand);
+    }
+
+    /**
+     * testGetQuery Test that getQuery executes as expected.
+     */
+    public function testGetQueryInsert()
+    {
+        // Prepare / Mock
+        $sqlCommand = SQLCommand::instance()
+            ->setType('insert')
+            ->setTable('user')
+            ->addColumn('name', 'Abdul')
+            ->addColumn('status', 1);
+
+        // Execute
+        $result = $this->testObject->getQuery($sqlCommand);
+
+        $expectedQuery = "INSERT INTO `user` (`name`, `status`) VALUES ('Abdul', 1)";
+
+        // Assert Result
+        $this->assertEquals($expectedQuery, $result);
+    }
+
+    /**
+     * testGetQuery Test that getQuery executes as expected.
+     */
+    public function testGetQuerySelect()
+    {
+        // Prepare / Mock
+        $sqlCommand = SQLCommand::instance()
+            ->setType('select')
+            ->setTable('user')
+            ->addColumn('name')
+            ->addColumn('status')
+            ->addWhere('parent', 0)
+            ->addWhere('role', 'admin');
+
+        // Execute
+        $result = $this->testObject->getQuery($sqlCommand);
+
+        $expectedQuery = "SELECT `name`, `status` FROM `user` WHERE `parent` = 0 AND `role` = 'admin'";
+
+        // Assert Result
+        $this->assertEquals($expectedQuery, $result);
+    }
+
+    /**
+     * testGetQuery Test that getQuery executes as expected.
+     */
+    public function testGetQueryUpdate()
+    {
+        // Prepare / Mock
+        $sqlCommand = SQLCommand::instance()
+            ->setType('update')
+            ->setTable('user')
+            ->addColumn('name', 'Wahhab Qureshi')
+            ->addColumn('status', 3)
+            ->addWhere('name', 'Abdul')
+            ->addWhere('role', 'admin');
+
+        // Execute
+        $result = $this->testObject->getQuery($sqlCommand);
+
+        $expectedQuery = "UPDATE `user` SET `name` = 'Wahhab Qureshi', `status` = 3 WHERE `name` = 'Abdul' AND `role` = 'admin'";
+
+        // Assert Result
+        $this->assertEquals($expectedQuery, $result);
+    }
+
+    /**
+     * testGetQuery Test that getQuery executes as expected.
+     */
+    public function testGetQueryDelete()
+    {
+        // Prepare / Mock
+        $sqlCommand = SQLCommand::instance()
+            ->setType('delete')
+            ->setTable('user')
+            ->addWhere('name', 'Abdul')
+            ->addWhere('role', 'admin');
+
+        // Execute
+        $result = $this->testObject->getQuery($sqlCommand);
+
+        $expectedQuery = "DELETE FROM `user` WHERE `name` = 'Abdul' AND `role` = 'admin'";
+
+        // Assert Result
+        $this->assertEquals($expectedQuery, $result);
+    }
+
+    /**
+     * testGetQuery Test that getQuery executes as expected.
+     */
+    public function testGetQueryOrderSingle()
+    {
+        // Prepare / Mock
+        $sqlCommand = SQLCommand::instance()
+            ->setType('select')
+            ->setTable('user')
+            ->addColumn('name')
+            ->addColumn('status')
+            ->addWhere('parent', 0)
+            ->addWhere('role', 'admin')
+            ->setOrder('name', 'ASC');
+
+        // Execute
+        $result = $this->testObject->getQuery($sqlCommand);
+
+        $expectedQuery = "SELECT `name`, `status` FROM `user` WHERE `parent` = 0 AND `role` = 'admin' ORDER BY `name` ASC";
+
+        // Assert Result
+        $this->assertEquals($expectedQuery, $result);
+    }
+
+    /**
+     * testGetQuery Test that getQuery executes as expected.
+     */
+    public function testGetQueryOrderMultiple()
+    {
+        // Prepare / Mock
+        $sqlCommand = SQLCommand::instance()
+            ->setType('select')
+            ->setTable('user')
+            ->addColumn('name')
+            ->addColumn('status')
+            ->addWhere('parent', 0)
+            ->addWhere('role', 'admin')
+            ->setOrder('name, role', 'ASC');
+
+        // Execute
+        $result = $this->testObject->getQuery($sqlCommand);
+
+        $expectedQuery = "SELECT `name`, `status` FROM `user` WHERE `parent` = 0 AND `role` = 'admin' ORDER BY `name`, `role` ASC";
+
+        // Assert Result
+        $this->assertEquals($expectedQuery, $result);
+    }
+
+    /**
+     * testGetQuery Test that getQuery executes as expected.
+     */
+    public function testGetQueryLimit()
+    {
+        // Prepare / Mock
+        $sqlCommand = SQLCommand::instance()
+            ->setType('select')
+            ->setTable('user')
+            ->addColumn('name')
+            ->addColumn('status')
+            ->addWhere('parent', 0)
+            ->addWhere('role', 'admin')
+            ->setOrder('name', 'ASC')
+            ->setLimit(4);
+
+        // Execute
+        $result = $this->testObject->getQuery($sqlCommand);
+
+        $expectedQuery = "SELECT `name`, `status` FROM `user` WHERE `parent` = 0 AND `role` = 'admin' ORDER BY `name` ASC LIMIT 4";
+
+        // Assert Result
         $this->assertEquals($expectedQuery, $result);
     }
 }

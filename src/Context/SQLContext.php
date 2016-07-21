@@ -70,11 +70,13 @@ class SQLContext extends SQLHandler implements Interfaces\SQLContextInterface
         // Convert columns given to an array.
         $columns = $this->convertToFilteredArray($columns);
 
-        // Check if the record exists.
-        $whereClause = $this->constructSQLClause($this->getCommandType(), ' AND ', $columns);
+        $sqlCommand = Representations\SQLCommand::instance()
+            ->setType('select')
+            ->setTable($this->getEntity())
+            ->addColumn('*')
+            ->setWhere($columns);
 
-        // Build up the sql command.
-        $sql = sprintf('SELECT * FROM %s WHERE %s', $this->getEntity(), $whereClause);
+        $sql = $this->get('sqlBuilder')->getQuery($sqlCommand);
 
         // Execute statement.
         $statement = $this->execute($sql);
@@ -99,8 +101,12 @@ class SQLContext extends SQLHandler implements Interfaces\SQLContextInterface
         // If the record does not already exist, create it.
         list($columnNames, $columnValues) = $this->getTableColumns($this->getEntity(), $columns);
 
-        // Build up the sql.
-        $sql = sprintf('INSERT INTO %s (%s) VALUES (%s)', $this->getEntity(), $columnNames, $columnValues);
+        $sqlCommand = Representations\SQLCommand::instance()
+            ->setType('insert')
+            ->setTable($this->getEntity())
+            ->setColumns($columns);
+
+        $sql = $this->get('sqlBuilder')->getQuery($sqlCommand);
         $statement = $this->execute($sql);
 
         // Throw exception if no rows were effected.
@@ -118,11 +124,15 @@ class SQLContext extends SQLHandler implements Interfaces\SQLContextInterface
                 sprintf('%s:%s', $key, $columns[$key])
             );
 
-            $whereClause = sprintf('%s = %s', $key, $this->quoteOrNot($columns[$key]));
+            $sqlCommand
+                ->setWhere([])
+                ->addWhere($key, $this->quoteOrNot($columns[$key]));
+
+            // $whereClause = sprintf('%s = %s', $key, $this->quoteOrNot($columns[$key]));
         }
 
         try {
-            $this->setKeywordsFromCriteria($this->getEntity(), $whereClause);
+            $this->setKeywordsFromSQLCommand($sqlCommand);
         } catch (\Exception $e) {
             // ignore, as the keys may not be set because of dynamic function usage.
         }
@@ -161,10 +171,13 @@ class SQLContext extends SQLHandler implements Interfaces\SQLContextInterface
 
         // Construct the where clause.
         $columns = $this->convertToFilteredArray($columns);
-        $whereClause = $this->constructSQLClause($this->getCommandType(), ' AND ', $columns);
 
-        // Construct the delete statement.
-        $sql = sprintf('DELETE FROM %s WHERE %s', $this->getEntity(), $whereClause);
+        $sqlCommand = Representations\SQLCommand::instance()
+            ->setType('delete')
+            ->setTable($this->getEntity())
+            ->setWhere($columns);
+
+        $sql = $this->get('sqlBuilder')->getQuery($sqlCommand);
 
         // Execute statement.
         $statement = $this->execute($sql);
@@ -242,14 +255,17 @@ class SQLContext extends SQLHandler implements Interfaces\SQLContextInterface
 
         // Build up the update clause.
         $with = $this->convertToFilteredArray($with);
-        $updateClause = $this->constructSQLClause($this->getCommandType(), ', ', $with);
 
         // Build up the where clause.
         $columns = $this->convertToFilteredArray($columns);
-        $whereClause = $this->constructSQLClause($this->getCommandType(), ' AND ', $columns);
 
-        // Build up the update statement.
-        $sql = sprintf('UPDATE %s SET %s WHERE %s', $this->getEntity(), $updateClause, $whereClause);
+        $sqlCommand = Representations\SQLCommand::instance()
+            ->setType('update')
+            ->setTable($this->getEntity())
+            ->setColumns($with)
+            ->setWhere($columns);
+
+        $sql = $this->get('sqlBuilder')->getQuery($sqlCommand);
 
         // Execute statement.
         $statement = $this->execute($sql);
@@ -258,9 +274,8 @@ class SQLContext extends SQLHandler implements Interfaces\SQLContextInterface
         $this->throwErrorIfNoRowsAffected($statement, self::IGNORE_DUPLICATE);
 
         // If no exception is throw, save the last id.
-        $this->setKeywordsFromCriteria(
-            $this->getEntity(),
-            $whereClause
+        $this->setKeywordsFromSQLCommand(
+            $sqlCommand
         );
 
         return $sql;
@@ -295,10 +310,15 @@ class SQLContext extends SQLHandler implements Interfaces\SQLContextInterface
         // Create a usable sql clause.
         $selectWhereClause = $this->constructSQLClause($this->getCommandType(), ' AND ', $columns);
 
+        $sqlCommand = Representations\SQLCommand::instance()
+            ->setType('select')
+            ->setTable($this->getEntity())
+            ->addColumn('*')
+            ->setWhere($columns);
+
         // Execute sql for setting last id.
-        return $this->setKeywordsFromCriteria(
-            $this->getEntity(),
-            $selectWhereClause
+        return $this->setKeywordsFromSQLCommand(
+            $sqlCommand
         );
     }
 
@@ -343,23 +363,21 @@ class SQLContext extends SQLHandler implements Interfaces\SQLContextInterface
         // Set the clause type.
         $this->setCommandType('select');
 
-        // Create a usable sql clause.
-        $selectWhereClause = $this->constructSQLClause($this->getCommandType(), ' AND ', $columns);
+        $sqlCommand = Representations\SQLCommand::instance()
+            ->setType('select')
+            ->setTable($this->getEntity())
+            ->addColumn('*')
+            ->setWhere($columns);
 
-        // Create the sql to be inserted.
-        $sql = sprintf(
-            'SELECT * FROM %s WHERE %s',
-            $this->getEntity(),
-            $selectWhereClause
-        );
+        $sql = $this->get('sqlBuilder')->getQuery($sqlCommand);
 
         // Execute the sql query, if the query throws a generic not found error,
         // catch it and give it some context.
         $statement = $this->execute($sql);
         if (! $this->hasFetchedRows($statement)) {
             throw new Exceptions\RecordNotFoundException(
-                $selectWhereClause,
-                $this->getEntity()
+                $sql,
+                $sqlCommand->getTable()
             );
         }
 
@@ -384,12 +402,13 @@ class SQLContext extends SQLHandler implements Interfaces\SQLContextInterface
         // Create a usable sql clause.
         $selectWhereClause = $this->constructSQLClause($this->getCommandType(), ' AND ', $columns);
 
-        // Create the sql to be inserted.
-        $sql = sprintf(
-            'SELECT * FROM %s WHERE %s',
-            $this->getEntity(),
-            $selectWhereClause
-        );
+        $sqlCommand = Representations\SQLCommand::instance()
+            ->setType('select')
+            ->setTable($this->getEntity())
+            ->addColumn('*')
+            ->setWhere($columns);
+
+        $sql = $this->get('sqlBuilder')->getQuery($sqlCommand);
 
         // Execute the sql query, if the query throws a generic not found error,
         // catch it and give it some context.

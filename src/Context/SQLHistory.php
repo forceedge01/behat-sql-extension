@@ -72,7 +72,7 @@ class SQLHistory implements Interfaces\SQLHistoryInterface
     {
         if (! array_key_exists($commandType, $this->history)) {
             throw new Exception(
-                'Invalid command type given, allowed types are: ' .
+                'Invalid command type given "' . $commandType . '", allowed types are: ' .
                 print_r(array_keys($this->history), true)
             );
         }
