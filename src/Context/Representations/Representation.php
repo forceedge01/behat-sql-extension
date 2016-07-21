@@ -3,14 +3,14 @@
 namespace Genesis\SQLExtension\Context\Representations;
 
 /**
- * Base class.
+ * Base representation class.
  */
 abstract class Representation
 {
     /**
      * new object of the calling class.
      *
-     * @return $new Static
+     * @return new Static
      */
     public static function instance()
     {
