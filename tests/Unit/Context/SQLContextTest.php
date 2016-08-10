@@ -6,6 +6,7 @@ use Behat\Gherkin\Node\TableNode;
 use Genesis\SQLExtension\Context\Interfaces\DBManagerInterface;
 use Genesis\SQLExtension\Context\Interfaces\KeyStoreInterface;
 use Genesis\SQLExtension\Context\Interfaces\SQLBuilderInterface;
+use Genesis\SQLExtension\Context\Interfaces\SQLHistoryInterface;
 use Genesis\SQLExtension\Context\SQLContext;
 use Exception;
 use Genesis\SQLExtension\Tests\TestHelper;
@@ -71,10 +72,15 @@ class SQLContextTest extends TestHelper
             ->method('getKeyword')
             ->will($this->returnValue(5));
 
+        $this->dependencies['sqlHistoryMock'] = $this->getMockBuilder(SQLHistoryInterface::class)
+            ->disableOriginalConstructor()
+            ->getMock();
+
         $this->testObject = new SQLContext(
             $this->dependencies['dbHelperMock'],
             $this->dependencies['sqlBuilder'],
-            $this->dependencies['keyStoreMock']
+            $this->dependencies['keyStoreMock'],
+            $this->dependencies['sqlHistoryMock']
         );
     }
 
