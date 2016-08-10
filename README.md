@@ -226,6 +226,7 @@ To substitute a value from another table use the following syntax:
 
 ```gherkin
 Then I should have a "table" where "column1:value1, column2:[table1.columnToUse|whereColumn:Value]"
+```
 
 Putting the above into context.
 ```
