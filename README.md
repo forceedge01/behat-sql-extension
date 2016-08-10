@@ -231,12 +231,12 @@ Then I should have a "table" where "column1:value1, column2:[table1.columnToUse|
 Putting the above into context.
 ```
 column1: value1 # Usual sql syntax.
-column2: [table.columnToUse|whereColumn:Value] # External reference to the table `table1`
+column2: [table1.columnToUse|whereColumn:Value] # External reference to the table `table1`
 ```
 
 The above syntax i.e `[...]` will be resolved as follows:
 ```sql
-SELECT `table1.columnToUse` WHERE `whereColumn` = 'Value';
+SELECT `table1.columnToUse` FROM `table1` WHERE `whereColumn` = 'Value';
 ```
 
 ### Verifying data in the database
