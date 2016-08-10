@@ -220,6 +220,24 @@ The `Given I have ...` command will do two things for you:
       - {user_email}
       - {user_role_id}
 
+### Referencing foreign table values
+
+To substitute a value from another table use the following syntax:
+
+```gherkin
+Then I should have a "table" where "column1:value1, column2:[table1.columnToUse|whereColumn:Value]"
+
+Putting the above into context.
+```
+column1: value1 # Usual sql syntax.
+column2: [table.columnToUse|whereColumn:Value] # External reference to the table `table1`
+```
+
+The above syntax i.e `[...]` will be resolved as follows:
+```sql
+SELECT `table1.columnToUse` WHERE `whereColumn` = 'Value';
+```
+
 ### Verifying data in the database
 
 Verify the database records as follows:
