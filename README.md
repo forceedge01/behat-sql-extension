@@ -207,7 +207,7 @@ Given I have an "account" where "title:my account, user_id:{user_id}"
 
 The `Given I have ...` command will do two things for you:
   - Attempt to create a new record if it doesn't exist.
-  - Save all columns of that new record for re-usability in its keywords store. These are accessible like so: {table_column}
+  - Save all columns of that new record for re-usability in its keywords store. These are accessible like so: {table.column}
   Example:
     - Consider a table user with the following columns:
       - id
@@ -215,10 +215,10 @@ The `Given I have ...` command will do two things for you:
       - email
       - role_id
     - This `Given I have a "user" where "email: its.inevitable@hotmail.com"` will give you the following keywords:
-      - {user_id}
-      - {user_name}
-      - {user_email}
-      - {user_role_id}
+      - {user.id}
+      - {user.name}
+      - {user.email}
+      - {user.role_id}
 
 ### Referencing foreign table values
 
