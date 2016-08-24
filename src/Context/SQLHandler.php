@@ -694,6 +694,8 @@ class SQLHandler extends BehatContext implements Interfaces\SQLHandlerInterface
             );
         }
 
+        $this->get('dbManager')->closeStatement($statement);
+
         return $result;
     }
 }

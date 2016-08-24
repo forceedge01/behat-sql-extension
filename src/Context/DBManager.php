@@ -29,6 +29,14 @@ class DBManager implements Interfaces\DBManagerInterface
     }
 
     /**
+     * Close connection on destruct.
+     */
+    public function __destruct()
+    {
+        $this->closeConnection();
+    }
+
+    /**
      * Get params.
      *
      * @return array
@@ -87,6 +95,7 @@ class DBManager implements Interfaces\DBManagerInterface
         $statement = $this->execute($sql);
         $this->throwExceptionIfErrors($statement);
         $result = $statement->fetchAll();
+        $this->closeStatement($statement);
 
         if (! $result) {
             return false;
@@ -180,6 +189,7 @@ class DBManager implements Interfaces\DBManagerInterface
 
         $statement = $this->execute($sql);
         $result = $statement->fetchAll();
+        $this->closeStatement($statement);
 
         if (! $result) {
             return [];

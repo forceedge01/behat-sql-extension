@@ -127,6 +127,8 @@ class SQLContext extends SQLHandler implements Interfaces\SQLContextInterface
             // ignore, as the keys may not be set because of dynamic function usage.
         }
 
+        $this->get('dbManager')->closeStatement($statement);
+
         return $sql;
     }
 
@@ -171,6 +173,7 @@ class SQLContext extends SQLHandler implements Interfaces\SQLContextInterface
 
         // Throw an exception if errors are found.
         $this->throwExceptionIfErrors($statement);
+        $this->get('dbManager')->closeStatement($statement);
 
         return $sql;
     }
@@ -262,6 +265,8 @@ class SQLContext extends SQLHandler implements Interfaces\SQLContextInterface
             $this->getEntity(),
             $whereClause
         );
+
+        $this->get('dbManager')->closeStatement($statement);
 
         return $sql;
     }
@@ -363,6 +368,8 @@ class SQLContext extends SQLHandler implements Interfaces\SQLContextInterface
             );
         }
 
+        $this->get('dbManager')->closeStatement($statement);
+
         return $sql;
     }
 
@@ -401,6 +408,8 @@ class SQLContext extends SQLHandler implements Interfaces\SQLContextInterface
                 $this->getEntity()
             );
         }
+
+        $this->get('dbManager')->closeStatement($statement);
 
         return $sql;
     }
