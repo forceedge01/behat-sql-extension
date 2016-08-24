@@ -325,4 +325,31 @@ class DBManager implements Interfaces\DBManagerInterface
 
         return false;
     }
+
+
+    /**
+     * Close the pdo connection.
+     *
+     * @return void
+     */
+    public function closeConnection()
+    {
+        $this->setConnection(null);
+    }
+
+
+    /**
+     * Close pdo statement.
+     *
+     * @param Traversable $statement The statement to close.
+     *
+     * @return $this self.
+     */
+    public function closeStatement(Traverable $statement)
+    {
+        $statement->closeCursor();
+        $statement = null;
+
+        return $this;
+    }
 }
