@@ -355,7 +355,7 @@ class DBManager implements Interfaces\DBManagerInterface
      *
      * @return $this self.
      */
-    public function closeStatement(Traverable $statement)
+    public function closeStatement(Traversable $statement)
     {
         $statement->closeCursor();
         $statement = null;
