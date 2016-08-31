@@ -254,9 +254,6 @@ class SQLContext extends SQLHandler implements Interfaces\SQLContextInterface
         // Execute statement.
         $statement = $this->execute($sql);
 
-        // Throw an exception if no rows are effected.
-        $this->throwErrorIfNoRowsAffected($statement, self::IGNORE_DUPLICATE);
-
         // If no exception is throw, save the last id.
         $this->setKeywordsFromCriteria(
             $this->getEntity(),

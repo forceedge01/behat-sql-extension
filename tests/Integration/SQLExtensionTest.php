@@ -45,7 +45,7 @@ class SQLExtensionTest extends TestHelper
     /**
      * @group test
      */
-    public function testIHaveWhere()
+    public function testIHaveWhereAlreadyExists()
     {
         $entity = 'database.unique';
         $node = new TableNode();
@@ -86,12 +86,18 @@ class SQLExtensionTest extends TestHelper
         $this->assertEquals('its.inevitable@hotmail.com', $this->testObject->getKeyword(sprintf('%s_email', $entity)));
         $this->assertEquals('its.inevitable@hotmail.com', $this->testObject->getKeyword(sprintf('%s.email', $entity)));
         $this->assertEquals('Abdul', $this->testObject->getKeyword(sprintf('%s_name', $entity)));
+
+        // Check history.
+        $this->assertCount(0, $this->testObject->get('sqlHistory')->getHistory()['insert']);
+        $this->assertCount(2, $this->testObject->get('sqlHistory')->getHistory()['select']);
+        $this->assertCount(0, $this->testObject->get('sqlHistory')->getHistory()['delete']);
+        $this->assertCount(0, $this->testObject->get('sqlHistory')->getHistory()['update']);
     }
 
     /**
      * @group test
      */
-    public function testIHave()
+    public function testIHaveAlreadyExists()
     {
         $node = new TableNode();
         // Add title row.
@@ -116,6 +122,12 @@ class SQLExtensionTest extends TestHelper
 
         $sqls = $this->testObject->iHave($node);
         $this->assertCount(2, $sqls);
+
+        // Check history.
+        $this->assertCount(0, $this->testObject->get('sqlHistory')->getHistory()['insert']);
+        $this->assertCount(2, $this->testObject->get('sqlHistory')->getHistory()['select']);
+        $this->assertCount(0, $this->testObject->get('sqlHistory')->getHistory()['delete']);
+        $this->assertCount(0, $this->testObject->get('sqlHistory')->getHistory()['update']);
     }
 
     /**
@@ -147,6 +159,12 @@ class SQLExtensionTest extends TestHelper
 
         $sqls = $this->testObject->iDontHaveWhere($entity, $node);
         $this->assertCount(2, $sqls);
+
+        // Check history.
+        $this->assertCount(0, $this->testObject->get('sqlHistory')->getHistory()['insert']);
+        $this->assertCount(0, $this->testObject->get('sqlHistory')->getHistory()['select']);
+        $this->assertCount(2, $this->testObject->get('sqlHistory')->getHistory()['delete']);
+        $this->assertCount(0, $this->testObject->get('sqlHistory')->getHistory()['update']);
     }
 
     /**
@@ -177,6 +195,12 @@ class SQLExtensionTest extends TestHelper
 
         $sqls = $this->testObject->iDontHave($node);
         $this->assertCount(2, $sqls);
+
+        // Check history.
+        $this->assertCount(0, $this->testObject->get('sqlHistory')->getHistory()['insert']);
+        $this->assertCount(0, $this->testObject->get('sqlHistory')->getHistory()['select']);
+        $this->assertCount(2, $this->testObject->get('sqlHistory')->getHistory()['delete']);
+        $this->assertCount(0, $this->testObject->get('sqlHistory')->getHistory()['update']);
     }
 
     /**
@@ -201,11 +225,17 @@ class SQLExtensionTest extends TestHelper
         $this->assertNotNull($this->testObject->getEntity());
         $this->assertEquals(234324, $this->testObject->getKeyword('database.unique_id'));
         $this->assertEquals('select', $this->testObject->getCommandType());
+
+        // Check history.
+        $this->assertCount(0, $this->testObject->get('sqlHistory')->getHistory()['insert']);
+        $this->assertCount(1, $this->testObject->get('sqlHistory')->getHistory()['select']);
+        $this->assertCount(0, $this->testObject->get('sqlHistory')->getHistory()['delete']);
+        $this->assertCount(0, $this->testObject->get('sqlHistory')->getHistory()['update']);
     }
 
     /**
      * Test that this method works with values provided.
-     * 
+     *
      * @group testing
      */
     public function testIHaveAWhereWithValuesRecordDoesNotExists()
@@ -229,7 +259,14 @@ class SQLExtensionTest extends TestHelper
         $this->assertEquals($expectedSQL, $result);
         $this->assertNotNull($this->testObject->getEntity());
         $this->assertEquals(237463, $this->testObject->getKeyword('database.unique1_id'));
-        $this->assertEquals('insert', $this->testObject->getCommandType());
+        // After execution select all values.
+        $this->assertEquals('select', $this->testObject->getCommandType());
+
+        // Check history.
+        $this->assertCount(1, $this->testObject->get('sqlHistory')->getHistory()['insert']);
+        $this->assertCount(2, $this->testObject->get('sqlHistory')->getHistory()['select']);
+        $this->assertCount(0, $this->testObject->get('sqlHistory')->getHistory()['delete']);
+        $this->assertCount(0, $this->testObject->get('sqlHistory')->getHistory()['update']);
     }
 
     /**
@@ -264,6 +301,12 @@ class SQLExtensionTest extends TestHelper
         $this->assertEquals($expectedSQL, $result);
         $this->assertNotNull($this->testObject->getEntity());
         $this->assertEquals('delete', $this->testObject->getCommandType());
+
+        // Check history.
+        $this->assertCount(0, $this->testObject->get('sqlHistory')->getHistory()['insert']);
+        $this->assertCount(0, $this->testObject->get('sqlHistory')->getHistory()['select']);
+        $this->assertCount(1, $this->testObject->get('sqlHistory')->getHistory()['delete']);
+        $this->assertCount(0, $this->testObject->get('sqlHistory')->getHistory()['update']);
     }
 
     /**
@@ -305,7 +348,14 @@ class SQLExtensionTest extends TestHelper
         $this->assertNotNull($this->testObject->getEntity());
         $this->assertEquals(1234, $this->testObject->getKeyword('database.someTable2_id'));
         $this->assertEquals('Abdul', $this->testObject->getKeyword('database.someTable2_name'));
-        $this->assertEquals('update', $this->testObject->getCommandType());
+        // After execution select all values.
+        $this->assertEquals('select', $this->testObject->getCommandType());
+
+        // Check history.
+        $this->assertCount(0, $this->testObject->get('sqlHistory')->getHistory()['insert']);
+        $this->assertCount(1, $this->testObject->get('sqlHistory')->getHistory()['select']);
+        $this->assertCount(0, $this->testObject->get('sqlHistory')->getHistory()['delete']);
+        $this->assertCount(1, $this->testObject->get('sqlHistory')->getHistory()['update']);
     }
 
     /**
@@ -349,6 +399,12 @@ class SQLExtensionTest extends TestHelper
         $this->assertEquals($expectedSQL, $result);
         $this->assertNotNull($this->testObject->getEntity());
         $this->assertEquals('select', $this->testObject->getCommandType());
+
+        // Check history.
+        $this->assertCount(0, $this->testObject->get('sqlHistory')->getHistory()['insert']);
+        $this->assertCount(1, $this->testObject->get('sqlHistory')->getHistory()['select']);
+        $this->assertCount(0, $this->testObject->get('sqlHistory')->getHistory()['delete']);
+        $this->assertCount(0, $this->testObject->get('sqlHistory')->getHistory()['update']);
     }
 
     /**
@@ -404,6 +460,12 @@ class SQLExtensionTest extends TestHelper
         $this->assertEquals($expectedSQL, $result);
         $this->assertNotNull($this->testObject->getEntity());
         $this->assertEquals('select', $this->testObject->getCommandType());
+
+        // Check history.
+        $this->assertCount(0, $this->testObject->get('sqlHistory')->getHistory()['insert']);
+        $this->assertCount(1, $this->testObject->get('sqlHistory')->getHistory()['select']);
+        $this->assertCount(0, $this->testObject->get('sqlHistory')->getHistory()['delete']);
+        $this->assertCount(0, $this->testObject->get('sqlHistory')->getHistory()['update']);
     }
 
     /**
@@ -493,6 +555,12 @@ class SQLExtensionTest extends TestHelper
         $this->assertEquals($expectedSQL, $result);
         $this->assertNotNull($this->testObject->getEntity());
         $this->assertEquals('select', $this->testObject->getCommandType());
+
+        // Check history.
+        $this->assertCount(0, $this->testObject->get('sqlHistory')->getHistory()['insert']);
+        $this->assertCount(1, $this->testObject->get('sqlHistory')->getHistory()['select']);
+        $this->assertCount(0, $this->testObject->get('sqlHistory')->getHistory()['delete']);
+        $this->assertCount(0, $this->testObject->get('sqlHistory')->getHistory()['update']);
     }
 
     /**
@@ -516,6 +584,12 @@ class SQLExtensionTest extends TestHelper
         $this->assertEquals($expectedSQL, $result);
         $this->assertNotNull($this->testObject->getEntity());
         $this->assertEquals('select', $this->testObject->getCommandType());
+
+        // Check history.
+        $this->assertCount(0, $this->testObject->get('sqlHistory')->getHistory()['insert']);
+        $this->assertCount(1, $this->testObject->get('sqlHistory')->getHistory()['select']);
+        $this->assertCount(0, $this->testObject->get('sqlHistory')->getHistory()['delete']);
+        $this->assertCount(0, $this->testObject->get('sqlHistory')->getHistory()['update']);
     }
 
     /**
@@ -539,6 +613,12 @@ class SQLExtensionTest extends TestHelper
         // Assert.
         $this->assertEquals($expectedSQL, $result);
         $this->assertNotNull($this->testObject->getEntity());
+
+        // Check history.
+        $this->assertCount(0, $this->testObject->get('sqlHistory')->getHistory()['insert']);
+        $this->assertCount(1, $this->testObject->get('sqlHistory')->getHistory()['select']);
+        $this->assertCount(0, $this->testObject->get('sqlHistory')->getHistory()['delete']);
+        $this->assertCount(0, $this->testObject->get('sqlHistory')->getHistory()['update']);
     }
 
     /**
@@ -617,6 +697,12 @@ class SQLExtensionTest extends TestHelper
 
         $this->assertEquals('random', $this->testObject->getKeyword('abc.my_entity_column2'));
         $this->assertEquals('random', $this->testObject->getKeyword('abc.my_entity.column2'));
+
+        // Check history.
+        $this->assertCount(0, $this->testObject->get('sqlHistory')->getHistory()['insert']);
+        $this->assertCount(1, $this->testObject->get('sqlHistory')->getHistory()['select']);
+        $this->assertCount(0, $this->testObject->get('sqlHistory')->getHistory()['delete']);
+        $this->assertCount(0, $this->testObject->get('sqlHistory')->getHistory()['update']);
     }
 
 
@@ -657,6 +743,12 @@ class SQLExtensionTest extends TestHelper
 
         $this->assertEquals('random', $this->testObject->getKeyword('abc.my_entity_column2'));
         $this->assertEquals('random', $this->testObject->getKeyword('abc.my_entity.column2'));
+
+        // Check history.
+        $this->assertCount(0, $this->testObject->get('sqlHistory')->getHistory()['insert']);
+        $this->assertCount(1, $this->testObject->get('sqlHistory')->getHistory()['select']);
+        $this->assertCount(0, $this->testObject->get('sqlHistory')->getHistory()['delete']);
+        $this->assertCount(0, $this->testObject->get('sqlHistory')->getHistory()['update']);
     }
 
     /**
@@ -696,6 +788,12 @@ class SQLExtensionTest extends TestHelper
         $this->assertEquals($expectedSQL, $result);
         $this->assertNotNull($this->testObject->getEntity());
         $this->assertEquals('select', $this->testObject->getCommandType());
+
+        // Check history.
+        $this->assertCount(0, $this->testObject->get('sqlHistory')->getHistory()['insert']);
+        $this->assertCount(2, $this->testObject->get('sqlHistory')->getHistory()['select']);
+        $this->assertCount(0, $this->testObject->get('sqlHistory')->getHistory()['delete']);
+        $this->assertCount(0, $this->testObject->get('sqlHistory')->getHistory()['update']);
     }
 
     /**
@@ -735,5 +833,11 @@ class SQLExtensionTest extends TestHelper
         $this->assertEquals($expectedSQL, $result);
         $this->assertNotNull($this->testObject->getEntity());
         $this->assertEquals('select', $this->testObject->getCommandType());
+
+        // Check history.
+        $this->assertCount(0, $this->testObject->get('sqlHistory')->getHistory()['insert']);
+        $this->assertCount(2, $this->testObject->get('sqlHistory')->getHistory()['select']);
+        $this->assertCount(0, $this->testObject->get('sqlHistory')->getHistory()['delete']);
+        $this->assertCount(0, $this->testObject->get('sqlHistory')->getHistory()['update']);
     }
 }
