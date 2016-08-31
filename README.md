@@ -280,3 +280,7 @@ The extension provides wrapper methods for the same functionality as the dsl lan
 ```
 
 Anything the DSL does will be done using the above methods (i.e setting keywords, outputting to debug log etc...)
+
+### Upgrading from version 2.x to 3.0:
+
+The only major change in version 3.0 is the introduction of the SQLHistory object. Just set the constructor object and that should be it.
