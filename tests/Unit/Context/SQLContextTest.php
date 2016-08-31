@@ -255,9 +255,6 @@ class SQLContextTest extends TestHelper
         );
 
         $this->mockDependency('dbHelperMock', 'getRequiredTableColumns', null, []);
-
-        $this->mockDependency('sqlBuilder', 'getColumns', null, ['column1' => 'abc']);
-
         $this->mockDependency('sqlBuilder', 'getPrefixedDatabaseName', null, 'dev_database');
         $this->mockDependency('sqlBuilder', 'getTableName', null, 'unique');
 
@@ -321,11 +318,7 @@ class SQLContextTest extends TestHelper
         );
 
         $this->mockDependency('dbHelperMock', 'getRequiredTableColumns', null, []);
-
-        $this->mockDependency('sqlBuilder', 'getColumns', null, ['column1' => 'abc']);
-
         $this->mockDependency('sqlBuilder', 'quoteOrNot', null, "'abc'");
-
         $this->mockDependency('sqlBuilder', 'getPrefixedDatabaseName', null, 'dev_database');
         $this->mockDependency('sqlBuilder', 'getTableName', null, 'unique1');
 
@@ -337,7 +330,8 @@ class SQLContextTest extends TestHelper
         // Assert.
         $this->assertEquals($expectedSQL, $result);
         $this->assertNotNull($this->testObject->getEntity());
-        $this->assertEquals('insert', $this->testObject->getCommandType());
+        // After execution select all values.
+        $this->assertEquals('select', $this->testObject->getCommandType());
     }
 
     /**
@@ -395,11 +389,7 @@ class SQLContextTest extends TestHelper
         );
 
         $this->mockDependency('dbHelperMock', 'getRequiredTableColumns', null, []);
-
-        $this->mockDependency('sqlBuilder', 'getColumns', null, ['column1' => 'abc']);
-
         $this->mockDependency('sqlBuilder', 'quoteOrNot', null, "'abc'");
-
         $this->mockDependency('sqlBuilder', 'getPrefixedDatabaseName', null, 'dev_database');
         $this->mockDependency('sqlBuilder', 'getTableName', null, 'unique1');
 
@@ -411,7 +401,8 @@ class SQLContextTest extends TestHelper
         // Assert.
         $this->assertEquals($expectedSQL, $result);
         $this->assertNotNull($this->testObject->getEntity());
-        $this->assertEquals('insert', $this->testObject->getCommandType());
+        // After execution select all values.
+        $this->assertEquals('select', $this->testObject->getCommandType());
     }
 
     /**
@@ -665,7 +656,8 @@ class SQLContextTest extends TestHelper
         // Assert.
         $this->assertEquals($expectedSQL, $result);
         $this->assertNotNull($this->testObject->getEntity());
-        $this->assertEquals('update', $this->testObject->getCommandType());
+        // After execution select all values.
+        $this->assertEquals('select', $this->testObject->getCommandType());
     }
 
     /**

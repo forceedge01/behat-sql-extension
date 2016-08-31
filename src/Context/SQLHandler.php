@@ -214,6 +214,7 @@ class SQLHandler extends BehatContext implements Interfaces\SQLHandlerInterface
                         $this->getParams()['DBPREFIX']
                     );
 
+                $this->setCommandType('select');
                 $statement = $this->execute($query);
                 $this->throwExceptionIfErrors($statement);
                 $this->throwErrorIfNoRowsAffected($statement);
@@ -683,6 +684,7 @@ class SQLHandler extends BehatContext implements Interfaces\SQLHandlerInterface
      */
     public function fetchByCriteria($entity, $criteria)
     {
+        $this->setCommandType('select');
         $sql = sprintf('SELECT * FROM %s WHERE %s', $entity, $criteria);
         $statement = $this->execute($sql);
         $result = $statement->fetchAll();
