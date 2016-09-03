@@ -8,7 +8,7 @@ interface DBManagerInterface
 {
     /**
      * Get params.
-     * 
+     *
      * @return array
      */
     public function getParams();
@@ -20,14 +20,14 @@ interface DBManagerInterface
 
     /**
      * @param string $entity
-     * 
+     *
      * @result string|bool
      */
     public function getPrimaryKeyForTable($database, $table);
 
     /**
      * @param string $sql
-     * 
+     *
      * @return Traversable
      */
     public function execute($sql);
@@ -39,16 +39,16 @@ interface DBManagerInterface
 
     /**
      * Gets a column list for a table with their type.
-     * 
+     *
      * @param string $table
      */
     public function getRequiredTableColumns($table);
 
     /**
      * Get the last insert id.
-     * 
+     *
      * @param string $table For compatibility with postgres.
-     * 
+     *
      * @return int|null
      */
     public function getLastInsertId($table = null);
@@ -77,4 +77,20 @@ interface DBManagerInterface
      * @return mixed.
      */
     public function getFirstValueFromStatement(Traversable $statement);
+
+    /**
+     * Close the pdo connection.
+     *
+     * @return void
+     */
+    public function closeConnection();
+
+    /**
+     * Close pdo statement.
+     *
+     * @param Traversable $statement The statement to close.
+     *
+     * @return $this self.
+     */
+    public function closeStatement(Traversable $statement);
 }

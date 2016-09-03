@@ -840,4 +840,33 @@ class SQLExtensionTest extends TestHelper
         $this->assertCount(0, $this->testObject->get('sqlHistory')->getHistory()['delete']);
         $this->assertCount(0, $this->testObject->get('sqlHistory')->getHistory()['update']);
     }
+
+
+    /**
+     * Test that this method works with values provided.
+     */
+    public function testIHaveAWhereWithOrStatementAndExternalRef()
+    {
+        $entity = 'database.unique';
+        $column = "column1:abc||column2:[user.id|abc:1||name:Abdul]||column3:what\'s up doc";
+        $this->testObject->get('dbManager')->getConnection()->expects($this->any())
+            ->method('prepare')
+            ->with($this->isType('string'))
+            ->willReturn($this->getPdoStatementWithRows(1, [[0 => 234324, 'id' => 234324]]));
+
+        $result = $this->testObject->iHaveAWhere($entity, $column);
+        // Expected SQL.
+        $expectedSQL = "SELECT * FROM dev_database.unique WHERE `column1` = 'abc' OR `column2` = 234324 OR `column3` = 'what\'s up doc'";
+        // Assert.
+        $this->assertEquals($expectedSQL, $result);
+        $this->assertNotNull($this->testObject->getEntity());
+        $this->assertEquals(234324, $this->testObject->getKeyword('database.unique_id'));
+        $this->assertEquals('select', $this->testObject->getCommandType());
+
+        // Check history.
+        $this->assertCount(0, $this->testObject->get('sqlHistory')->getHistory()['insert']);
+        $this->assertCount(2, $this->testObject->get('sqlHistory')->getHistory()['select']);
+        $this->assertCount(0, $this->testObject->get('sqlHistory')->getHistory()['delete']);
+        $this->assertCount(0, $this->testObject->get('sqlHistory')->getHistory()['update']);
+    }
 }

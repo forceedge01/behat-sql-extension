@@ -182,6 +182,31 @@ class SQLBuilderTest extends TestHelper
     }
 
     /**
+     * testConvertToArray Test that convertToArray executes as expected.
+     */
+    public function testConvertToArrayOr()
+    {
+        // Prepare / Mock
+        $columns = 'one:1||
+            two:2||
+            three:ransom||
+            four:randomness||
+            address: 1\, Burlington road||
+            created: DATE(NOW()\, "U")';
+
+        // Execute
+        $result = $this->testObject->convertToArray($columns);
+
+        // Assert Result
+        $this->assertEquals($result['one'], 1);
+        $this->assertEquals($result['two'], 2);
+        $this->assertEquals($result['three'], 'ransom');
+        $this->assertEquals($result['four'], 'randomness');
+        $this->assertEquals($result['address'], '1, Burlington road');
+        $this->assertEquals($result['created'], 'DATE(NOW(), "U")');
+    }
+
+    /**
      * testFilterAndConvertToArray Test that filterAndConvertToArray executes as expected.
      *
      * @expectedException Exception
@@ -594,5 +619,73 @@ class SQLBuilderTest extends TestHelper
 
         //assert
         $this->assertEquals($expectedQuery, $result);
+    }
+
+    /**
+     * testGetSearchConditionOperatorForColumns Test that getSearchConditionOperatorForColumns executes as expected.
+     */
+    public function testGetSearchConditionOperatorForColumnsReturnAndClause()
+    {
+        // Prepare / Mock
+        $query = 'company_id: 123, username: forceedge, status_id: 3';
+
+        // Execute
+        $result = $this->testObject->getSearchConditionOperatorForColumns($query);
+
+        // Assert Result
+        $this->assertEquals(' AND ', $result);
+    }
+
+    /**
+     * testGetSearchConditionOperatorForColumns Test that getSearchConditionOperatorForColumns executes as expected.
+     */
+    public function testGetSearchConditionOperatorForColumnsReturnOrClause()
+    {
+        // Prepare / Mock
+        $query = 'company_id: 123|| username: forceedge|| status_id: 3';
+
+        // Execute
+        $result = $this->testObject->getSearchConditionOperatorForColumns($query);
+
+        // Assert Result
+        $this->assertEquals(' OR ', $result);
+    }
+
+    /**
+     * testGetSearchConditionOperatorForColumns Test that getSearchConditionOperatorForColumns executes as expected.
+     *
+     * @expectedException Exception
+     */
+    public function testGetSearchConditionOperatorForColumnsException()
+    {
+        // Prepare / Mock
+        $query = 'company_id: 123, username: forceedge|| status_id: 3';
+
+        // Execute
+        $this->testObject->getSearchConditionOperatorForColumns($query);
+    }
+
+    /**
+     * Test that isAndOperatorForColumns executes as expected.
+     */
+    public function testIsAndOperatorForColumnsFalse()
+    {
+        $query = 'company_id: 123|| username: forceedge|| status_id: 3';
+
+        $result = $this->testObject->isAndOperatorForColumns($query);
+
+        $this->assertFalse($result);
+    }
+
+    /**
+     * Test that isAndOperatorForColumns executes as expected.
+     */
+    public function testIsAndOperatorForColumnsTrue()
+    {
+        $query = 'company_id: 123, username: forceedge, status_id: 3';
+
+        $result = $this->testObject->isAndOperatorForColumns($query);
+
+        $this->assertTrue($result);
     }
 }
