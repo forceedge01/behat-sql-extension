@@ -336,7 +336,6 @@ class DBManager implements Interfaces\DBManagerInterface
         return false;
     }
 
-
     /**
      * Close the pdo connection.
      *
@@ -346,7 +345,6 @@ class DBManager implements Interfaces\DBManagerInterface
     {
         $this->setConnection(null);
     }
-
 
     /**
      * Close pdo statement.

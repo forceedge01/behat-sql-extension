@@ -13,20 +13,20 @@ interface SQLBuilderInterface
 
     /**
      * Constructs a clause based on the glue, to be used for where and update clause.
-     * 
+     *
      * @param string $commandType
      * @param string $glue
      * @param array $columns
-     * 
+     *
      * @return string
      */
     public function constructSQLClause($commandType, $glue, array $columns);
 
     /**
      * Converts the incoming string param from steps to array.
-     * 
+     *
      * @param string $columns
-     * 
+     *
      * @return array
      */
     public function convertToArray($columns);
@@ -100,7 +100,6 @@ interface SQLBuilderInterface
      */
     public function isExternalReference($value);
 
-
     /**
      * Prepends the prefix.
      *
@@ -111,7 +110,6 @@ interface SQLBuilderInterface
      */
     public function getPrefixedDatabaseName($prefix, $table);
 
-
     /**
      * Get table name from entity.
      *
@@ -120,4 +118,13 @@ interface SQLBuilderInterface
      * @return string
      */
     public function getTableName($entity);
+
+    /**
+     * Get the search condition operator for the columns provided.
+     *
+     * @param string $columns The columns to analyze.
+     *
+     * @return string
+     */
+    public function getSearchConditionOperatorForColumns($columns);
 }
