@@ -127,4 +127,13 @@ interface SQLBuilderInterface
      * @return string
      */
     public function getSearchConditionOperatorForColumns($columns);
+
+    /**
+     * Check whether an and is supported by the columns.
+     *
+     * @param string $columns The columns to analyze.
+     *
+     * @return bool
+     */
+    public function isAndOperatorForColumns($columns);
 }
