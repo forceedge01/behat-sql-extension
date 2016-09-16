@@ -154,8 +154,11 @@ class DBManager implements Interfaces\DBManagerInterface
      */
     public function getRequiredTableColumns($table)
     {
+        $resetSchema = false;
         // If the DBSCHEMA is not set, try using the database name if provided with the table.
+        // If this happens the schema generation is dynamic so keep resetting the stored schema.
         if (! $this->params['DBSCHEMA']) {
+            $resetSchema = true;
             preg_match('/(.*)\./', $table, $db);
 
             if (isset($db[1])) {
@@ -186,6 +189,11 @@ class DBManager implements Interfaces\DBManagerInterface
             $table,
             $this->params['DBSCHEMA']
         );
+
+        // Reset schema after the fields have been extracted.
+        if ($resetSchema) {
+            $this->params['DBSCHEMA'] = null;
+        }
 
         $statement = $this->execute($sql);
         $result = $statement->fetchAll();
