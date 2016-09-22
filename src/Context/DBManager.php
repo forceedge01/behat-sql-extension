@@ -236,12 +236,12 @@ class DBManager implements Interfaces\DBManagerInterface
         // Check if port is provided, if not leave empty to use default.
         $port = '';
         if ($this->params['DBPORT']) {
-            $port = 'port=' . $this->params['DBPORT'] . ';';
+            $port = ';port=' . $this->params['DBPORT'];
         }
 
         return [
             sprintf(
-                '%s:dbname=%s;host=%s;%s',
+                '%s:dbname=%s;host=%s%s',
                 $this->params['DBENGINE'],
                 $this->params['DBNAME'],
                 $this->params['DBHOST'],
