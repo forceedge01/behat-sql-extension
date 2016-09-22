@@ -233,12 +233,19 @@ class DBManager implements Interfaces\DBManagerInterface
      */
     private function getConnectionDetails()
     {
+        // Check if port is provided, if not leave empty to use default.
+        $port = '';
+        if ($this->params['DBPORT']) {
+            $port = ';port=' . $this->params['DBPORT'];
+        }
+
         return [
             sprintf(
-                '%s:dbname=%s;host=%s',
+                '%s:dbname=%s;host=%s%s',
                 $this->params['DBENGINE'],
                 $this->params['DBNAME'],
-                $this->params['DBHOST']
+                $this->params['DBHOST'],
+                $port
             ),
             $this->params['DBUSER'],
             $this->params['DBPASSWORD']
@@ -277,6 +284,7 @@ class DBManager implements Interfaces\DBManagerInterface
             $this->params['DBNAME'] = $this->arrayIfElse($dbParams, 'name', SQLDBNAME);
             $this->params['DBPREFIX'] = $this->arrayIfElse($dbParams, 'prefix', SQLDBPREFIX);
             $this->params['DBHOST'] = $this->arrayIfElse($dbParams, 'host', SQLDBHOST);
+            $this->params['DBPORT'] = $this->arrayIfElse($dbParams, 'port', SQLDBPORT);
             $this->params['DBUSER'] = $this->arrayIfElse($dbParams, 'username', SQLDBUSERNAME);
             $this->params['DBPASSWORD'] = $this->arrayIfElse($dbParams, 'password', SQLDBPASSWORD);
             $this->params['DBENGINE'] = $this->arrayIfElse($dbParams, 'engine', SQLDBENGINE);

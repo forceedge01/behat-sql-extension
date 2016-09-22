@@ -382,7 +382,7 @@ class DBManagerTest extends TestHelper
     /**
      * testGetConnectionDetails Test that getConnectionDetails executes as expected.
      */
-    public function testGetConnectionDetails()
+    public function testGetConnectionDetailsWithoutPort()
     {
         // Prepare / Mock
         $paramsValue = [
@@ -390,7 +390,8 @@ class DBManagerTest extends TestHelper
             'DBNAME' => 'hot',
             'DBHOST' => 'cup',
             'DBUSER' => 'of',
-            'DBPASSWORD' => 'tea'
+            'DBPASSWORD' => 'tea',
+            'DBPORT' => ''
         ];
 
         $property = $this
@@ -405,7 +406,43 @@ class DBManagerTest extends TestHelper
             ->accessMethod('getConnectionDetails')
             ->invoke($this->testObject);
 
-        $expectedConnectionString = 'banana:dbname=hot;host=cup';
+        $expectedConnectionString = 'banana:dbname=hot;host=cup;';
+
+        // Assert Result
+        $this->assertTrue(is_array($result));
+        $this->assertEquals($expectedConnectionString, $result[0]);
+        $this->assertEquals($paramsValue['DBUSER'], $result[1]);
+        $this->assertEquals($paramsValue['DBPASSWORD'], $result[2]);
+    }
+
+    /**
+     * testGetConnectionDetails Test that getConnectionDetails executes as expected.
+     */
+    public function testGetConnectionDetails()
+    {
+        // Prepare / Mock
+        $paramsValue = [
+            'DBENGINE' => 'banana',
+            'DBNAME' => 'hot',
+            'DBHOST' => 'cup',
+            'DBUSER' => 'of',
+            'DBPASSWORD' => 'tea',
+            'DBPORT' => 3380
+        ];
+
+        $property = $this
+            ->accessProperty('params')
+            ->setValue(
+                $this->testObject,
+                $paramsValue
+            );
+
+        // Execute
+        $result = $this
+            ->accessMethod('getConnectionDetails')
+            ->invoke($this->testObject);
+
+        $expectedConnectionString = 'banana:dbname=hot;host=cup;port=3380;';
 
         // Assert Result
         $this->assertTrue(is_array($result));
