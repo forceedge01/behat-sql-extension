@@ -9,6 +9,7 @@ session_start();
 // Necessary vars for testing.
 DEFINE('SQLDBENGINE', 'mysql');
 DEFINE('SQLDBHOST', 'localhost');
+DEFINE('SQLDBPORT', '3306');
 DEFINE('SQLDBSCHEMA', 'myschema');
 DEFINE('SQLDBNAME', 'mydb');
 DEFINE('SQLDBUSERNAME', 'root');
