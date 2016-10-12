@@ -135,10 +135,13 @@ class SQLContextTest extends TestHelper
             'name' => 'Qureshi'
         ];
 
+// <<<<<<< HEAD
         $this->dependencies['sqlBuilder']->expects($this->any())
             ->method('getQuery')
             ->with($this->isType('object'))
             ->will($this->returnValue('abc'));
+// =======
+        // $this->mockDependency('sqlBuilder', 'getSearchConditionOperatorForColumns', null, ' AND ');
 
         $this->mockDependency('sqlBuilder', 'convertTableNodeToQueries', [$node], $queries);
 
@@ -203,6 +206,8 @@ class SQLContextTest extends TestHelper
             'name' => 'Qureshi'
         ];
 
+        $this->mockDependency('sqlBuilder', 'getSearchConditionOperatorForColumns', null, ' AND ');
+
         $this->mockDependencyValueMap('sqlBuilder', 'convertToArray', array(
                 array('email:its.inevitable@hotmail.com, name:Abdul', $convertedQuery1),
                 array('email:forceedge01@gmail.com, name:Qureshi', $convertedQuery2)
@@ -259,10 +264,8 @@ class SQLContextTest extends TestHelper
             "`column1` = 'abc' AND `column2` = 'xyz' AND `column3` is NULL AND `column4` = 'what\'s up doc'"
         );
 
+        $this->mockDependency('sqlBuilder', 'getSearchConditionOperatorForColumns', null, ' AND ');
         $this->mockDependency('dbHelperMock', 'getRequiredTableColumns', null, []);
-
-        $this->mockDependency('sqlBuilder', 'getColumns', null, ['column1' => 'abc']);
-
         $this->mockDependency('sqlBuilder', 'getPrefixedDatabaseName', null, 'dev_database');
         $this->mockDependency('sqlBuilder', 'getTableName', null, 'unique');
 
@@ -331,13 +334,10 @@ class SQLContextTest extends TestHelper
         );
 
         $this->mockDependency('dbHelperMock', 'getRequiredTableColumns', null, []);
-
-        $this->mockDependency('sqlBuilder', 'getColumns', null, ['column1' => 'abc']);
-
         $this->mockDependency('sqlBuilder', 'quoteOrNot', null, "'abc'");
-
         $this->mockDependency('sqlBuilder', 'getPrefixedDatabaseName', null, 'dev_database');
         $this->mockDependency('sqlBuilder', 'getTableName', null, 'unique1');
+        $this->mockDependency('sqlBuilder', 'getSearchConditionOperatorForColumns', null, ' AND ');
 
         $this->dependencies['sqlBuilder']->expects($this->any())
             ->method('getQuery')
@@ -352,7 +352,8 @@ class SQLContextTest extends TestHelper
         // Assert.
         $this->assertEquals($expectedSQL, $result);
         $this->assertNotNull($this->testObject->getEntity());
-        $this->assertEquals('insert', $this->testObject->getCommandType());
+        // After execution select all values.
+        $this->assertEquals('select', $this->testObject->getCommandType());
     }
 
     /**
@@ -410,13 +411,10 @@ class SQLContextTest extends TestHelper
         );
 
         $this->mockDependency('dbHelperMock', 'getRequiredTableColumns', null, []);
-
-        $this->mockDependency('sqlBuilder', 'getColumns', null, ['column1' => 'abc']);
-
         $this->mockDependency('sqlBuilder', 'quoteOrNot', null, "'abc'");
-
         $this->mockDependency('sqlBuilder', 'getPrefixedDatabaseName', null, 'dev_database');
         $this->mockDependency('sqlBuilder', 'getTableName', null, 'unique1');
+        $this->mockDependency('sqlBuilder', 'getSearchConditionOperatorForColumns', null, ' AND ');
 
         $this->dependencies['sqlBuilder']->expects($this->any())
             ->method('getQuery')
@@ -431,7 +429,8 @@ class SQLContextTest extends TestHelper
         // Assert.
         $this->assertEquals($expectedSQL, $result);
         $this->assertNotNull($this->testObject->getEntity());
-        $this->assertEquals('insert', $this->testObject->getCommandType());
+        // After execution select all values.
+        $this->assertEquals('select', $this->testObject->getCommandType());
     }
 
     /**
@@ -484,6 +483,7 @@ class SQLContextTest extends TestHelper
 
         $this->mockDependency('sqlBuilder', 'getPrefixedDatabaseName', null, 'dev_database');
         $this->mockDependency('sqlBuilder', 'getTableName', null, 'someTable');
+        $this->mockDependency('sqlBuilder', 'getSearchConditionOperatorForColumns', null, ' AND ');
 
         $this->dependencies['sqlBuilder']->expects($this->any())
             ->method('getQuery')
@@ -550,6 +550,7 @@ class SQLContextTest extends TestHelper
         ];
 
         $this->mockDependency('sqlBuilder', 'convertTableNodeToQueries', [$node], $queries);
+        $this->mockDependency('sqlBuilder', 'getSearchConditionOperatorForColumns', null, ' AND ');
 
         $this->mockDependencyValueMap('sqlBuilder', 'convertToArray', array(
                 array('email:its.inevitable@hotmail.com,name:Abdul', $convertedQuery1),
@@ -614,6 +615,7 @@ class SQLContextTest extends TestHelper
         ];
 
         $this->mockDependency('sqlBuilder', 'convertTableNodeToQueries', [$node], $queries);
+        $this->mockDependency('sqlBuilder', 'getSearchConditionOperatorForColumns', null, ' AND ');
 
         $this->mockDependencyValueMap('sqlBuilder', 'convertToArray', array(
                 array('email:its.inevitable@hotmail.com,name:Abdul', $convertedQuery1),
@@ -681,6 +683,7 @@ class SQLContextTest extends TestHelper
 
         $this->mockDependency('sqlBuilder', 'getPrefixedDatabaseName', null, 'dev_database');
         $this->mockDependency('sqlBuilder', 'getTableName', null, 'someTable2');
+        $this->mockDependency('sqlBuilder', 'getSearchConditionOperatorForColumns', null, ' AND ');
 
         $this->dependencies['sqlBuilder']->expects($this->any())
             ->method('getQuery')
@@ -695,7 +698,8 @@ class SQLContextTest extends TestHelper
         // Assert.
         $this->assertEquals($expectedSQL, $result);
         $this->assertNotNull($this->testObject->getEntity());
-        $this->assertEquals('update', $this->testObject->getCommandType());
+        // After execution select all values.
+        $this->assertEquals('select', $this->testObject->getCommandType());
     }
 
     /**
@@ -736,7 +740,7 @@ class SQLContextTest extends TestHelper
         $this->mockDependency('dbHelperMock', 'execute', ["SELECT * FROM dev_database.someTable2 WHERE `column1` = 'abc' AND `column2` = 'xyz' AND `column3` is NULL AND `column4` = 'what\'s up doc'"], $statement);
 
         $this->mockDependency('dbHelperMock', 'throwErrorIfNoRowsAffected', [$statement]);
-
+        $this->mockDependency('sqlBuilder', 'getSearchConditionOperatorForColumns', null, ' AND ');
         $this->mockDependency('sqlBuilder', 'getPrefixedDatabaseName', null, 'dev_database');
         $this->mockDependency('sqlBuilder', 'getTableName', null, 'someTable2');
 
@@ -799,6 +803,7 @@ class SQLContextTest extends TestHelper
 
         $this->mockDependency('sqlBuilder', 'getPrefixedDatabaseName', null, 'dev_database');
         $this->mockDependency('sqlBuilder', 'getTableName', null, 'someTable4');
+        $this->mockDependency('sqlBuilder', 'getSearchConditionOperatorForColumns', null, ' AND ');
 
         $this->dependencies['sqlBuilder']->expects($this->any())
             ->method('getQuery')
@@ -849,6 +854,7 @@ class SQLContextTest extends TestHelper
 
         $this->mockDependency('sqlBuilder', 'getPrefixedDatabaseName', null, 'dev_database');
         $this->mockDependency('sqlBuilder', 'getTableName', null, 'someTable4');
+        $this->mockDependency('sqlBuilder', 'getSearchConditionOperatorForColumns', null, ' AND ');
 
         $this->dependencies['sqlBuilder']->expects($this->any())
             ->method('getQuery')
@@ -957,6 +963,7 @@ class SQLContextTest extends TestHelper
 
         $this->mockDependency('sqlBuilder', 'getPrefixedDatabaseName', null, 'dev_database');
         $this->mockDependency('sqlBuilder', 'getTableName', null, 'someTable3');
+        $this->mockDependency('sqlBuilder', 'getSearchConditionOperatorForColumns', null, ' AND ');
 
         $this->dependencies['sqlBuilder']->expects($this->any())
             ->method('getQuery')
@@ -1046,7 +1053,7 @@ class SQLContextTest extends TestHelper
         ]);
 
         $this->mockDependency('sqlBuilder', 'constructSQLClause', null, "`column1` = 'abc' AND `column2` LIKE '%xyz%'");
-
+        $this->mockDependency('sqlBuilder', 'getSearchConditionOperatorForColumns', null, ' AND ');
         $this->mockDependency('sqlBuilder', 'getPrefixedDatabaseName', null, 'dev_database');
         $this->mockDependency('sqlBuilder', 'getTableName', null, 'someTable4');
 

@@ -42,6 +42,7 @@ default:
           connection_details:
             engine: pgsql
             host: 127.0.0.1
+            port: 3306
             schema: ...
             dbname: ...
             username: ...
@@ -207,7 +208,7 @@ Given I have an "account" where "title:my account, user_id:{user_id}"
 
 The `Given I have ...` command will do two things for you:
   - Attempt to create a new record if it doesn't exist.
-  - Save all columns of that new record for re-usability in its keywords store. These are accessible like so: {table_column}
+  - Save all columns of that new record for re-usability in its keywords store. These are accessible like so: {table.column}
   Example:
     - Consider a table user with the following columns:
       - id
@@ -215,10 +216,29 @@ The `Given I have ...` command will do two things for you:
       - email
       - role_id
     - This `Given I have a "user" where "email: its.inevitable@hotmail.com"` will give you the following keywords:
-      - {user_id}
-      - {user_name}
-      - {user_email}
-      - {user_role_id}
+      - {user.id}
+      - {user.name}
+      - {user.email}
+      - {user.role_id}
+
+### Referencing foreign table values
+
+To substitute a value from another table use the following syntax:
+
+```gherkin
+Then I should have a "table" where "column1:value1, column2:[table1.columnToUse|whereColumn:Value]"
+```
+
+Putting the above into context.
+```
+column1: value1 # Usual sql syntax.
+column2: [table1.columnToUse|whereColumn:Value] # External reference to the table `table1`
+```
+
+The above syntax i.e `[...]` will be resolved as follows:
+```sql
+SELECT `table1.columnToUse` FROM `table1` WHERE `whereColumn` = 'Value';
+```
 
 ### Verifying data in the database
 
@@ -261,3 +281,7 @@ The extension provides wrapper methods for the same functionality as the dsl lan
 ```
 
 Anything the DSL does will be done using the above methods (i.e setting keywords, outputting to debug log etc...)
+
+### Upgrading from version 2.x to 3.0:
+
+The only major change in version 3.0 is the introduction of the SQLHistory object. Just set the constructor object and that should be it.

@@ -681,4 +681,29 @@ class SQLHandler extends BehatContext implements Interfaces\SQLHandlerInterface
 
         return $_SESSION['behat']['GenesisSqlExtension']['last_id'];
     }
+
+    /**
+     * Get a record by a criteria.
+     *
+     * @param string $entity
+     * @param string $criteria The SQL criteria.
+     */
+    public function fetchByCriteria($entity, $criteria)
+    {
+        $this->setCommandType('select');
+        $sql = sprintf('SELECT * FROM %s WHERE %s', $entity, $criteria);
+        $statement = $this->execute($sql);
+        $result = $statement->fetchAll();
+
+        if (! $result) {
+            throw new Exceptions\RecordNotFoundException(
+                $criteria,
+                $entity
+            );
+        }
+
+        $this->get('dbManager')->closeStatement($statement);
+
+        return $result;
+    }
 }

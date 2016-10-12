@@ -68,6 +68,7 @@ class SQLContext extends SQLHandler implements Interfaces\SQLContextInterface
         $this->setCommandType('select');
 
         // Convert columns given to an array.
+        $searchConditionOperator = $this->get('sqlBuilder')->getSearchConditionOperatorForColumns($columns);
         $columns = $this->convertToFilteredArray($columns);
 
         $sqlCommand = Representations\SQLCommand::instance()
@@ -75,6 +76,8 @@ class SQLContext extends SQLHandler implements Interfaces\SQLContextInterface
             ->setTable($this->getEntity())
             ->addColumn('*')
             ->setWhere($columns);
+//         // Check if the record exists.
+//         $whereClause = $this->constructSQLClause($this->getCommandType(), $searchConditionOperator, $columns);
 
         $sql = $this->get('sqlBuilder')->getQuery($sqlCommand);
 
@@ -135,6 +138,8 @@ class SQLContext extends SQLHandler implements Interfaces\SQLContextInterface
             // ignore, as the keys may not be set because of dynamic function usage.
         }
 
+        $this->get('dbManager')->closeStatement($statement);
+
         return $sql;
     }
 
@@ -168,7 +173,9 @@ class SQLContext extends SQLHandler implements Interfaces\SQLContextInterface
         $this->setCommandType('delete');
 
         // Construct the where clause.
+        $searchConditionOperator = $this->get('sqlBuilder')->getSearchConditionOperatorForColumns($columns);
         $columns = $this->convertToFilteredArray($columns);
+        $whereClause = $this->constructSQLClause($this->getCommandType(), $searchConditionOperator, $columns);
 
         $sqlCommand = Representations\SQLCommand::instance()
             ->setType('delete')
@@ -182,6 +189,7 @@ class SQLContext extends SQLHandler implements Interfaces\SQLContextInterface
 
         // Throw an exception if errors are found.
         $this->throwExceptionIfErrors($statement);
+        $this->get('dbManager')->closeStatement($statement);
 
         return $sql;
     }
@@ -255,7 +263,9 @@ class SQLContext extends SQLHandler implements Interfaces\SQLContextInterface
         $with = $this->convertToFilteredArray($with);
 
         // Build up the where clause.
+        $searchConditionOperator = $this->get('sqlBuilder')->getSearchConditionOperatorForColumns($columns);
         $columns = $this->convertToFilteredArray($columns);
+        $whereClause = $this->constructSQLClause($this->getCommandType(), $searchConditionOperator, $columns);
 
         $sqlCommand = Representations\SQLCommand::instance()
             ->setType('update')
@@ -268,13 +278,12 @@ class SQLContext extends SQLHandler implements Interfaces\SQLContextInterface
         // Execute statement.
         $statement = $this->execute($sql);
 
-        // Throw an exception if no rows are effected.
-        $this->throwErrorIfNoRowsAffected($statement, self::IGNORE_DUPLICATE);
-
         // If no exception is throw, save the last id.
         $this->setKeywordsFromSQLCommand(
             $sqlCommand
         );
+
+        $this->get('dbManager')->closeStatement($statement);
 
         return $sql;
     }
@@ -302,11 +311,13 @@ class SQLContext extends SQLHandler implements Interfaces\SQLContextInterface
         $this->setEntity($entity);
         $this->setCommandType('select');
 
+        $searchConditionOperator = $this->get('sqlBuilder')->getSearchConditionOperatorForColumns($where);
+
         // Create array out of the with string given.
         $columns = $this->convertToFilteredArray($where);
 
         // Create a usable sql clause.
-        $selectWhereClause = $this->constructSQLClause($this->getCommandType(), ' AND ', $columns);
+        $selectWhereClause = $this->constructSQLClause($this->getCommandType(), $searchConditionOperator, $columns);
 
         $sqlCommand = Representations\SQLCommand::instance()
             ->setType('select')
@@ -355,6 +366,8 @@ class SQLContext extends SQLHandler implements Interfaces\SQLContextInterface
         $this->debugLog('------- I SHOULD HAVE A WITH -------');
         $this->setEntity($entity);
 
+        $searchConditionOperator = $this->get('sqlBuilder')->getSearchConditionOperatorForColumns($with);
+
         // Create array out of the with string given.
         $columns = $this->convertToFilteredArray($with);
 
@@ -366,6 +379,8 @@ class SQLContext extends SQLHandler implements Interfaces\SQLContextInterface
             ->setTable($this->getEntity())
             ->addColumn('*')
             ->setWhere($columns);
+//         // Create a usable sql clause.
+//         $selectWhereClause = $this->constructSQLClause($this->getCommandType(), $searchConditionOperator, $columns);
 
         $sql = $this->get('sqlBuilder')->getQuery($sqlCommand);
 
@@ -379,6 +394,8 @@ class SQLContext extends SQLHandler implements Interfaces\SQLContextInterface
             );
         }
 
+        $this->get('dbManager')->closeStatement($statement);
+
         return $sql;
     }
 
@@ -391,6 +408,8 @@ class SQLContext extends SQLHandler implements Interfaces\SQLContextInterface
 
         $this->setEntity($entity);
 
+        $searchConditionOperator = $this->get('sqlBuilder')->getSearchConditionOperatorForColumns($with);
+
         // Create array out of the with string given.
         $columns = $this->convertToFilteredArray($with);
 
@@ -398,7 +417,7 @@ class SQLContext extends SQLHandler implements Interfaces\SQLContextInterface
         $this->setCommandType('select');
 
         // Create a usable sql clause.
-        $selectWhereClause = $this->constructSQLClause($this->getCommandType(), ' AND ', $columns);
+        $selectWhereClause = $this->constructSQLClause($this->getCommandType(), $searchConditionOperator, $columns);
 
         $sqlCommand = Representations\SQLCommand::instance()
             ->setType('select')
@@ -418,6 +437,8 @@ class SQLContext extends SQLHandler implements Interfaces\SQLContextInterface
                 $this->getEntity()
             );
         }
+
+        $this->get('dbManager')->closeStatement($statement);
 
         return $sql;
     }

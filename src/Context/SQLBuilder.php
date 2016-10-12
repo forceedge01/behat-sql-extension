@@ -106,7 +106,12 @@ class SQLBuilder implements Interfaces\SQLBuilderInterface
         // as a rule, each array element after this should have the ":" separator.
         // Would it be better to use preg_match here?
         $query = str_replace('\,', $commaEscapeCode, $query);
-        $columns = explode(',', $query);
+
+        if ($this->isAndOperatorForColumns($query)) {
+            $columns = explode(',', $query);
+        } else {
+            $columns = explode('||', $query);
+        }
 
         foreach ($columns as $column) {
             if (strpos($column, ':') == false) {
@@ -337,12 +342,12 @@ class SQLBuilder implements Interfaces\SQLBuilderInterface
     {
         if (! $this->isExternalReference($externalRef)) {
             throw new Exception(
-                'Invalid external ref provided, external ref must be enclosed in "[]" and criteria split by "|".
+                'Invalid external ref provided, external ref must be enclosed in "[]" and where split by "|".
                 Example format [{table}.{column1}|{column2}:{value}]'
             );
         }
 
-        list($columnAndTable, $criteria) = explode('|', trim($externalRef, '[]'));
+        list($columnAndTable, $where) = explode('|', trim($externalRef, '[]'), 2);
 
         // Get the table name.
         $table = null;
@@ -360,6 +365,10 @@ class SQLBuilder implements Interfaces\SQLBuilderInterface
             ->setWhere($this->convertToArray($criteria));
 
         $query = $this->getQuery($sqlCommand);
+//         // Construct where clause.
+//         $searchConditionOperator = $this->getSearchConditionOperatorForColumns($where);
+//         $whereClause = $this->constructSQLClause('SELECT', $searchConditionOperator, $this->convertToArray($where));
+//         $query = sprintf('SELECT %s FROM %s WHERE %s', $column, $qualifiedTableName, $whereClause);
 
         Debugger::log(sprintf('Built query "%s" for external ref "%s"', $query, $externalRef));
 
@@ -435,7 +444,6 @@ class SQLBuilder implements Interfaces\SQLBuilderInterface
         return $query;
     }
 
-
     /**
      * Prepends the prefix.
      *
@@ -454,7 +462,6 @@ class SQLBuilder implements Interfaces\SQLBuilderInterface
 
         return null;
     }
-
 
     /**
      * Get table name from entity.
@@ -564,5 +571,37 @@ class SQLBuilder implements Interfaces\SQLBuilderInterface
         }
 
         return $query;
+    }
+
+    /**
+     * Get the search condition operator for the columns provided.
+     *
+     * @param string $columns The columns to analyze.
+     *
+     * @return string
+     */
+    public function getSearchConditionOperatorForColumns($columns)
+    {
+        if ((strpos($columns, '||') !== false) && (strpos($columns, ',') !== false)) {
+            throw new Exception('Cannot use both || and , in the same query.');
+        }
+
+        if (strpos($columns, '||')) {
+            return ' OR ';
+        }
+
+        return ' AND ';
+    }
+
+    /**
+     * Check whether an and is supported by the columns.
+     *
+     * @param string $columns The columns to analyze.
+     *
+     * @return bool
+     */
+    public function isAndOperatorForColumns($columns)
+    {
+        return (' AND ' === $this->getSearchConditionOperatorForColumns($columns));
     }
 }
