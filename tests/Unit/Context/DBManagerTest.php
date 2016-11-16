@@ -406,7 +406,7 @@ class DBManagerTest extends TestHelper
             ->accessMethod('getConnectionDetails')
             ->invoke($this->testObject);
 
-        $expectedConnectionString = 'banana:dbname=hot;host=cup;';
+        $expectedConnectionString = 'banana:dbname=hot;host=cup';
 
         // Assert Result
         $this->assertTrue(is_array($result));
@@ -442,7 +442,7 @@ class DBManagerTest extends TestHelper
             ->accessMethod('getConnectionDetails')
             ->invoke($this->testObject);
 
-        $expectedConnectionString = 'banana:dbname=hot;host=cup;port=3380;';
+        $expectedConnectionString = 'banana:dbname=hot;host=cup;port=3380';
 
         // Assert Result
         $this->assertTrue(is_array($result));

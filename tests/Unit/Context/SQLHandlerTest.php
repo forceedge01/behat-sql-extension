@@ -9,6 +9,7 @@ use Genesis\SQLExtension\Context\Interfaces\SQLHistoryInterface;
 use Genesis\SQLExtension\Context\SQLHandler;
 use Exception;
 use Genesis\SQLExtension\Tests\TestHelper;
+use ReflectionClass;
 
 /**
  * @group sqlHandler
@@ -21,6 +22,10 @@ class SQLHandlerTest extends TestHelper
      */
     private $testObject;
 
+    /**
+     * @var ReflectionClass The reflection of the testObject.
+     */
+    private $reflection;
 
     /**
      * Setup test object.
@@ -59,12 +64,8 @@ class SQLHandlerTest extends TestHelper
             ->disableOriginalConstructor()
             ->getMock();
 
-        $this->testObject = new SQLHandler(
-            $this->dependencies['dbHelperMock'],
-            $this->dependencies['sqlBuilderMock'],
-            $this->dependencies['keyStoreMock'],
-            $this->dependencies['sqlHistoryMock']
-        );
+        $this->reflection = new ReflectionClass(SQLHandler::class);
+        $this->testObject = $this->reflection->newInstanceArgs($this->dependencies);
     }
 
     /**
@@ -575,6 +576,28 @@ class SQLHandlerTest extends TestHelper
 
         // Assert Result
         $this->assertEquals(123123, $result);
+    }
+
+    public function testGetLastId()
+    {
+        $expectedValue = 992837;
+
+        $property = $this->reflection->getProperty('entity');
+        $property->setAccessible(true);
+        $property->setValue($this->testObject, 'company');
+
+        $property = $this->reflection->getProperty('primaryKey');
+        $property->setAccessible(true);
+        $property->setValue($this->testObject, 'userId');
+
+        $this->dependencies['keyStoreMock']->expects($this->once())
+            ->method('getKeyword')
+            ->with('company.userId')
+            ->willReturn($expectedValue);
+
+        $result = $this->testObject->getLastId();
+
+        $this->assertEquals($expectedValue, $result);
     }
 
     /**

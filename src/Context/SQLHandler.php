@@ -359,7 +359,7 @@ class SQLHandler extends BehatContext implements Interfaces\SQLHandlerInterface
     {
         $entity = $this->getUserInputEntity($this->getEntity());
 
-        return $this->getKeyword($entity . '_id');
+        return $this->getKeyword($entity . '.' . $this->primaryKey);
     }
 
     /**
