@@ -226,63 +226,6 @@ class SQLContextTest extends TestHelper
 
     /**
      * Test that this method works with values provided.
-    //  */
-    // public function testIHaveAWhereWithValuesRecordAlreadyExists()
-    // {
-    //     $entity = 'database.unique';
-    //     $column = "column1:abc,column2:xyz,column3:NULL, column4:what\'s up doc";
-
-    //     $this->mockDependencyMethods(
-    //         'dbHelperMock',
-    //         [
-    //             'execute' => $this->getPdoStatementWithRows(1, [['name' => 'Abdul']]),
-    //             'hasFetchedRows' => true
-    //         ]
-    //     );
-
-    //     $convertedQuery1 = [
-    //         'column1' => 'abc',
-    //         'column2' => 'xyz',
-    //         'column3' => 'NULL',
-    //         'column4' => 'what\\\'s up doc'
-    //     ];
-
-    //     $this->mockDependency('sqlBuilder', 'convertToArray',
-    //             array(
-    //                 'column1:abc,column2:xyz,column3:NULL, column4:what\\\'s up doc'
-    //             ),
-    //             $convertedQuery1
-    //         );
-
-    //     $this->mockDependency(
-    //         'sqlBuilder',
-    //         'constructSQLClause',
-    //         array(
-    //             'select',
-    //             ' AND ',
-    //             $convertedQuery1
-    //         ),
-    //         "`column1` = 'abc' AND `column2` = 'xyz' AND `column3` is NULL AND `column4` = 'what\'s up doc'"
-    //     );
-
-    //     $this->mockDependency('sqlBuilder', 'getSearchConditionOperatorForColumns', null, ' AND ');
-    //     $this->mockDependency('dbHelperMock', 'getRequiredTableColumns', null, []);
-    //     $this->mockDependency('sqlBuilder', 'getPrefixedDatabaseName', null, 'dev_database');
-    //     $this->mockDependency('sqlBuilder', 'getTableName', null, 'unique');
-
-    //     $result = $this->testObject->iHaveAWhere($entity, $column);
-
-    //     // Expected SQL.
-    //     $expectedSQL = "SELECT * FROM dev_database.unique WHERE `column1` = 'abc' AND `column2` = 'xyz' AND `column3` is NULL AND `column4` = 'what\'s up doc'";
-
-    //     // Assert.
-    //     $this->assertEquals($expectedSQL, $result);
-    //     $this->assertNotNull($this->testObject->getEntity());
-    //     $this->assertEquals('select', $this->testObject->getCommandType());
-    // }
-
-    /**
-     * Test that this method works with values provided.
      */
     public function testIHaveAWhereWithValuesRecordDoesNotExists()
     {
