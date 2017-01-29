@@ -231,11 +231,11 @@ class SQLHandler extends BehatContext implements Interfaces\SQLHandlerInterface
         $this->throwExceptionIfErrors($statement);
         $this->throwErrorIfNoRowsAffected($statement);
 
-        $placeholder = $this->get('dbManager')->getFirstValueFromStatement($statement)[0];
+        $placeholderValue = $this->get('dbManager')->getFirstValueFromStatement($statement)[0];
 
-        Debugger::log(sprintf('Resolved external ref placeholder: "%s"', $placeholder));
+        Debugger::log(sprintf('Resolved external ref placeholder: "%s"', $placeholderValue));
 
-        return $placeholder;
+        return $placeholderValue;
     }
 
     /**
@@ -365,9 +365,7 @@ class SQLHandler extends BehatContext implements Interfaces\SQLHandlerInterface
      */
     public function getLastId()
     {
-        $entity = $this->getUserInputEntity($this->getEntity());
-
-        return $this->getKeyword($entity . '_id');
+        return $this->lastId;
     }
 
     /**
