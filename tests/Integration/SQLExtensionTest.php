@@ -219,7 +219,7 @@ class SQLExtensionTest extends TestHelper
 
         $result = $this->testObject->iHaveAWhere($entity, $column);
         // Expected SQL.
-        $expectedSQL = "SELECT * FROM dev_database.unique WHERE `column1` = 'abc' AND `column2` = 'xyz' AND `column3` is NULL AND `column4` = 'what\'s up doc'";
+        $expectedSQL = "SELECT * FROM `dev_database`.`unique` WHERE `column1` = 'abc' AND `column2` = 'xyz' AND `column3` is NULL AND `column4` = 'what\'s up doc'";
         // Assert.
         $this->assertEquals($expectedSQL, $result);
         $this->assertNotNull($this->testObject->getEntity());
@@ -254,7 +254,7 @@ class SQLExtensionTest extends TestHelper
             ));
         $result = $this->testObject->iHaveAWhere($entity, $column);
         // Expected SQL.
-        $expectedSQL = "INSERT INTO dev_database.unique1 (`column1`, `column2`, `column3`, `column4`) VALUES ('abc', 'xyz', NULL, 'what\'s up doc')";
+        $expectedSQL = "INSERT INTO `dev_database`.`unique1` (`column1`, `column2`, `column3`, `column4`) VALUES ('abc', 'xyz', NULL, 'what\'s up doc')";
         // Assert.
         $this->assertEquals($expectedSQL, $result);
         $this->assertNotNull($this->testObject->getEntity());
@@ -296,7 +296,7 @@ class SQLExtensionTest extends TestHelper
 
         $result = $this->testObject->iDontHaveAWhere($entity, $column);
         // Expected SQL.
-        $expectedSQL = "DELETE FROM dev_database.someTable WHERE `column1` = 'abc' AND `column2` = 'xyz' AND `column3` is NULL AND `column4` = 'what\'s up doc'";
+        $expectedSQL = "DELETE FROM `dev_database`.`someTable` WHERE `column1` = 'abc' AND `column2` = 'xyz' AND `column3` is NULL AND `column4` = 'what\'s up doc'";
         // Assert.
         $this->assertEquals($expectedSQL, $result);
         $this->assertNotNull($this->testObject->getEntity());
@@ -341,7 +341,7 @@ class SQLExtensionTest extends TestHelper
         $result = $this->testObject->iHaveAnExistingWithWhere($entity, $with, $columns);
 
         // Expected SQL.
-        $expectedSQL = "UPDATE dev_database.someTable2 SET `column1` = 'abc', `column2` = 'xyz', `column3` = NULL, `column4` = 'what\'s up doc' WHERE `id` = 134 AND `photo` is not NULL AND `column` = 'what\'s up doc'";
+        $expectedSQL = "UPDATE `dev_database`.`someTable2` SET `column1` = 'abc', `column2` = 'xyz', `column3` = NULL, `column4` = 'what\'s up doc' WHERE `id` = 134 AND `photo` is not NULL AND `column` = 'what\'s up doc'";
 
         // Assert.
         $this->assertEquals($expectedSQL, $result);
@@ -393,7 +393,7 @@ class SQLExtensionTest extends TestHelper
         $result = $this->testObject->iShouldNotHaveAWith($entity, $with);
 
         // Expected SQL.
-        $expectedSQL = "SELECT * FROM dev_database.someTable3 WHERE `column1` = 'abc' AND `column2` = 'xyz' AND `column3` = 'what\'s up doc'";
+        $expectedSQL = "SELECT * FROM `dev_database`.`someTable3` WHERE `column1` = 'abc' AND `column2` = 'xyz' AND `column3` = 'what\'s up doc'";
 
         // Assert.
         $this->assertEquals($expectedSQL, $result);
@@ -455,7 +455,7 @@ class SQLExtensionTest extends TestHelper
 
         $result = $this->testObject->iShouldNotHaveAWithTable($entity, $with);
         // Expected SQL.
-        $expectedSQL = "SELECT * FROM dev_database.someTable3 WHERE `column1` = 'abc' AND `column2` = 'xyz'";
+        $expectedSQL = "SELECT * FROM `dev_database`.`someTable3` WHERE `column1` = 'abc' AND `column2` = 'xyz'";
         // Assert.
         $this->assertEquals($expectedSQL, $result);
         $this->assertNotNull($this->testObject->getEntity());
@@ -550,7 +550,7 @@ class SQLExtensionTest extends TestHelper
 
         $result = $this->testObject->iShouldHaveAWithTable($entity, $with);
         // Expected SQL.
-        $expectedSQL = "SELECT * FROM dev_database.someTable4 WHERE `column1` = 'abc' AND `column2` = 'xyz' AND `column3` is NULL";
+        $expectedSQL = "SELECT * FROM `dev_database`.`someTable4` WHERE `column1` = 'abc' AND `column2` = 'xyz' AND `column3` is NULL";
         // Assert.
         $this->assertEquals($expectedSQL, $result);
         $this->assertNotNull($this->testObject->getEntity());
@@ -579,7 +579,7 @@ class SQLExtensionTest extends TestHelper
 
         $result = $this->testObject->iShouldHaveAWith($entity, $with);
         // Expected SQL.
-        $expectedSQL = "SELECT * FROM dev_database.someTable4 WHERE `column1` = 'abc' AND `column2` = 'xyz' AND `column3` is NULL AND `column4` is not NULL AND `column5` = 'what\'s up doc'";
+        $expectedSQL = "SELECT * FROM `dev_database`.`someTable4` WHERE `column1` = 'abc' AND `column2` = 'xyz' AND `column3` is NULL AND `column4` is not NULL AND `column5` = 'what\'s up doc'";
         // Assert.
         $this->assertEquals($expectedSQL, $result);
         $this->assertNotNull($this->testObject->getEntity());
@@ -609,7 +609,7 @@ class SQLExtensionTest extends TestHelper
 
         $result = $this->testObject->iShouldHaveAWith($entity, $with);
         // Expected SQL.
-        $expectedSQL = "SELECT * FROM dev_database.someTable4 WHERE `column1` = 'abc' AND `column2` LIKE '%xyz%'";
+        $expectedSQL = "SELECT * FROM `dev_database`.`someTable4` WHERE `column1` = 'abc' AND `column2` LIKE '%xyz%'";
         // Assert.
         $this->assertEquals($expectedSQL, $result);
         $this->assertNotNull($this->testObject->getEntity());
@@ -782,7 +782,7 @@ class SQLExtensionTest extends TestHelper
         $result = $this->testObject->insert($entity, $column);
 
         // Expected SQL.
-        $expectedSQL = "SELECT * FROM dev_database.unique WHERE `column1` = 'hjlasjdkfhlajksfdhklasdfj' AND `column2` = 3443 AND `column3` = 'what\'s up doc'";
+        $expectedSQL = "SELECT * FROM `dev_database`.`unique` WHERE `column1` = 'hjlasjdkfhlajksfdhklasdfj' AND `column2` = 3443 AND `column3` = 'what\'s up doc'";
 
         // Assert.
         $this->assertEquals($expectedSQL, $result);
@@ -827,7 +827,7 @@ class SQLExtensionTest extends TestHelper
         $result = $this->testObject->iShouldHaveAWith($entity, $column);
 
         // Expected SQL.
-        $expectedSQL = "SELECT * FROM dev_database.unique WHERE `column1` = 'hjlasjdkfhlajksfdhklasdfj' AND `column2` = 3443 AND `column3` = 'what\'s up doc'";
+        $expectedSQL = "SELECT * FROM `dev_database`.`unique` WHERE `column1` = 'hjlasjdkfhlajksfdhklasdfj' AND `column2` = 3443 AND `column3` = 'what\'s up doc'";
 
         // Assert.
         $this->assertEquals($expectedSQL, $result);

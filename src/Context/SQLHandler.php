@@ -84,6 +84,11 @@ class SQLHandler extends BehatContext implements Interfaces\SQLHandlerInterface
     private $sqlHistory;
 
     /**
+     * Holds the sql builder object.
+     */
+    private $sqlBuilder;
+
+    /**
      * Construct the object.
      *
      * @param Interfaces\DBManagerInterface $dbManager
@@ -398,20 +403,25 @@ class SQLHandler extends BehatContext implements Interfaces\SQLHandlerInterface
     }
 
     /**
-     * Set all keys from the current entity.
+     * Set keywords based on the sqlCommand object.
      *
-     * @param string $entity
-     * @param string $criteria
+     * @param Interfaces\Representations\SQLCommandInterface $sqlCommand The sqlCommand.
      */
-    public function setKeywordsFromCriteria($entity, $criteria)
+    public function setKeywordsFromSQLCommand(Interfaces\Representations\SQLCommandInterface $sqlCommand)
     {
-        $result = $this->fetchByCriteria(
-            $entity,
-            $criteria
-        );
+        $sql = $this->get('sqlBuilder')->getQuery($sqlCommand);
+        $statement = $this->execute($sql);
+        $result = $statement->fetchAll();
+
+        if (! $result) {
+            throw new Exceptions\RecordNotFoundException(
+                $sql,
+                $sqlCommand->getTable()
+            );
+        }
 
         return $this->setKeywordsFromRecord(
-            $entity,
+            $sqlCommand->getTable(),
             $result[0]
         );
     }
@@ -541,11 +551,7 @@ class SQLHandler extends BehatContext implements Interfaces\SQLHandlerInterface
      */
     public function makeSQLSafe($string)
     {
-        $string = str_replace('', '', $string);
-
-        $chunks = explode('.', $string);
-
-        return implode('.', $chunks);
+        return $string;
     }
 
     /**

@@ -2,10 +2,12 @@
 
 namespace Genesis\SQLExtension\Context\Representations;
 
+use Genesis\SQLExtension\Context\Interfaces\Representations\SQLCommandInterface;
+
 /**
  * SQLClause class.
  */
-class SQLCommand extends Representation
+class SQLCommand extends Representation implements SQLCommandInterface
 {
     /**
      * @var string $table.
@@ -13,9 +15,9 @@ class SQLCommand extends Representation
     private $table;
 
     /**
-     * @var array $select.
+     * @var array $column.
      */
-    private $select = [];
+    private $columns = [];
 
     /**
      * @var array $where.
@@ -28,14 +30,14 @@ class SQLCommand extends Representation
     private $type;
 
     /**
-     * @var string $glue.
+     * @var int $limit.
      */
-    private $glue;
+    private $limit;
 
     /**
-     * @var array $update.
+     * @var string The order.
      */
-    private $update = [];
+    private $order;
 
     /**
      * Get the table.
@@ -62,30 +64,6 @@ class SQLCommand extends Representation
     }
 
     /**
-     * Get the select.
-     *
-     * @return array
-     */
-    public function getSelect()
-    {
-        return $this->select;
-    }
-
-    /**
-     * Set the select.
-     *
-     * @param array $select
-     *
-     * @return $this
-     */
-    public function setSelect(array $select)
-    {
-        $this->select = $select;
-
-        return $this;
-    }
-
-    /**
      * Get the where.
      *
      * @return array
@@ -96,15 +74,69 @@ class SQLCommand extends Representation
     }
 
     /**
-     * Set the where.
+     * Add a where condition.
      *
-     * @param array $where
+     * @param string $column The column to set.
+     * @param string|int|null $value The value for the column.
+     *
+     * @return $this
+     */
+    public function addWhere($column, $value)
+    {
+        $this->where[$column] = $value;
+
+        return $this;
+    }
+
+    /**
+     * Set where params.
+     *
+     * @param array $where The where criteria.
      *
      * @return $this
      */
     public function setWhere(array $where)
     {
         $this->where = $where;
+
+        return $this;
+    }
+
+    /**
+     * Get the columns set.
+     *
+     * @return array
+     */
+    public function getColumns()
+    {
+        return $this->columns;
+    }
+
+    /**
+     * Add a column.
+     *
+     * @param string $column The column to set.
+     * @param string|int|null $value The value to set.
+     *
+     * @return $this
+     */
+    public function addColumn($column, $value = null)
+    {
+        $this->columns[$column] = $value;
+
+        return $this;
+    }
+
+    /**
+     * Set columns.
+     *
+     * @param array $columns The columns to set.
+     *
+     * @return $this
+     */
+    public function setColumns(array $columns)
+    {
+        $this->columns = $columns;
 
         return $this;
     }
@@ -134,49 +166,75 @@ class SQLCommand extends Representation
     }
 
     /**
-     * Get the glue.
+     * Return only columns set.
      *
-     * @return string
+     * @return array
      */
-    public function getGlue()
+    public function getColumnsOnly()
     {
-        return $this->glue;
+        return array_keys($this->columns);
     }
 
     /**
-     * Set the glue.
+     * Return only values set.
      *
-     * @param string $glue
+     * @return array
+     */
+    public function getValuesOnly()
+    {
+        return array_values($this->columns);
+    }
+
+    /**
+     * Get the limit.
+     *
+     * @return int
+     */
+    public function getLimit()
+    {
+        return $this->limit;
+    }
+
+    /**
+     * Set the limit.
+     *
+     * @param int $limit
      *
      * @return $this
      */
-    public function setGlue($glue)
+    public function setLimit($limit)
     {
-        $this->glue = $glue;
+        $this->limit = $limit;
 
         return $this;
     }
 
     /**
-     * Get the update.
+     * Get the order.
      *
-     * @return array
+     * @return string
      */
-    public function getUpdate()
+    public function getOrder()
     {
-        return $this->update;
+        return $this->order;
     }
 
     /**
-     * Set the update.
+     * Set the order.
      *
-     * @param array $update
+     * @param string $columns The columns separated by commas.
+     * @param string $order The ordering.
      *
      * @return $this
      */
-    public function setUpdate(array $update)
+    public function setOrder($column, $order)
     {
-        $this->update = $update;
+        $chunks = explode(',', $column);
+        array_walk($chunks, function (&$value) {
+            $value = '`' . trim($value) . '`';
+        });
+
+        $this->order = implode(', ', $chunks) . ' ' . $order;
 
         return $this;
     }

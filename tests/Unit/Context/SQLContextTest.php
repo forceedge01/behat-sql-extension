@@ -135,7 +135,13 @@ class SQLContextTest extends TestHelper
             'name' => 'Qureshi'
         ];
 
-        $this->mockDependency('sqlBuilder', 'getSearchConditionOperatorForColumns', null, ' AND ');
+// <<<<<<< HEAD
+        $this->dependencies['sqlBuilder']->expects($this->any())
+            ->method('getQuery')
+            ->with($this->isType('object'))
+            ->will($this->returnValue('abc'));
+// =======
+        // $this->mockDependency('sqlBuilder', 'getSearchConditionOperatorForColumns', null, ' AND ');
 
         $this->mockDependency('sqlBuilder', 'convertTableNodeToQueries', [$node], $queries);
 
@@ -263,6 +269,11 @@ class SQLContextTest extends TestHelper
         $this->mockDependency('sqlBuilder', 'getPrefixedDatabaseName', null, 'dev_database');
         $this->mockDependency('sqlBuilder', 'getTableName', null, 'unique');
 
+        $this->dependencies['sqlBuilder']->expects($this->any())
+            ->method('getQuery')
+            ->with($this->isType('object'))
+            ->will($this->returnValue("SELECT * FROM dev_database.unique WHERE `column1` = 'abc' AND `column2` = 'xyz' AND `column3` is NULL AND `column4` = 'what\'s up doc'"));
+
         $result = $this->testObject->iHaveAWhere($entity, $column);
 
         // Expected SQL.
@@ -327,6 +338,11 @@ class SQLContextTest extends TestHelper
         $this->mockDependency('sqlBuilder', 'getPrefixedDatabaseName', null, 'dev_database');
         $this->mockDependency('sqlBuilder', 'getTableName', null, 'unique1');
         $this->mockDependency('sqlBuilder', 'getSearchConditionOperatorForColumns', null, ' AND ');
+
+        $this->dependencies['sqlBuilder']->expects($this->any())
+            ->method('getQuery')
+            ->with($this->isType('object'))
+            ->will($this->returnValue("INSERT INTO dev_database.unique1 (`column1`) VALUES ('abc')"));
 
         $result = $this->testObject->iHaveAWhere($entity, $column);
 
@@ -400,6 +416,11 @@ class SQLContextTest extends TestHelper
         $this->mockDependency('sqlBuilder', 'getTableName', null, 'unique1');
         $this->mockDependency('sqlBuilder', 'getSearchConditionOperatorForColumns', null, ' AND ');
 
+        $this->dependencies['sqlBuilder']->expects($this->any())
+            ->method('getQuery')
+            ->with($this->isType('object'))
+            ->will($this->returnValue("INSERT INTO dev_database.unique1 (`column1`) VALUES ('abc')"));
+
         $result = $this->testObject->iHaveAWhere($entity, $column);
 
         // Expected SQL.
@@ -463,6 +484,11 @@ class SQLContextTest extends TestHelper
         $this->mockDependency('sqlBuilder', 'getPrefixedDatabaseName', null, 'dev_database');
         $this->mockDependency('sqlBuilder', 'getTableName', null, 'someTable');
         $this->mockDependency('sqlBuilder', 'getSearchConditionOperatorForColumns', null, ' AND ');
+
+        $this->dependencies['sqlBuilder']->expects($this->any())
+            ->method('getQuery')
+            ->with($this->isType('object'))
+            ->will($this->returnValue("DELETE FROM dev_database.someTable WHERE `column1` = 'abc' AND `column2` = 'xyz' AND `column3` is NULL AND `column4` = 'what\'s up doc'"));
 
         $result = $this->testObject->iDontHaveAWhere($entity, $column);
 
@@ -659,6 +685,11 @@ class SQLContextTest extends TestHelper
         $this->mockDependency('sqlBuilder', 'getTableName', null, 'someTable2');
         $this->mockDependency('sqlBuilder', 'getSearchConditionOperatorForColumns', null, ' AND ');
 
+        $this->dependencies['sqlBuilder']->expects($this->any())
+            ->method('getQuery')
+            ->with($this->isType('object'))
+            ->will($this->returnValue("UPDATE dev_database.someTable2 SET `column1` = 'abc', `column2` = 'xyz', `column3` = NULL, `column4` = 'what\'s up doc' WHERE `id` = 134 AND `photo` is not NULL AND `column` = 'what\'s up doc'"));
+
         $result = $this->testObject->iHaveAnExistingWithWhere($entity, $with, $columns);
 
         // Expected SQL.
@@ -712,6 +743,11 @@ class SQLContextTest extends TestHelper
         $this->mockDependency('sqlBuilder', 'getSearchConditionOperatorForColumns', null, ' AND ');
         $this->mockDependency('sqlBuilder', 'getPrefixedDatabaseName', null, 'dev_database');
         $this->mockDependency('sqlBuilder', 'getTableName', null, 'someTable2');
+
+        $this->dependencies['sqlBuilder']->expects($this->any())
+            ->method('getQuery')
+            ->with($this->isType('object'))
+            ->will($this->returnValue("SELECT * FROM dev_database.someTable2 WHERE `column1` = 'abc' AND `column2` = 'xyz' AND `column3` is NULL AND `column4` = 'what\'s up doc'"));
 
         $result = $this->testObject->iHaveAnExistingWhere($entity, $where);
 
@@ -769,6 +805,11 @@ class SQLContextTest extends TestHelper
         $this->mockDependency('sqlBuilder', 'getTableName', null, 'someTable4');
         $this->mockDependency('sqlBuilder', 'getSearchConditionOperatorForColumns', null, ' AND ');
 
+        $this->dependencies['sqlBuilder']->expects($this->any())
+            ->method('getQuery')
+            ->with($this->isType('object'))
+            ->will($this->returnValue("SELECT * FROM dev_database.someTable4 WHERE `column1` = 'abc' AND `column2` = 'xyz' AND `column3` is NULL"));
+
         $result = $this->testObject->iShouldHaveAWithTable($entity, $with);
 
         // Expected SQL.
@@ -814,6 +855,11 @@ class SQLContextTest extends TestHelper
         $this->mockDependency('sqlBuilder', 'getPrefixedDatabaseName', null, 'dev_database');
         $this->mockDependency('sqlBuilder', 'getTableName', null, 'someTable4');
         $this->mockDependency('sqlBuilder', 'getSearchConditionOperatorForColumns', null, ' AND ');
+
+        $this->dependencies['sqlBuilder']->expects($this->any())
+            ->method('getQuery')
+            ->with($this->isType('object'))
+            ->will($this->returnValue("SELECT * FROM dev_database.someTable4 WHERE `column1` = 'abc' AND `column2` = 'xyz' AND `column3` is not NULL"));
 
         $result = $this->testObject->iShouldHaveAWith($entity, $with);
 
@@ -919,6 +965,11 @@ class SQLContextTest extends TestHelper
         $this->mockDependency('sqlBuilder', 'getTableName', null, 'someTable3');
         $this->mockDependency('sqlBuilder', 'getSearchConditionOperatorForColumns', null, ' AND ');
 
+        $this->dependencies['sqlBuilder']->expects($this->any())
+            ->method('getQuery')
+            ->with($this->isType('object'))
+            ->will($this->returnValue("SELECT * FROM dev_database.someTable3 WHERE `column1` = 'abc' AND `column2` = 'xyz' AND `column3` = 'what\'s up doc'"));
+
         $result = $this->testObject->iShouldNotHaveAWith($entity, $with);
 
         $expectedSQL = "SELECT * FROM dev_database.someTable3 WHERE `column1` = 'abc' AND `column2` = 'xyz' AND `column3` = 'what\'s up doc'";
@@ -1005,6 +1056,11 @@ class SQLContextTest extends TestHelper
         $this->mockDependency('sqlBuilder', 'getSearchConditionOperatorForColumns', null, ' AND ');
         $this->mockDependency('sqlBuilder', 'getPrefixedDatabaseName', null, 'dev_database');
         $this->mockDependency('sqlBuilder', 'getTableName', null, 'someTable4');
+
+        $this->dependencies['sqlBuilder']->expects($this->any())
+            ->method('getQuery')
+            ->with($this->isType('object'))
+            ->will($this->returnValue("SELECT * FROM dev_database.someTable4 WHERE `column1` = 'abc' AND `column2` LIKE '%xyz%'"));
 
         $result = $this->testObject->iShouldHaveAWith($entity, $with);
 

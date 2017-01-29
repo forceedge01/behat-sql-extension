@@ -120,6 +120,15 @@ interface SQLBuilderInterface
     public function getTableName($entity);
 
     /**
+     * Build up sql query from sql command object.
+     *
+     * @param Representations\SQLCommandInterface $sqlCommand The sql command.
+     *
+     * @return string
+     */
+    public function getQuery(Representations\SQLCommandInterface $sqlCommand);
+
+    /**
      * Get the search condition operator for the columns provided.
      *
      * @param string $columns The columns to analyze.

@@ -107,15 +107,7 @@ interface SQLHandlerInterface
      * @param string $entity
      * @param string $criteria
      */
-    public function setKeywordsFromCriteria($entity, $criteria);
-
-    /**
-     * Get a record by a criteria.
-     * 
-     * @param string $entity
-     * @param string $criteria
-     */
-    public function fetchByCriteria($entity, $criteria);
+    // public function setKeywordsFromCriteria($entity, $criteria);
 
     /**
      * Set the record as keywords for re-use.
