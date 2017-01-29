@@ -65,36 +65,9 @@ class SQLContext extends SQLHandler implements Interfaces\SQLContextInterface
 
         // Normalize data.
         $this->setEntity($entity);
-        $this->setCommandType('select');
+        $columns = $this->resolveQuery($columns);
 
-        // Convert columns given to an array.
-        $searchConditionOperator = $this->get('sqlBuilder')->getSearchConditionOperatorForColumns($columns);
-        $columns = $this->convertToFilteredArray($columns);
-
-        // Check if the record exists.
-        $whereClause = $this->constructSQLClause($this->getCommandType(), $searchConditionOperator, $columns);
-
-        // Build up the sql command.
-        $sql = sprintf('SELECT * FROM %s WHERE %s', $this->getEntity(), $whereClause);
-
-        // Execute statement.
-        $statement = $this->execute($sql);
-
-        // If it does, set the last id and return.
-        if ($this->hasFetchedRows($statement)) {
-            // Set the last id to use from fetched row.
-            $result = $statement->fetchAll();
-
-            $this->setKeywordsFromRecord($this->getEntity(), $result[0]);
-
-            if (isset($result[0]['id'])) {
-                $this->handleLastId($this->getEntity(), $result[0]['id']);
-            }
-
-            return $sql;
-        }
-
-        $this->debugLog('No record found, trying to insert.');
+        // $this->debugLog('No record found, trying to insert.');
         $this->setCommandType('insert');
 
         // If the record does not already exist, create it.
@@ -106,27 +79,7 @@ class SQLContext extends SQLHandler implements Interfaces\SQLContextInterface
 
         // Throw exception if no rows were effected.
         $this->throwErrorIfNoRowsAffected($statement, self::IGNORE_DUPLICATE);
-        $result = $statement->fetchAll();
-
-        // Extract duplicate key and run update using it
-        if ($key = $this->getKeyFromDuplicateError($result)) {
-            // DEPCRECIATED, Probably need to get rid of this logic.
-            $this->debugLog(sprintf('Duplicate key found, running update using key "%s"', $key));
-
-            $this->iHaveAnExistingWithWhere(
-                $this->getEntity(),
-                $columns,
-                sprintf('%s:%s', $key, $columns[$key])
-            );
-
-            $whereClause = sprintf('%s = %s', $key, $this->quoteOrNot($columns[$key]));
-        }
-
-        try {
-            $this->setKeywordsFromCriteria($this->getEntity(), $whereClause);
-        } catch (\Exception $e) {
-            // ignore, as the keys may not be set because of dynamic function usage.
-        }
+        $this->setKeywordsFromId($this->getLastId());
 
         $this->get('dbManager')->closeStatement($statement);
 
@@ -162,10 +115,7 @@ class SQLContext extends SQLHandler implements Interfaces\SQLContextInterface
         $this->setEntity($entity);
         $this->setCommandType('delete');
 
-        // Construct the where clause.
-        $searchConditionOperator = $this->get('sqlBuilder')->getSearchConditionOperatorForColumns($columns);
-        $columns = $this->convertToFilteredArray($columns);
-        $whereClause = $this->constructSQLClause($this->getCommandType(), $searchConditionOperator, $columns);
+        $whereClause = $this->resolveQueryToSQLClause($this->getCommandType(), $columns);
 
         // Construct the delete statement.
         $sql = sprintf('DELETE FROM %s WHERE %s', $this->getEntity(), $whereClause);
@@ -246,13 +196,10 @@ class SQLContext extends SQLHandler implements Interfaces\SQLContextInterface
         $this->setCommandType('update');
 
         // Build up the update clause.
-        $with = $this->convertToFilteredArray($with);
+        $with = $this->resolveQuery($with);
         $updateClause = $this->constructSQLClause($this->getCommandType(), ', ', $with);
 
-        // Build up the where clause.
-        $searchConditionOperator = $this->get('sqlBuilder')->getSearchConditionOperatorForColumns($columns);
-        $columns = $this->convertToFilteredArray($columns);
-        $whereClause = $this->constructSQLClause($this->getCommandType(), $searchConditionOperator, $columns);
+        $whereClause = $this->resolveQueryToSQLClause($this->getCommandType(), $columns);
 
         // Build up the update statement.
         $sql = sprintf('UPDATE %s SET %s WHERE %s', $this->getEntity(), $updateClause, $whereClause);
@@ -294,13 +241,7 @@ class SQLContext extends SQLHandler implements Interfaces\SQLContextInterface
         $this->setEntity($entity);
         $this->setCommandType('select');
 
-        $searchConditionOperator = $this->get('sqlBuilder')->getSearchConditionOperatorForColumns($where);
-
-        // Create array out of the with string given.
-        $columns = $this->convertToFilteredArray($where);
-
-        // Create a usable sql clause.
-        $selectWhereClause = $this->constructSQLClause($this->getCommandType(), $searchConditionOperator, $columns);
+        $selectWhereClause = $this->resolveQueryToSQLClause($this->getCommandType(), $where);
 
         // Execute sql for setting last id.
         return $this->setKeywordsFromCriteria(
@@ -344,16 +285,10 @@ class SQLContext extends SQLHandler implements Interfaces\SQLContextInterface
         $this->debugLog('------- I SHOULD HAVE A WITH -------');
         $this->setEntity($entity);
 
-        $searchConditionOperator = $this->get('sqlBuilder')->getSearchConditionOperatorForColumns($with);
-
-        // Create array out of the with string given.
-        $columns = $this->convertToFilteredArray($with);
-
         // Set the clause type.
         $this->setCommandType('select');
 
-        // Create a usable sql clause.
-        $selectWhereClause = $this->constructSQLClause($this->getCommandType(), $searchConditionOperator, $columns);
+        $selectWhereClause = $this->resolveQueryToSQLClause($this->getCommandType(), $with);
 
         // Create the sql to be inserted.
         $sql = sprintf(
@@ -386,16 +321,10 @@ class SQLContext extends SQLHandler implements Interfaces\SQLContextInterface
 
         $this->setEntity($entity);
 
-        $searchConditionOperator = $this->get('sqlBuilder')->getSearchConditionOperatorForColumns($with);
-
-        // Create array out of the with string given.
-        $columns = $this->convertToFilteredArray($with);
-
         // Set clause type.
         $this->setCommandType('select');
 
-        // Create a usable sql clause.
-        $selectWhereClause = $this->constructSQLClause($this->getCommandType(), $searchConditionOperator, $columns);
+        $selectWhereClause = $this->resolveQueryToSQLClause($this->getCommandType(), $with);
 
         // Create the sql to be inserted.
         $sql = sprintf(
