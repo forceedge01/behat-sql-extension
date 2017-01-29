@@ -47,7 +47,7 @@ class SQLContextTest extends TestHelper
 
         $this->dependencies['dbHelperMock']->expects($this->any())
             ->method('getRequiredTableColumns')
-            ->will($this->returnValue(['id']));
+            ->will($this->returnValue([]));
 
         $this->dependencies['dbHelperMock']->expects($this->any())
             ->method('getParams')
