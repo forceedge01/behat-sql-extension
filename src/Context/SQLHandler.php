@@ -196,38 +196,46 @@ class SQLHandler extends BehatContext implements Interfaces\SQLHandlerInterface
 
         // Check for keywords.
         foreach ($columns as $column => $value) {
-            $keywordValue = $this->checkForKeyword($value);
-
             // Check if the value provided is a keyword or an external ref, if so get value.
-            if ($keywordValue != $value) {
-                $value = $keywordValue;
-            } elseif ($this->get('sqlBuilder')->isExternalReferencePlaceholder($value)) {
-                Debugger::log(sprintf('Resolving external ref: "%s"', $value));
-
-                $externalRef = $this->get('sqlBuilder')->getRefFromPlaceholder($value);
-
-                // Execute query and get value back.
-                $query = $this
-                    ->get('sqlBuilder')
-                    ->getSQLQueryForExternalReference(
-                        $externalRef,
-                        $this->getParams()['DBPREFIX']
-                    );
-
-                $this->setCommandType('select');
-                $statement = $this->execute($query);
-                $this->throwExceptionIfErrors($statement);
-                $this->throwErrorIfNoRowsAffected($statement);
-
-                $value = $this->get('dbManager')->getFirstValueFromStatement($statement)[0];
-
-                Debugger::log(sprintf('Resolved external ref value: "%s"', $value));
+            if ($this->get('sqlBuilder')->isExternalReferencePlaceholder($value)) {
+                $value = $this->resolveExternalReferencePlaceholder($value);
             }
 
             $filteredColumns[$column] = $value;
         }
 
         return $filteredColumns;
+    }
+
+    /**
+     * @param string $placeholder The placeholder to resolve.
+     *
+     * @return string
+     */
+    private function resolveExternalReferencePlaceholder($placeholder)
+    {
+        Debugger::log(sprintf('Resolving external ref: "%s"', $placeholder));
+
+        $externalRef = $this->get('sqlBuilder')->getRefFromPlaceholder($placeholder);
+
+        // Execute query and get placeholder back.
+        $query = $this
+            ->get('sqlBuilder')
+            ->getSQLQueryForExternalReference(
+                $externalRef,
+                $this->getParams()['DBPREFIX']
+            );
+
+        $this->setCommandType('select');
+        $statement = $this->execute($query);
+        $this->throwExceptionIfErrors($statement);
+        $this->throwErrorIfNoRowsAffected($statement);
+
+        $placeholder = $this->get('dbManager')->getFirstValueFromStatement($statement)[0];
+
+        Debugger::log(sprintf('Resolved external ref placeholder: "%s"', $placeholder));
+
+        return $placeholder;
     }
 
     /**
@@ -699,5 +707,43 @@ class SQLHandler extends BehatContext implements Interfaces\SQLHandlerInterface
         $this->get('dbManager')->closeStatement($statement);
 
         return $result;
+    }
+
+    /**
+     * @param string $query The query to resolve.
+     *
+     * @return array
+     */
+    protected function resolveQuery($query)
+    {
+        $query = $this->get('keyStore')->parseKeywordsInString($query);
+
+        return $this->convertToFilteredArray($query);
+    }
+
+    /**
+     * @param string $commandType The command type.
+     * @param string $query The query to resolve to sql clause.
+     *
+     * @return string
+     */
+    protected function resolveQueryToSQLClause($commandType, $query)
+    {
+        $query = $this->resolveQuery($query);
+
+        $searchConditionOperator = $this->get('sqlBuilder')->getSearchConditionOperatorForColumns($query);
+        $sqlClause = $this->constructSQLClause($commandType, $searchConditionOperator, $query);
+
+        return $sqlClause;
+    }
+
+    /**
+     * @param int $id The id.
+     *
+     * @return void
+     */
+    protected function setKeywordsFromId($id)
+    {
+        $this->setKeywordsFromCriteria($this->getEntity(), "{$this->primaryKey} = {$id}");
     }
 }
