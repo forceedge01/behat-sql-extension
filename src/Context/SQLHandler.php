@@ -729,9 +729,9 @@ class SQLHandler extends BehatContext implements Interfaces\SQLHandlerInterface
      */
     protected function resolveQueryToSQLClause($commandType, $query)
     {
-        $query = $this->resolveQuery($query);
+        $resolveQuery = $this->resolveQuery($query);
         $searchConditionOperator = $this->get('sqlBuilder')->getSearchConditionOperatorForColumns($query);
-        $sqlClause = $this->constructSQLClause($commandType, $searchConditionOperator, $query);
+        $sqlClause = $this->constructSQLClause($commandType, $searchConditionOperator, $resolveQuery);
 
         return $sqlClause;
     }
