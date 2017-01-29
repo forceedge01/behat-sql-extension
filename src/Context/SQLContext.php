@@ -74,7 +74,7 @@ class SQLContext extends SQLHandler implements Interfaces\SQLContextInterface
         list($columnNames, $columnValues) = $this->getTableColumns($this->getEntity(), $columns);
 
         // Build up the sql.
-        $sql = sprintf('INSERT INTO %s (%s) VALUES (%s)', $this->getEntity(), $columnNames, $columnValues);
+        $sql = "INSERT INTO {$this->getEntity()} ({$columnNames}) VALUES ({$columnValues})";
         $statement = $this->execute($sql);
 
         // Throw exception if no rows were effected.
