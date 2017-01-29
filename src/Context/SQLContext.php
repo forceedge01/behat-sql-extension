@@ -118,7 +118,7 @@ class SQLContext extends SQLHandler implements Interfaces\SQLContextInterface
         $whereClause = $this->resolveQueryToSQLClause($this->getCommandType(), $columns);
 
         // Construct the delete statement.
-        $sql = sprintf('DELETE FROM %s WHERE %s', $this->getEntity(), $whereClause);
+        $sql = "DELETE FROM {$this->getEntity()} WHERE {$whereClause}";
 
         // Execute statement.
         $statement = $this->execute($sql);
@@ -202,7 +202,7 @@ class SQLContext extends SQLHandler implements Interfaces\SQLContextInterface
         $whereClause = $this->resolveQueryToSQLClause($this->getCommandType(), $columns);
 
         // Build up the update statement.
-        $sql = sprintf('UPDATE %s SET %s WHERE %s', $this->getEntity(), $updateClause, $whereClause);
+        $sql = "UPDATE {$this->getEntity()} SET {$updateClause} WHERE {$whereClause}";
 
         // Execute statement.
         $statement = $this->execute($sql);
@@ -291,11 +291,7 @@ class SQLContext extends SQLHandler implements Interfaces\SQLContextInterface
         $selectWhereClause = $this->resolveQueryToSQLClause($this->getCommandType(), $with);
 
         // Create the sql to be inserted.
-        $sql = sprintf(
-            'SELECT * FROM %s WHERE %s',
-            $this->getEntity(),
-            $selectWhereClause
-        );
+        $sql = "SELECT * FROM {$this->getEntity()} WHERE {$selectWhereClause}";
 
         // Execute the sql query, if the query throws a generic not found error,
         // catch it and give it some context.
@@ -327,11 +323,7 @@ class SQLContext extends SQLHandler implements Interfaces\SQLContextInterface
         $selectWhereClause = $this->resolveQueryToSQLClause($this->getCommandType(), $with);
 
         // Create the sql to be inserted.
-        $sql = sprintf(
-            'SELECT * FROM %s WHERE %s',
-            $this->getEntity(),
-            $selectWhereClause
-        );
+        $sql = "SELECT * FROM {$this->getEntity()} WHERE {$selectWhereClause}";
 
         // Execute the sql query, if the query throws a generic not found error,
         // catch it and give it some context.
