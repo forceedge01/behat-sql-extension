@@ -97,4 +97,13 @@ interface SQLContextInterface
      * @return string
      */
     public function select($table, $where);
+
+    /**
+     * Get a dependency.
+     *
+     * @param string $dependency.
+     *
+     * @return object
+     */
+    public function get($dependency);
 }
