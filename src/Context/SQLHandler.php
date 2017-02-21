@@ -365,7 +365,9 @@ class SQLHandler extends BehatContext implements Interfaces\SQLHandlerInterface
      */
     public function getLastId()
     {
-        return $this->lastId;
+        $entity = $this->getUserInputEntity($this->getEntity());
+
+        return $this->getKeyword($entity . '.' . $this->primaryKey);
     }
 
     /**
