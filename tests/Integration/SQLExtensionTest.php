@@ -45,94 +45,6 @@ class SQLExtensionTest extends TestHelper
     /**
      * @group test
      */
-    public function testIHaveWhereAlreadyExists()
-    {
-        $entity = 'database.unique';
-        $node = new TableNode();
-        // Add title row.
-        $node->addRow([
-            'email',
-            'name'
-        ]);
-        // Add data.
-        $node->addRow([
-            'its.inevitable@hotmail.com',
-            'Abdul'
-        ]);
-        // Add more data.
-        $node->addRow([
-            'forceedge01@gmail.com',
-            'Qureshi'
-        ]);
-        $this->testObject->get('dbManager')->getConnection()->expects($this->any())
-            ->method('prepare')
-            ->with($this->isType('string'))
-            ->willReturn($this->getPdoStatementWithRows(
-                1,
-                [
-                    [
-                        0 => 'id',
-                        'id' => 234324,
-                        'name' => 'Abdul',
-                        'email' => 'its.inevitable@hotmail.com'
-                    ]
-                ]
-            ));
-
-        $sqls = $this->testObject->iHaveWhere($entity, $node);
-        $this->assertCount(2, $sqls);
-        $this->assertEquals(234324, $this->testObject->getKeyword(sprintf('%s_id', $entity)));
-        $this->assertEquals(234324, $this->testObject->getKeyword(sprintf('%s.id', $entity)));
-        $this->assertEquals('its.inevitable@hotmail.com', $this->testObject->getKeyword(sprintf('%s_email', $entity)));
-        $this->assertEquals('its.inevitable@hotmail.com', $this->testObject->getKeyword(sprintf('%s.email', $entity)));
-        $this->assertEquals('Abdul', $this->testObject->getKeyword(sprintf('%s_name', $entity)));
-
-        // Check history.
-        $this->assertCount(0, $this->testObject->get('sqlHistory')->getHistory()['insert']);
-        $this->assertCount(2, $this->testObject->get('sqlHistory')->getHistory()['select']);
-        $this->assertCount(0, $this->testObject->get('sqlHistory')->getHistory()['delete']);
-        $this->assertCount(0, $this->testObject->get('sqlHistory')->getHistory()['update']);
-    }
-
-    /**
-     * @group test
-     */
-    public function testIHaveAlreadyExists()
-    {
-        $node = new TableNode();
-        // Add title row.
-        $node->addRow([
-            'table',
-            'values'
-        ]);
-        // Add data.
-        $node->addRow([
-            'table1',
-            "id:34234, name:abdul"
-        ]);
-        // Add more data.
-        $node->addRow([
-            'table2',
-            'id:34234, name:Jenkins'
-        ]);
-        $this->testObject->get('dbManager')->getConnection()->expects($this->any())
-            ->method('prepare')
-            ->with($this->isType('string'))
-            ->willReturn($this->getPdoStatementWithRows(1, [[0 => 'id', 'id' => 234324]]));
-
-        $sqls = $this->testObject->iHave($node);
-        $this->assertCount(2, $sqls);
-
-        // Check history.
-        $this->assertCount(0, $this->testObject->get('sqlHistory')->getHistory()['insert']);
-        $this->assertCount(2, $this->testObject->get('sqlHistory')->getHistory()['select']);
-        $this->assertCount(0, $this->testObject->get('sqlHistory')->getHistory()['delete']);
-        $this->assertCount(0, $this->testObject->get('sqlHistory')->getHistory()['update']);
-    }
-
-    /**
-     * @group test
-     */
     public function testIDontHaveWhere()
     {
         $entity = 'database.unique';
@@ -206,36 +118,6 @@ class SQLExtensionTest extends TestHelper
     /**
      * Test that this method works with values provided.
      *
-     * @group test
-     */
-    public function testIHaveAWhereWithValuesRecordAlreadyExists()
-    {
-        $entity = 'database.unique';
-        $column = "column1:abc,column2:xyz,column3:NULL, column4:what\'s up doc";
-        $this->testObject->get('dbManager')->getConnection()->expects($this->any())
-            ->method('prepare')
-            ->with($this->isType('string'))
-            ->willReturn($this->getPdoStatementWithRows(1, [[0 => 'id', 'id' => 234324]]));
-
-        $result = $this->testObject->iHaveAWhere($entity, $column);
-        // Expected SQL.
-        $expectedSQL = "SELECT * FROM dev_database.unique WHERE `column1` = 'abc' AND `column2` = 'xyz' AND `column3` is NULL AND `column4` = 'what\'s up doc'";
-        // Assert.
-        $this->assertEquals($expectedSQL, $result);
-        $this->assertNotNull($this->testObject->getEntity());
-        $this->assertEquals(234324, $this->testObject->getKeyword('database.unique_id'));
-        $this->assertEquals('select', $this->testObject->getCommandType());
-
-        // Check history.
-        $this->assertCount(0, $this->testObject->get('sqlHistory')->getHistory()['insert']);
-        $this->assertCount(1, $this->testObject->get('sqlHistory')->getHistory()['select']);
-        $this->assertCount(0, $this->testObject->get('sqlHistory')->getHistory()['delete']);
-        $this->assertCount(0, $this->testObject->get('sqlHistory')->getHistory()['update']);
-    }
-
-    /**
-     * Test that this method works with values provided.
-     *
      * @group testing
      */
     public function testIHaveAWhereWithValuesRecordDoesNotExists()
@@ -246,7 +128,6 @@ class SQLExtensionTest extends TestHelper
             ->method('prepare')
             ->with($this->isType('string'))
             ->will($this->onConsecutiveCalls(
-                $this->getPdoStatementWithRows(1, [['id']]),
                 $this->getPdoStatementWithRows(0),
                 $this->getPdoStatementWithRows(1, [['column_name' => 'id', 'data_type' => 'int']]),
                 $this->getPdoStatementWithRows(1, [[0 => 'id', 'id' => 237463]]),
@@ -264,7 +145,7 @@ class SQLExtensionTest extends TestHelper
 
         // Check history.
         $this->assertCount(1, $this->testObject->get('sqlHistory')->getHistory()['insert']);
-        $this->assertCount(2, $this->testObject->get('sqlHistory')->getHistory()['select']);
+        $this->assertCount(1, $this->testObject->get('sqlHistory')->getHistory()['select']);
         $this->assertCount(0, $this->testObject->get('sqlHistory')->getHistory()['delete']);
         $this->assertCount(0, $this->testObject->get('sqlHistory')->getHistory()['update']);
     }
@@ -622,8 +503,6 @@ class SQLExtensionTest extends TestHelper
     }
 
     /**
-     * @expectedException Exception
-     *
      * @group test
      */
     public function testISaveTheIdAs()
@@ -775,14 +654,18 @@ class SQLExtensionTest extends TestHelper
         $this->testObject->get('dbManager')->getConnection()->expects($this->any())
             ->method('prepare')
             ->with($this->isType('string'))
-            ->willReturn($this->getPdoStatementWithRows(1, [
-                $expectedResult
-            ]));
+            ->will($this->onConsecutiveCalls(
+                $this->getPdoStatementWithRows(0, [[0 => 'id']]),
+                $this->getPdoStatementWithRows(1, true),
+                $this->getPdoStatementWithRows(1, [['column_name' => 'id', 'data_type' => 'int']]),
+                $this->getPdoStatementWithRows(1, true),
+                $this->getPdoStatementWithRows(1, [[0 => 'id', 'id' => 237463]])
+            ));
 
         $result = $this->testObject->insert($entity, $column);
 
         // Expected SQL.
-        $expectedSQL = "SELECT * FROM dev_database.unique WHERE `column1` = 'hjlasjdkfhlajksfdhklasdfj' AND `column2` = 3443 AND `column3` = 'what\'s up doc'";
+        $expectedSQL = "INSERT INTO dev_database.unique (`column1`, `column2`, `column3`) VALUES ('hjlasjdkfhlajksfdhklasdfj', 'behat-test-string-234234234', 'what\'s up doc')";
 
         // Assert.
         $this->assertEquals($expectedSQL, $result);
@@ -790,7 +673,7 @@ class SQLExtensionTest extends TestHelper
         $this->assertEquals('select', $this->testObject->getCommandType());
 
         // Check history.
-        $this->assertCount(0, $this->testObject->get('sqlHistory')->getHistory()['insert']);
+        $this->assertCount(1, $this->testObject->get('sqlHistory')->getHistory()['insert']);
         $this->assertCount(2, $this->testObject->get('sqlHistory')->getHistory()['select']);
         $this->assertCount(0, $this->testObject->get('sqlHistory')->getHistory()['delete']);
         $this->assertCount(0, $this->testObject->get('sqlHistory')->getHistory()['update']);
@@ -849,22 +732,33 @@ class SQLExtensionTest extends TestHelper
     {
         $entity = 'database.unique';
         $column = "column1:abc||column2:[user.id|abc:1||name:Abdul]||column3:what\'s up doc";
+        // $this->testObject->get('dbManager')->getConnection()->expects($this->any())
+        //     ->method('prepare')
+        //     ->with($this->isType('string'))
+        //     ->willReturn($this->getPdoStatementWithRows(1, [[0 => 234324, 'id' => 234324]]));
+
         $this->testObject->get('dbManager')->getConnection()->expects($this->any())
             ->method('prepare')
             ->with($this->isType('string'))
-            ->willReturn($this->getPdoStatementWithRows(1, [[0 => 234324, 'id' => 234324]]));
+            ->will($this->onConsecutiveCalls(
+                $this->getPdoStatementWithRows(0, [[0 => 'id']]),
+                $this->getPdoStatementWithRows(1, true),
+                $this->getPdoStatementWithRows(1, [['column_name' => 'id', 'data_type' => 'int']]),
+                $this->getPdoStatementWithRows(1, true),
+                $this->getPdoStatementWithRows(1, [[0 => 'id', 'id' => 237463]])
+            ));
 
         $result = $this->testObject->iHaveAWhere($entity, $column);
         // Expected SQL.
-        $expectedSQL = "SELECT * FROM dev_database.unique WHERE `column1` = 'abc' OR `column2` = 234324 OR `column3` = 'what\'s up doc'";
+        $expectedSQL = "INSERT INTO dev_database.unique (`column1`, `column2`, `column3`) VALUES ('abc', 'behat-test-string-234234234', 'what\'s up doc')";
         // Assert.
         $this->assertEquals($expectedSQL, $result);
         $this->assertNotNull($this->testObject->getEntity());
-        $this->assertEquals(234324, $this->testObject->getKeyword('database.unique_id'));
+        $this->assertEquals(237463, $this->testObject->getKeyword('database.unique_id'));
         $this->assertEquals('select', $this->testObject->getCommandType());
 
         // Check history.
-        $this->assertCount(0, $this->testObject->get('sqlHistory')->getHistory()['insert']);
+        $this->assertCount(1, $this->testObject->get('sqlHistory')->getHistory()['insert']);
         $this->assertCount(2, $this->testObject->get('sqlHistory')->getHistory()['select']);
         $this->assertCount(0, $this->testObject->get('sqlHistory')->getHistory()['delete']);
         $this->assertCount(0, $this->testObject->get('sqlHistory')->getHistory()['update']);
