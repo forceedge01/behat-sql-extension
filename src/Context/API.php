@@ -25,13 +25,13 @@ class API extends SQLHandler implements Interfaces\APIInterface
     /**
      * {@inheritDoc}
      */
-    public function insert($table, $values)
+    public function insert($table, $columns)
     {
         $this->debugLog('------- I HAVE WHERE -------');
         $this->debugLog('Trying to select existing record.');
 
         // Normalize data.
-        $this->setEntity($entity);
+        $this->setEntity($table);
         $columns = $this->resolveQuery($columns);
 
         // $this->debugLog('No record found, trying to insert.');
@@ -45,7 +45,7 @@ class API extends SQLHandler implements Interfaces\APIInterface
         $statement = $this->execute($sql);
 
         // Throw exception if no rows were effected.
-        $this->throwErrorIfNoRowsAffected($statement, self::IGNORE_DUPLICATE);
+        $this->throwErrorIfNoRowsAffected($statement, Interfaces\SQLHandlerInterface::IGNORE_DUPLICATE);
         $this->setKeywordsFromId($this->getLastId());
 
         $this->get('dbManager')->closeStatement($statement);
@@ -56,7 +56,7 @@ class API extends SQLHandler implements Interfaces\APIInterface
     /**
      * {@inheritDoc}
      */
-    public function delete($table, $where)
+    public function delete($table, $columns)
     {
         $this->debugLog('------- I DONT HAVE WHERE -------');
 
@@ -64,7 +64,7 @@ class API extends SQLHandler implements Interfaces\APIInterface
             throw new Exception('You must provide a where clause!');
         }
 
-        $this->setEntity($entity);
+        $this->setEntity($table);
         $this->setCommandType('delete');
 
         $whereClause = $this->resolveQueryToSQLClause($this->getCommandType(), $columns);
@@ -85,7 +85,7 @@ class API extends SQLHandler implements Interfaces\APIInterface
     /**
      * {@inheritDoc}
      */
-    public function update($table, $update, $where)
+    public function update($table, $with, $columns)
     {
         $this->debugLog('------- I HAVE AN EXISTING WITH WHERE -------');
 
@@ -93,7 +93,7 @@ class API extends SQLHandler implements Interfaces\APIInterface
             throw new Exception('You must provide a where clause!');
         }
 
-        $this->setEntity($entity);
+        $this->setEntity($table);
         $this->setCommandType('update');
 
         // Build up the update clause.
@@ -126,7 +126,7 @@ class API extends SQLHandler implements Interfaces\APIInterface
     {
         $this->debugLog('------- I HAVE AN EXISTING WHERE -------');
 
-        $this->setEntity($entity);
+        $this->setEntity($table);
         $this->setCommandType('select');
 
         $selectWhereClause = $this->resolveQueryToSQLClause($this->getCommandType(), $where);
@@ -141,10 +141,10 @@ class API extends SQLHandler implements Interfaces\APIInterface
     /**
      * {@inheritDoc}
      */
-    public function assertExists($table, $where)
+    public function assertExists($table, $with)
     {
         $this->debugLog('------- I SHOULD HAVE A WITH -------');
-        $this->setEntity($entity);
+        $this->setEntity($table);
 
         // Set the clause type.
         $this->setCommandType('select');
@@ -172,11 +172,11 @@ class API extends SQLHandler implements Interfaces\APIInterface
     /**
      * {@inheritDoc}
      */
-    public function assertNotExists($table, $where)
+    public function assertNotExists($table, $with)
     {
         $this->debugLog('------- I SHOULD NOT HAVE A WHERE -------');
 
-        $this->setEntity($entity);
+        $this->setEntity($table);
 
         // Set clause type.
         $this->setCommandType('select');

@@ -98,23 +98,18 @@ class SQLContextTest extends TestHelper
     public function testIHaveWhere()
     {
         $entity = 'database.unique';
-        $node = new TableNode();
-        // Add title row.
-        $node->addRow([
+        $node = new TableNode([
+            [
             'email',
             'name'
-        ]);
-
-        // Add data.
-        $node->addRow([
+        ],[
             'its.inevitable@hotmail.com',
             'Abdul'
-        ]);
-
-        // Add more data.
-        $node->addRow([
+        ],[
             'forceedge01@gmail.com',
             'Qureshi'
+        ]
+
         ]);
 
         $this->mockDependencyMethods(
@@ -167,23 +162,19 @@ class SQLContextTest extends TestHelper
      */
     public function testIHave()
     {
-        $node = new TableNode();
-        // Add title row.
-        $node->addRow([
+        $node = new TableNode([
+            [
             'table',
             'values'
-        ]);
-
-        // Add data.
-        $node->addRow([
+        ],
+        [
             'table1',
             "email:its.inevitable@hotmail.com, name:Abdul"
-        ]);
-
-        // Add more data.
-        $node->addRow([
+        ],
+        [
             'table2',
             'email:forceedge01@gmail.com, name:Qureshi'
+        ]
         ]);
 
         $this->mockDependencyMethods(
@@ -431,23 +422,19 @@ class SQLContextTest extends TestHelper
     public function testIDontHaveWhere()
     {
         $entity = 'database.unique';
-        $node = new TableNode();
-        // Add title row.
-        $node->addRow([
+        $node = new TableNode([
+            [
             'email',
             'name'
-        ]);
-
-        // Add data.
-        $node->addRow([
+        ],
+        [
             'its.inevitable@hotmail.com',
             'Abdul'
-        ]);
-
-        // Add more data.
-        $node->addRow([
+        ],
+        [
             'forceedge01@gmail.com',
             'Qureshi'
+        ]
         ]);
 
         $this->mockDependencyMethods(
@@ -496,23 +483,19 @@ class SQLContextTest extends TestHelper
      */
     public function testIDontHave()
     {
-        $node = new TableNode();
-        // Add title row.
-        $node->addRow([
+        $node = new TableNode([
+            [
             'table',
             'values'
-        ]);
-
-        // Add data.
-        $node->addRow([
+        ],
+        [
             'table1',
             "email:its.inevitable@hotmail.com,name:Abdul"
-        ]);
-
-        // Add more data.
-        $node->addRow([
+        ],
+        [
             'table2',
             'email:forceedge01@gmail.com,name:Qureshi'
+        ]
         ]);
 
         $this->mockDependencyMethods(
@@ -674,22 +657,23 @@ class SQLContextTest extends TestHelper
     public function testiShouldHaveAWithTableNode()
     {
         $entity = 'database.someTable4';
-        $with = new TableNode();
-        $with->addRow([
+        $with = new TableNode([
+            [
             'title',
             'value'
-        ]);
-        $with->addRow([
+        ],
+        [
             'column1',
             'abc'
-        ]);
-        $with->addRow([
+        ],
+        [
             'column2',
             'xyz'
-        ]);
-        $with->addRow([
+        ],
+        [
             'column3',
             'NULL'
+        ]
         ]);
 
         $this->mockDependency(
@@ -884,18 +868,19 @@ class SQLContextTest extends TestHelper
     public function testiShouldNotHaveAWithWithTableNode()
     {
         $entity = 'database.someTable3';
-        $with = new TableNode();
-        $with->addRow([
+        $with = new TableNode([
+            [
             'title',
             'value'
-        ]);
-        $with->addRow([
+        ],
+        [
             'column1',
             'abc'
-        ]);
-        $with->addRow([
+        ],
+        [
             'column2',
             'xyz'
+        ]
         ]);
 
         $this->mockDependency(

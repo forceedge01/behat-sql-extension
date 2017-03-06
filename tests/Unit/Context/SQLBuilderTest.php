@@ -271,23 +271,10 @@ class SQLBuilderTest extends TestHelper
     public function testConvertTableNodeToQueries()
     {
         // Mock.
-        $node = new TableNode();
-        // Add title row.
-        $node->addRow([
-            'email',
-            'name'
-        ]);
-
-        // Add data.
-        $node->addRow([
-            'its.inevitable@hotmail.com',
-            'Abdul'
-        ]);
-
-        // Add more data.
-        $node->addRow([
-            'forceedge01@gmail.com',
-            'Qureshi'
+        $node = new TableNode([
+            ['email', 'name'],
+            ['its.inevitable@hotmail.com', 'Abdul'],
+            ['forceedge01@gmail.com', 'Qureshi']
         ]);
 
         // Run.
@@ -307,12 +294,7 @@ class SQLBuilderTest extends TestHelper
     public function testConvertTableNodeToQueriesNoRows()
     {
         // Mock.
-        $node = new TableNode();
-        // Add title row.
-        $node->addRow([
-            'email',
-            'name'
-        ]);
+        $node = new TableNode([['email', 'name']]);
 
         // Run.
         $this->testObject->convertTableNodeToQueries($node);
@@ -323,22 +305,11 @@ class SQLBuilderTest extends TestHelper
      */
     public function testConvertTableNodeToSingleContextClauseTableNode()
     {
-        $node = new TableNode();
-        $node->addRow([
-            'title',
-            'value'
-        ]);
-        $node->addRow([
-            'email',
-            'its.inevitable@hotmail'
-        ]);
-        $node->addRow([
-            'name',
-            'Abdul'
-        ]);
-        $node->addRow([
-            'age',
-            26
+        $node = new TableNode([
+            ['title', 'value'],
+            ['email', 'its.inevitable@hotmail'],
+            ['name', 'Abdul'],
+            ['age', 26]
         ]);
 
         $result = $this->testObject->convertTableNodeToSingleContextClause($node);
@@ -348,15 +319,13 @@ class SQLBuilderTest extends TestHelper
 
     /**
      * Test that convertTableNodeToSingleContextClause works as expected.
-     * 
+     *
      * @expectedException Exception
      */
     public function testConvertTableNodeToSingleContextClauseTableNodeNoData()
     {
-        $node = new TableNode();
-        $node->addRow([
-            'title',
-            'value'
+        $node = new TableNode([
+            ['title', 'value']
         ]);
 
         $this->testObject->convertTableNodeToSingleContextClause($node);
