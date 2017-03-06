@@ -1,6 +1,6 @@
 <?php
 
-namespace Genesis\SQLExtension\Tests\Integation\Context;
+namespace Genesis\SQLExtension\Tests\Integation;
 
 use Behat\Gherkin\Node\TableNode;
 use Genesis\SQLExtension\Context;
@@ -48,21 +48,19 @@ class SQLExtensionTest extends TestHelper
     public function testIDontHaveWhere()
     {
         $entity = 'database.unique';
-        $node = new TableNode();
-        // Add title row.
-        $node->addRow([
-            'email',
-            'name'
-        ]);
-        // Add data.
-        $node->addRow([
-            'its.inevitable@hotmail.com',
-            'Abdul'
-        ]);
-        // Add more data.
-        $node->addRow([
-            'forceedge01@gmail.com',
-            'Qureshi'
+        $node = new TableNode([
+            [
+                'email',
+                'name'
+            ],
+            [
+                'its.inevitable@hotmail.com',
+                'Abdul'
+            ],
+            [
+                'forceedge01@gmail.com',
+                'Qureshi'
+            ]
         ]);
         $this->testObject->get('dbManager')->getConnection()->expects($this->any())
             ->method('prepare')
@@ -84,21 +82,19 @@ class SQLExtensionTest extends TestHelper
      */
     public function testIDontHave()
     {
-        $node = new TableNode();
-        // Add title row.
-        $node->addRow([
-            'table',
-            'values'
-        ]);
-        // Add data.
-        $node->addRow([
-            'table1',
-            'id:34234, name:abdul'
-        ]);
-        // Add more data.
-        $node->addRow([
-            'table2',
-            'id:34234, name:Jenkins'
+        $node = new TableNode([
+            [
+                'table',
+                'values'
+            ],
+            [
+                'table1',
+                'id:34234, name:abdul'
+            ],
+            [
+                'table2',
+                'id:34234, name:Jenkins'
+            ]
         ]);
         $this->testObject->get('dbManager')->getConnection()->expects($this->any())
             ->method('prepare')
@@ -316,18 +312,19 @@ class SQLExtensionTest extends TestHelper
     public function testiShouldNotHaveAWithWithTableNode()
     {
         $entity = 'database.someTable3';
-        $with = new TableNode();
-        $with->addRow([
-            'title',
-            'value'
-        ]);
-        $with->addRow([
-            'column1',
-            'abc'
-        ]);
-        $with->addRow([
-            'column2',
-            'xyz'
+        $with = new TableNode([
+            [
+                'title',
+                'value'
+            ],
+            [
+                'column1',
+                'abc'
+            ],
+            [
+                'column2',
+                'xyz'
+            ]
         ]);
         $this->testObject->get('dbManager')->getConnection()->expects($this->any())
             ->method('prepare')
@@ -359,18 +356,19 @@ class SQLExtensionTest extends TestHelper
     public function testiShouldNotHaveAWithWithTableNodeFindsRows()
     {
         $entity = 'database.someTable3';
-        $with = new TableNode();
-        $with->addRow([
-            'title',
-            'value'
-        ]);
-        $with->addRow([
-            'column1',
-            'abc'
-        ]);
-        $with->addRow([
-            'column2',
-            'xyz'
+        $with = new TableNode([
+            [
+                'title',
+                'value'
+            ],
+            [
+                'column1',
+                'abc'
+            ],
+            [
+                'column2',
+                'xyz'
+            ]
         ]);
         $this->testObject->get('dbManager')->getConnection()->expects($this->any())
             ->method('prepare')
@@ -407,22 +405,23 @@ class SQLExtensionTest extends TestHelper
     public function testiShouldHaveAWithTableNode()
     {
         $entity = 'database.someTable4';
-        $with = new TableNode();
-        $with->addRow([
-            'title',
-            'value'
-        ]);
-        $with->addRow([
-            'column1',
-            'abc'
-        ]);
-        $with->addRow([
-            'column2',
-            'xyz'
-        ]);
-        $with->addRow([
-            'column3',
-            'NULL'
+        $with = new TableNode([
+            [
+                'title',
+                'value'
+            ],
+            [
+                'column1',
+                'abc'
+            ],
+            [
+                'column2',
+                'xyz'
+            ],
+            [
+                'column3',
+                'NULL'
+            ]
         ]);
         $this->testObject->get('dbManager')->getConnection()->expects($this->any())
             ->method('prepare')

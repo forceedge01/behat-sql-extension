@@ -100,15 +100,15 @@ class SQLContextTest extends TestHelper
         $entity = 'database.unique';
         $node = new TableNode([
             [
-            'email',
-            'name'
-        ],[
-            'its.inevitable@hotmail.com',
-            'Abdul'
-        ],[
-            'forceedge01@gmail.com',
-            'Qureshi'
-        ]
+                'email',
+                'name'
+            ],[
+                'its.inevitable@hotmail.com',
+                'Abdul'
+            ],[
+                'forceedge01@gmail.com',
+                'Qureshi'
+            ]
 
         ]);
 
@@ -164,17 +164,17 @@ class SQLContextTest extends TestHelper
     {
         $node = new TableNode([
             [
-            'table',
-            'values'
-        ],
-        [
-            'table1',
-            "email:its.inevitable@hotmail.com, name:Abdul"
-        ],
-        [
-            'table2',
-            'email:forceedge01@gmail.com, name:Qureshi'
-        ]
+                'table',
+                'values'
+            ],
+            [
+                'table1',
+                "email:its.inevitable@hotmail.com, name:Abdul"
+            ],
+            [
+                'table2',
+                'email:forceedge01@gmail.com, name:Qureshi'
+            ]
         ]);
 
         $this->mockDependencyMethods(
@@ -424,17 +424,17 @@ class SQLContextTest extends TestHelper
         $entity = 'database.unique';
         $node = new TableNode([
             [
-            'email',
-            'name'
-        ],
-        [
-            'its.inevitable@hotmail.com',
-            'Abdul'
-        ],
-        [
-            'forceedge01@gmail.com',
-            'Qureshi'
-        ]
+                'email',
+                'name'
+            ],
+            [
+                'its.inevitable@hotmail.com',
+                'Abdul'
+            ],
+            [
+                'forceedge01@gmail.com',
+                'Qureshi'
+            ]
         ]);
 
         $this->mockDependencyMethods(
@@ -487,15 +487,15 @@ class SQLContextTest extends TestHelper
             [
             'table',
             'values'
-        ],
-        [
-            'table1',
-            "email:its.inevitable@hotmail.com,name:Abdul"
-        ],
-        [
-            'table2',
-            'email:forceedge01@gmail.com,name:Qureshi'
-        ]
+            ],
+            [
+                'table1',
+                "email:its.inevitable@hotmail.com,name:Abdul"
+            ],
+            [
+                'table2',
+                'email:forceedge01@gmail.com,name:Qureshi'
+            ]
         ]);
 
         $this->mockDependencyMethods(
@@ -659,21 +659,21 @@ class SQLContextTest extends TestHelper
         $entity = 'database.someTable4';
         $with = new TableNode([
             [
-            'title',
-            'value'
-        ],
-        [
-            'column1',
-            'abc'
-        ],
-        [
-            'column2',
-            'xyz'
-        ],
-        [
-            'column3',
-            'NULL'
-        ]
+                'title',
+                'value'
+            ],
+            [
+                'column1',
+                'abc'
+            ],
+            [
+                'column2',
+                'xyz'
+            ],
+            [
+                'column3',
+                'NULL'
+            ]
         ]);
 
         $this->mockDependency(
@@ -870,17 +870,17 @@ class SQLContextTest extends TestHelper
         $entity = 'database.someTable3';
         $with = new TableNode([
             [
-            'title',
-            'value'
-        ],
-        [
-            'column1',
-            'abc'
-        ],
-        [
-            'column2',
-            'xyz'
-        ]
+                'title',
+                'value'
+            ],
+            [
+                'column1',
+                'abc'
+            ],
+            [
+                'column2',
+                'xyz'
+            ]
         ]);
 
         $this->mockDependency(
