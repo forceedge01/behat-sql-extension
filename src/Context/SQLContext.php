@@ -4,6 +4,7 @@ namespace Genesis\SQLExtension\Context;
 
 use Behat\Behat\Context\Step\Given;
 use Behat\Gherkin\Node\TableNode;
+use Exception;
 
 /*
  * This file is part of the Behat\SQLExtension
@@ -60,55 +61,71 @@ class SQLContext extends SQLHandler implements Interfaces\SQLContextInterface
     public function iHaveAWhere($entity, $columns)
     {
         $this->debugLog('------- I HAVE WHERE -------');
+        $this->debugLog('Trying to select existing record.');
 
         // Normalize data.
         $this->setEntity($entity);
+        $columns = $this->resolveQuery($columns);
 
-        $this->filterAndConvertToArray($columns);
-
-        $this->debugLog('Trying to select existing record.');
-
-        // Check if the record exists.
-        // This needs to be done in two ways.
-        $whereClause = $this->constructSQLClause(' AND ', $this->getColumns());
-        $sql = sprintf('SELECT * FROM %s WHERE %s', $this->getEntity(), $whereClause);
-        $statement = $this->execute($sql);
-
-        // If it does, set the last id and return.
-        if ($this->hasFetchedRows($statement)) {
-            // Set the last id to use from fetched row.
-            $result = $statement->fetchAll();
-            if (isset($result[0]['id'])) {
-                $this->handleLastId($this->getEntity(), $result[0]['id']);
-            }
-
-            return $sql;
-        }
-
-        $this->debugLog('No record found, trying to insert.');
+        // $this->debugLog('No record found, trying to insert.');
+        $this->setCommandType('insert');
 
         // If the record does not already exist, create it.
-        list($columnNames, $columnValues) = $this->getTableColumns($this->getEntity());
-        $sql = sprintf('INSERT INTO %s (%s) VALUES (%s)', $this->getEntity(), $columnNames, $columnValues);
+        list($columnNames, $columnValues) = $this->getTableColumns($this->getEntity(), $columns);
+
+        // Build up the sql.
+        $sql = "INSERT INTO {$this->getEntity()} ({$columnNames}) VALUES ({$columnValues})";
         $statement = $this->execute($sql);
+
+        // Throw exception if no rows were effected.
         $this->throwErrorIfNoRowsAffected($statement, self::IGNORE_DUPLICATE);
-        $result = $statement->fetchAll();
+        $this->setKeywordsFromId($this->getLastId());
 
-        // Extract duplicate key and run update using it
-        if ($key = $this->getKeyFromDuplicateError($result)) {
-            $this->debugLog(sprintf('Duplicate key found, running update using key "%s"', $key));
+        $this->get('dbManager')->closeStatement($statement);
 
-            $this->iHaveAnExistingWithWhere(
-                $this->getEntity(),
-                $columns,
-                sprintf('%s:%s', $key, $this->getColumns()[$key])
-            );
+        return $sql;
+    }
 
-            $this->setLastIdWhere(
-                $this->getEntity(),
-                sprintf('%s = %s', $key, $this->quoteOrNot($this->getColumns()[$key]))
-            );
+    /**
+     * User friendly version of iHaveAWith.
+     *
+     * @param $table The table to insert into.
+     * @param $values Values to insert.
+     *
+     * @return string
+     */
+    public function insert($table, $values)
+    {
+        return $this->iHaveAWhere($table, $values);
+    }
+
+    /**
+     * @Given /^(?:|I )don't have(?:| an| a) "([^"]*)" where "([^"]*)"$/
+     * @Given /^(?:|I )don't have(?:| an| a) "([^"]*)" with "([^"]*)"$/
+     * @Given /^(?:|I )do not have(?:| an| a) "([^"]*)" where "([^"]*)"$/
+     */
+    public function iDontHaveAWhere($entity, $columns)
+    {
+        $this->debugLog('------- I DONT HAVE WHERE -------');
+
+        if (! $columns) {
+            throw new Exception('You must provide a where clause!');
         }
+
+        $this->setEntity($entity);
+        $this->setCommandType('delete');
+
+        $whereClause = $this->resolveQueryToSQLClause($this->getCommandType(), $columns);
+
+        // Construct the delete statement.
+        $sql = "DELETE FROM {$this->getEntity()} WHERE {$whereClause}";
+
+        // Execute statement.
+        $statement = $this->execute($sql);
+
+        // Throw an exception if errors are found.
+        $this->throwExceptionIfErrors($statement);
+        $this->get('dbManager')->closeStatement($statement);
 
         return $sql;
     }
@@ -143,7 +160,10 @@ class SQLContext extends SQLHandler implements Interfaces\SQLContextInterface
      */
     public function iDontHave(TableNode $nodes)
     {
+        // Get all table node rows.
         $nodes = $nodes->getRows();
+
+        // Get rid of first row as its just for readability.
         unset($nodes[0]);
         $sqls = [];
 
@@ -160,9 +180,11 @@ class SQLContext extends SQLHandler implements Interfaces\SQLContextInterface
      */
     public function iDontHaveWhere($entity, TableNode $nodes)
     {
+        // Convert table node to parse able string.
         $queries = $this->convertTableNodeToQueries($nodes);
         $sqls = [];
 
+        // Run through the dontHave step definition for each query.
         foreach ($queries as $query) {
             $sqls[] = $this->iDontHaveAWhere($entity, $query);
         }
@@ -178,24 +200,31 @@ class SQLContext extends SQLHandler implements Interfaces\SQLContextInterface
         $this->debugLog('------- I HAVE AN EXISTING WITH WHERE -------');
 
         if (! $columns) {
-            throw new \Exception('You must provide a where clause!');
+            throw new Exception('You must provide a where clause!');
         }
 
         $this->setEntity($entity);
+        $this->setCommandType('update');
 
-        $this->filterAndConvertToArray($with);
-        $updateClause = $this->constructSQLClause(', ', $this->getColumns());
-        $this->filterAndConvertToArray($columns);
-        $whereClause = $this->constructSQLClause(' AND ', $this->getColumns());
+        // Build up the update clause.
+        $with = $this->resolveQuery($with);
+        $updateClause = $this->constructSQLClause($this->getCommandType(), ', ', $with);
 
-        $sql = sprintf('UPDATE %s SET %s WHERE %s', $this->getEntity(), $updateClause, $whereClause);
+        $whereClause = $this->resolveQueryToSQLClause($this->getCommandType(), $columns);
+
+        // Build up the update statement.
+        $sql = "UPDATE {$this->getEntity()} SET {$updateClause} WHERE {$whereClause}";
+
+        // Execute statement.
         $statement = $this->execute($sql);
-        $this->throwErrorIfNoRowsAffected($statement, self::IGNORE_DUPLICATE);
 
-        $this->setLastIdWhere(
+        // If no exception is throw, save the last id.
+        $this->setKeywordsFromCriteria(
             $this->getEntity(),
             $whereClause
         );
+
+        $this->get('dbManager')->closeStatement($statement);
 
         return $sql;
     }
@@ -208,13 +237,12 @@ class SQLContext extends SQLHandler implements Interfaces\SQLContextInterface
         $this->debugLog('------- I HAVE AN EXISTING WHERE -------');
 
         $this->setEntity($entity);
+        $this->setCommandType('select');
 
-        // Create array out of the with string given.
-        $this->filterAndConvertToArray($where);
-        // Create a usable sql clause.
-        $selectWhereClause = $this->constructSQLClause(' AND ', $this->getColumns());
+        $selectWhereClause = $this->resolveQueryToSQLClause($this->getCommandType(), $where);
 
-        return $this->setLastIdWhere(
+        // Execute sql for setting last id.
+        return $this->setKeywordsFromCriteria(
             $this->getEntity(),
             $selectWhereClause
         );
@@ -225,47 +253,75 @@ class SQLContext extends SQLHandler implements Interfaces\SQLContextInterface
      */
     public function iShouldHaveAWithTable($entity, TableNode $with)
     {
+        // Convert the table node to parse able string.
         $clause = $this->convertTableNodeToSingleContextClause($with);
+
+        // Run through the shouldHaveWith step definition.
         $sql = $this->iShouldHaveAWith($entity, $clause);
 
         return $sql;
     }
 
     /**
-     * @Then /^(?:|I )should have(?:| an| a) "([^"]*)" with "([^"]*)"$/
+     * @Then /^(?:|I )should have(?:| an| a) "([^"]*)" with "([^"]*)"(?:| in the database)$/
      */
     public function iShouldHaveAWith($entity, $with)
     {
         $this->debugLog('------- I SHOULD HAVE A WITH -------');
-
         $this->setEntity($entity);
 
-        // Create array out of the with string given.
-        $this->filterAndConvertToArray($with);
-        // Create a usable sql clause.
-        $selectWhereClause = $this->constructSQLClause(' AND ', $this->getColumns());
+        // Set the clause type.
+        $this->setCommandType('select');
+
+        $selectWhereClause = $this->resolveQueryToSQLClause($this->getCommandType(), $with);
 
         // Create the sql to be inserted.
-        $sql = sprintf(
-            'SELECT * FROM %s WHERE %s',
-            $this->getEntity(),
-            $selectWhereClause
-        );
+        $sql = "SELECT * FROM {$this->getEntity()} WHERE {$selectWhereClause}";
 
         // Execute the sql query, if the query throws a generic not found error,
         // catch it and give it some context.
-        try {
-            $statement = $this->execute($sql);
-            $this->throwErrorIfNoRowsAffected($statement);
-        } catch (\Exception $e) {
-            if (! $this->hasFetchedRows($statement)) {
-                throw new \Exception(sprintf(
-                    'Record not found with "%s" in "%s"',
-                    $selectWhereClause,
-                    $this->getEntity()
-                ));
-            }
+        $statement = $this->execute($sql);
+        if (! $this->hasFetchedRows($statement)) {
+            throw new Exceptions\RecordNotFoundException(
+                $selectWhereClause,
+                $this->getEntity()
+            );
         }
+
+        $this->get('dbManager')->closeStatement($statement);
+
+        return $sql;
+    }
+
+    /**
+     * @Then /^(?:|I )should not have(?:| an| a) "([^"]*)" with "([^"]*)"(?:| in the database)$/
+     */
+    public function iShouldNotHaveAWith($entity, $with)
+    {
+        $this->debugLog('------- I SHOULD NOT HAVE A WHERE -------');
+
+        $this->setEntity($entity);
+
+        // Set clause type.
+        $this->setCommandType('select');
+
+        $selectWhereClause = $this->resolveQueryToSQLClause($this->getCommandType(), $with);
+
+        // Create the sql to be inserted.
+        $sql = "SELECT * FROM {$this->getEntity()} WHERE {$selectWhereClause}";
+
+        // Execute the sql query, if the query throws a generic not found error,
+        // catch it and give it some context.
+        $statement = $this->execute($sql);
+
+        if ($this->hasFetchedRows($statement)) {
+            throw new Exceptions\RecordFoundException(
+                $selectWhereClause,
+                $this->getEntity()
+            );
+        }
+
+        $this->get('dbManager')->closeStatement($statement);
 
         return $sql;
     }
@@ -275,47 +331,11 @@ class SQLContext extends SQLHandler implements Interfaces\SQLContextInterface
      */
     public function iShouldNotHaveAWithTable($entity, TableNode $with)
     {
+        // Convert the table node to parse able string.
         $clause = $this->convertTableNodeToSingleContextClause($with);
+
+        // Run through the shouldNotHave step definition.
         $sql = $this->iShouldNotHaveAWith($entity, $clause);
-
-        return $sql;
-    }
-
-    /**
-     * @Then /^(?:|I )should not have(?:| an| a) "([^"]*)" with "([^"]*)"$/
-     */
-    public function iShouldNotHaveAWith($entity, $with)
-    {
-        $this->debugLog('------- I SHOULD NOT HAVE A WHERE -------');
-
-        $this->setEntity($entity);
-
-        // Create array out of the with string given.
-        $this->filterAndConvertToArray($with);
-        // Create a usable sql clause.
-        $selectWhereClause = $this->constructSQLClause(' AND ', $this->getColumns());
-
-        // Create the sql to be inserted.
-        $sql = sprintf(
-            'SELECT * FROM %s WHERE %s',
-            $this->getEntity(),
-            $selectWhereClause
-        );
-
-        // Execute the sql query, if the query throws a generic not found error,
-        // catch it and give it some context.
-        try {
-            $statement = $this->execute($sql);
-            $this->throwErrorIfNoRowsAffected($statement);
-        } catch (\Exception $e) {
-            if ($this->hasFetchedRows($statement)) {
-                throw new \Exception(sprintf(
-                    'Record not found with "%s" in "%s"',
-                    $selectWhereClause,
-                    $this->getEntity()
-                ));
-            }
-        }
 
         return $sql;
     }
@@ -327,7 +347,7 @@ class SQLContext extends SQLHandler implements Interfaces\SQLContextInterface
     {
         $this->debugLog('------- I SAVE THE ID -------');
 
-        $this->setKeyword($key, $this->getLastInsertId());
+        $this->setKeyword($key, $this->getLastId());
 
         return $this;
     }
