@@ -22,11 +22,6 @@ use Exception;
  */
 class SQLContext extends API implements Interfaces\SQLContextInterface
 {
-    // public function __construct(Interfaces\APIInterface $api)
-    // {
-    //     $this->api = $api;
-    // }
-
     /**
      * @Given /^(?:|I )have(?:| an| a) "([^"]*)" where:$/
      */

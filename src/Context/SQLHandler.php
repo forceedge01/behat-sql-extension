@@ -365,9 +365,7 @@ class SQLHandler implements Context
      */
     public function getLastId()
     {
-        $entity = $this->getUserInputEntity($this->getEntity());
-
-        return $this->getKeyword($entity . '.' . $this->primaryKey);
+        return $this->lastId;
     }
 
     /**
