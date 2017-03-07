@@ -23,6 +23,38 @@ use Exception;
 class SQLContext extends API implements Interfaces\SQLContextInterface
 {
     /**
+     * @param string $engine The engine to use.
+     * @param string $host The host to connect to.
+     * @param string $schema The schema to use.
+     * @param string $dbname The dbname to connect to.
+     * @param string $username The username.
+     * @param string $password The password.
+     * @param string $dbprefix The database prefix to use.
+     */
+    public function __construct($engine, $host, $schema, $dbname, $username, $password, $dbprefix)
+    {
+        // Combine the database connection details and pass on to DBManager.
+        // TODO: Create DBConnectionDetails object.
+        $dbConnectionDetails = [
+            'engine' => $engine,
+            'host' => $host,
+            'schema' => $schema,
+            'dbname' => $dbname,
+            'username' => $username,
+            'password' => $password,
+            'dbprefix' => $dbprefix
+        ];
+
+        parent::__construct(
+            new DBManager($dbConnectionDetails),
+            new SQLBuilder(),
+            new LocalKeyStore(),
+            new SQLHistory()
+        );
+    }
+
+
+    /**
      * @Given /^(?:|I )have(?:| an| a) "([^"]*)" where:$/
      */
     public function iHaveWhere($entity, TableNode $nodes)
