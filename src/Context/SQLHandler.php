@@ -51,7 +51,7 @@ class SQLHandler implements Context
     /**
      * The table's primary key.
      */
-    private $primaryKey;
+    protected $primaryKey;
 
     /**
      * The clause type being executed.
@@ -319,6 +319,7 @@ class SQLHandler implements Context
         $this->lastQuery = $sql;
         $statement = $this->dbManager->execute($sql);
         $this->lastId = $this->dbManager->getLastInsertId($this->getEntity());
+
         $this->get('sqlHistory')->addToHistory(
             $this->getCommandType(),
             $this->getUserInputEntity($this->getEntity()),
@@ -365,7 +366,13 @@ class SQLHandler implements Context
      */
     public function getLastId()
     {
-        return $this->lastId;
+        $entity = $this->getUserInputEntity($this->getEntity());
+
+        try {
+            return $this->getKeyword($entity . '.' . $this->primaryKey);
+        } catch (Exception $e) {
+            return false;
+        }
     }
 
     /**
@@ -741,6 +748,6 @@ class SQLHandler implements Context
      */
     protected function setKeywordsFromId($id)
     {
-        $this->setKeywordsFromCriteria($this->getEntity(), "{$this->primaryKey} = {$id}");
+        $this->setKeywordsFromCriteria($this->getEntity(), "{$this->primaryKey} = {$this->quoteOrNot($id)}");
     }
 }

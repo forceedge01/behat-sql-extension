@@ -581,10 +581,19 @@ class SQLHandlerTest extends TestHelper
     public function testGetLastId()
     {
         $expectedValue = 992837;
-
-        $property = $this->reflection->getProperty('lastId');
+        
+        $property = $this->reflection->getProperty('entity');
         $property->setAccessible(true);
-        $property->setValue($this->testObject, $expectedValue);
+        $property->setValue($this->testObject, 'company');
+
+        $property = $this->reflection->getProperty('primaryKey');
+        $property->setAccessible(true);
+        $property->setValue($this->testObject, 'userId');
+
+        $this->dependencies['keyStoreMock']->expects($this->once())
+            ->method('getKeyword')
+            ->with('company.userId')
+            ->willReturn($expectedValue);
 
         $result = $this->testObject->getLastId();
 

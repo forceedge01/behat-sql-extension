@@ -48,8 +48,15 @@ class API extends SQLHandler implements Interfaces\APIInterface
 
         // Throw exception if no rows were effected.
         $this->throwErrorIfNoRowsAffected($statement, Interfaces\SQLHandlerInterface::IGNORE_DUPLICATE);
-        $this->setKeywordsFromId($this->getLastId());
 
+        // If an ID was generated for us, use that to store results in keystore,
+        // else use criteria.
+        $lastId = $this->getLastId();
+        if (! $lastId && isset($values[$this->primaryKey])) {
+            $lastId = $values[$this->primaryKey];
+        }
+
+        $this->setKeywordsFromId($lastId);
         $this->get('dbManager')->closeStatement($statement);
 
         return $sql;
