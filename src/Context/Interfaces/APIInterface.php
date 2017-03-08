@@ -9,43 +9,43 @@ interface APIInterface
     /**
      * User friendly version of iHaveAWith.
      *
-     * @param $table The table to insert into.
-     * @param $values Values to insert.
+     * @param string $table The table to insert into.
+     * @param array $values Values to insert.
      *
      * @return string
      */
-    public function insert($table, $values);
+    public function insert($table, array $values);
 
     /**
      * User friendly version of iDontHaveAWhere.
      *
      * @param string $table The table to delete from.
-     * @param string $where The where clause.
+     * @param array $where The where clause.
      *
      * @return string
      */
-    public function delete($table, $where);
+    public function delete($table, array $where);
 
     /**
      * User friendly version of iHaveAnExistingWithWhere.
      *
      * @param string $table The table to delete from.
-     * @param string $update The columns to update.
-     * @param string $where The where clause.
+     * @param array $update The columns to update.
+     * @param array $where The where clause.
      *
      * @return string
      */
-    public function update($table, $update, $where);
+    public function update($table, array $update, array $where);
 
     /**
      * User friendly version of iHaveAnExistingWhere.
      *
      * @param string $table The table to delete from.
-     * @param string $where The where clause.
+     * @param array $where The where clause.
      *
      * @return string
      */
-    public function select($table, $where);
+    public function select($table, array $where);
 
     /**
      * Get a dependency.
@@ -60,19 +60,19 @@ interface APIInterface
      * Assert if record exists.
      *
      * @param string $table The table to delete from.
-     * @param string $where The where clause.
+     * @param array $where The where clause.
      *
      * @return string
      */
-    public function assertExists($table, $where);
+    public function assertExists($table, array $where);
 
     /**
      * Assert if record does not exist.
      *
      * @param string $table The table to delete from.
-     * @param string $where The where clause.
+     * @param array $where The where clause.
      *
      * @return string
      */
-    public function assertNotExists($table, $where);
+    public function assertNotExists($table, array $where);
 }

@@ -63,7 +63,7 @@ class SQLContext extends API implements Interfaces\SQLContextInterface
         $sqls = [];
 
         foreach ($queries as $query) {
-            $sqls[] = $this->insert($entity, $query);
+            $sqls[] = $this->iHaveAWhere($entity, $query);
         }
 
         return $sqls;
@@ -80,7 +80,7 @@ class SQLContext extends API implements Interfaces\SQLContextInterface
 
         // Loop through all nodes and try inserting values.
         foreach ($nodes as $node) {
-            $sqls[] = $this->insert($node[0], $node[1]);
+            $sqls[] = $this->iHaveAWhere($node[0], $node[1]);
         }
 
         return $sqls;
@@ -92,6 +92,8 @@ class SQLContext extends API implements Interfaces\SQLContextInterface
      */
     public function iHaveAWhere($entity, $columns)
     {
+        $columns = $this->get('sqlBuilder')->convertToArray($columns);
+
         return $this->insert($entity, $columns);
     }
 
@@ -102,6 +104,8 @@ class SQLContext extends API implements Interfaces\SQLContextInterface
      */
     public function iDontHaveAWhere($entity, $columns)
     {
+        $columns = $this->get('sqlBuilder')->convertToArray($columns);
+
         return $this->delete($entity, $columns);
     }
 
@@ -120,7 +124,7 @@ class SQLContext extends API implements Interfaces\SQLContextInterface
 
         // Loop through all nodes and try inserting values.
         foreach ($nodes as $node) {
-            $sqls[] = $this->delete($node[0], $node[1]);
+            $sqls[] = $this->iDontHaveAWhere($node[0], $node[1]);
         }
 
         return $sqls;
@@ -137,7 +141,7 @@ class SQLContext extends API implements Interfaces\SQLContextInterface
 
         // Run through the dontHave step definition for each query.
         foreach ($queries as $query) {
-            $sqls[] = $this->delete($entity, $query);
+            $sqls[] = $this->iDontHaveAWhere($entity, $query);
         }
 
         return $sqls;
@@ -148,6 +152,9 @@ class SQLContext extends API implements Interfaces\SQLContextInterface
      */
     public function iHaveAnExistingWithWhere($entity, $with, $columns)
     {
+        $with = $this->get('sqlBuilder')->convertToArray($with);
+        $columns = $this->get('sqlBuilder')->convertToArray($columns);
+
         return $this->update($entity, $with, $columns);
     }
 
@@ -156,6 +163,8 @@ class SQLContext extends API implements Interfaces\SQLContextInterface
      */
     public function iHaveAnExistingWhere($entity, $where)
     {
+        $where = $this->get('sqlBuilder')->convertToArray($where);
+
         return $this->select($entity, $where);
     }
 
@@ -168,7 +177,7 @@ class SQLContext extends API implements Interfaces\SQLContextInterface
         $clause = $this->convertTableNodeToSingleContextClause($with);
 
         // Run through the shouldHaveWith step definition.
-        $sql = $this->assertExists($entity, $clause);
+        $sql = $this->iShouldHaveAWith($entity, $clause);
 
         return $sql;
     }
@@ -178,6 +187,8 @@ class SQLContext extends API implements Interfaces\SQLContextInterface
      */
     public function iShouldHaveAWith($entity, $with)
     {
+        $with = $this->get('sqlBuilder')->convertToArray($with);
+
         return $this->assertExists($entity, $with);
     }
 
@@ -186,6 +197,8 @@ class SQLContext extends API implements Interfaces\SQLContextInterface
      */
     public function iShouldNotHaveAWith($entity, $with)
     {
+        $with = $this->get('sqlBuilder')->convertToArray($with);
+
         return $this->assertNotExists($entity, $with);
     }
 
@@ -198,7 +211,7 @@ class SQLContext extends API implements Interfaces\SQLContextInterface
         $clause = $this->convertTableNodeToSingleContextClause($with);
 
         // Run through the shouldNotHave step definition.
-        $sql = $this->assertNotExists($entity, $clause);
+        $sql = $this->iShouldNotHaveAWith($entity, $clause);
 
         return $sql;
     }

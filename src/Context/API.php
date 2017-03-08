@@ -25,22 +25,24 @@ class API extends SQLHandler implements Interfaces\APIInterface
     /**
      * {@inheritDoc}
      */
-    public function insert($table, $columns)
+    public function insert($table, array $values)
     {
         $this->debugLog('------- I HAVE WHERE -------');
         $this->debugLog('Trying to select existing record.');
 
         // Normalize data.
         $this->setEntity($table);
-        $columns = $this->resolveQuery($columns);
 
         // $this->debugLog('No record found, trying to insert.');
-        $this->setCommandType('insert');
+
+        $query = $this->convertToQuery($values);
+        $values = $this->resolveQuery($query);
 
         // If the record does not already exist, create it.
-        list($columnNames, $columnValues) = $this->getTableColumns($this->getEntity(), $columns);
+        list($columnNames, $columnValues) = $this->getTableColumns($this->getEntity(), $values);
 
         // Build up the sql.
+        $this->setCommandType('insert');
         $sql = "INSERT INTO {$this->getEntity()} ({$columnNames}) VALUES ({$columnValues})";
         $statement = $this->execute($sql);
 
@@ -56,7 +58,7 @@ class API extends SQLHandler implements Interfaces\APIInterface
     /**
      * {@inheritDoc}
      */
-    public function delete($table, $columns)
+    public function delete($table, array $columns)
     {
         $this->debugLog('------- I DONT HAVE WHERE -------');
 
@@ -67,7 +69,11 @@ class API extends SQLHandler implements Interfaces\APIInterface
         $this->setEntity($table);
         $this->setCommandType('delete');
 
-        $whereClause = $this->resolveQueryToSQLClause($this->getCommandType(), $columns);
+        $query = $this->convertToQuery($columns);
+        $columns = $this->resolveQuery($query);
+
+        $searchConditionOperator = $this->get('sqlBuilder')->getSearchConditionOperatorForColumns($query);
+        $whereClause = $this->constructSQLClause($this->getCommandType(), $searchConditionOperator, $columns);
 
         // Construct the delete statement.
         $sql = "DELETE FROM {$this->getEntity()} WHERE {$whereClause}";
@@ -85,7 +91,7 @@ class API extends SQLHandler implements Interfaces\APIInterface
     /**
      * {@inheritDoc}
      */
-    public function update($table, $with, $columns)
+    public function update($table, array $with, array $columns)
     {
         $this->debugLog('------- I HAVE AN EXISTING WITH WHERE -------');
 
@@ -97,10 +103,15 @@ class API extends SQLHandler implements Interfaces\APIInterface
         $this->setCommandType('update');
 
         // Build up the update clause.
-        $with = $this->resolveQuery($with);
+        $query = $this->convertToQuery($with);
+        $with = $this->resolveQuery($query);
         $updateClause = $this->constructSQLClause($this->getCommandType(), ', ', $with);
 
-        $whereClause = $this->resolveQueryToSQLClause($this->getCommandType(), $columns);
+        $query = $this->convertToQuery($columns);
+        $columns = $this->resolveQuery($query);
+
+        $searchConditionOperator = $this->get('sqlBuilder')->getSearchConditionOperatorForColumns($query);
+        $whereClause = $this->constructSQLClause($this->getCommandType(), $searchConditionOperator, $columns);
 
         // Build up the update statement.
         $sql = "UPDATE {$this->getEntity()} SET {$updateClause} WHERE {$whereClause}";
@@ -122,14 +133,18 @@ class API extends SQLHandler implements Interfaces\APIInterface
     /**
      * {@inheritDoc}
      */
-    public function select($table, $where)
+    public function select($table, array $columns)
     {
         $this->debugLog('------- I HAVE AN EXISTING WHERE -------');
 
         $this->setEntity($table);
         $this->setCommandType('select');
 
-        $selectWhereClause = $this->resolveQueryToSQLClause($this->getCommandType(), $where);
+        $query = $this->convertToQuery($columns);
+        $columns = $this->resolveQuery($query);
+
+        $searchConditionOperator = $this->get('sqlBuilder')->getSearchConditionOperatorForColumns($query);
+        $selectWhereClause = $this->constructSQLClause($this->getCommandType(), $searchConditionOperator, $columns);
 
         // Execute sql for setting last id.
         return $this->setKeywordsFromCriteria(
@@ -141,15 +156,14 @@ class API extends SQLHandler implements Interfaces\APIInterface
     /**
      * {@inheritDoc}
      */
-    public function assertExists($table, $with)
+    public function assertExists($table, array $with)
     {
         $this->debugLog('------- I SHOULD HAVE A WITH -------');
         $this->setEntity($table);
-
-        // Set the clause type.
         $this->setCommandType('select');
 
-        $selectWhereClause = $this->resolveQueryToSQLClause($this->getCommandType(), $with);
+        $query = $this->convertToQuery($with);
+        $selectWhereClause = $this->resolveQueryToSQLClause($this->getCommandType(), $query);
 
         // Create the sql to be inserted.
         $sql = "SELECT * FROM {$this->getEntity()} WHERE {$selectWhereClause}";
@@ -172,16 +186,15 @@ class API extends SQLHandler implements Interfaces\APIInterface
     /**
      * {@inheritDoc}
      */
-    public function assertNotExists($table, $with)
+    public function assertNotExists($table, array $with)
     {
         $this->debugLog('------- I SHOULD NOT HAVE A WHERE -------');
 
         $this->setEntity($table);
-
-        // Set clause type.
         $this->setCommandType('select');
 
-        $selectWhereClause = $this->resolveQueryToSQLClause($this->getCommandType(), $with);
+        $query = $this->convertToQuery($with);
+        $selectWhereClause = $this->resolveQueryToSQLClause($this->getCommandType(), $query);
 
         // Create the sql to be inserted.
         $sql = "SELECT * FROM {$this->getEntity()} WHERE {$selectWhereClause}";
