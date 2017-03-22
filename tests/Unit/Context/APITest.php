@@ -459,7 +459,7 @@ class APITest extends TestHelper
     /**
      * Test that this method works with values provided.
      *
-     * @expectedException Genesis\SQLExtension\Context\Exceptions\RecordNotFoundException
+     * @expectedException Genesis\SQLExtension\Context\Exceptions\SelectException
      */
     public function testiShouldHaveAWithWithNoRecordFound()
     {

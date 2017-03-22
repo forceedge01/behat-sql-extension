@@ -4,6 +4,7 @@ namespace Genesis\SQLExtension\Context;
 
 use Behat\Behat\Context\Step\Given;
 use Behat\Gherkin\Node\TableNode;
+use Genesis\SQLExtension\Context\Exceptions;
 use Exception;
 
 /*
@@ -44,19 +45,25 @@ class API extends SQLHandler implements Interfaces\APIInterface
         // Build up the sql.
         $this->setCommandType('insert');
         $sql = "INSERT INTO {$this->getEntity()} ({$columnNames}) VALUES ({$columnValues})";
-        $statement = $this->execute($sql);
 
-        // Throw exception if no rows were effected.
-        $this->throwErrorIfNoRowsAffected($statement, Interfaces\SQLHandlerInterface::IGNORE_DUPLICATE);
+        try {
+            $statement = $this->execute($sql);
 
-        // If an ID was generated for us, use that to store results in keystore,
-        // else use criteria.
-        $lastId = $this->getLastId();
-        if (! $lastId && isset($values[$this->primaryKey])) {
-            $lastId = $values[$this->primaryKey];
+            // Throw exception if no rows were effected.
+            $this->throwErrorIfNoRowsAffected($statement, Interfaces\SQLHandlerInterface::IGNORE_DUPLICATE);
+
+            // If an ID was generated for us, use that to store results in keystore,
+            // else use criteria.
+            $lastId = $this->getLastId();
+            if (! $lastId && isset($values[$this->primaryKey])) {
+                $lastId = $values[$this->primaryKey];
+            }
+
+            $this->setKeywordsFromId($lastId);
+        } catch (Exception $e) {
+            throw new Exceptions\InsertException($this->getEntity(), $e);
         }
 
-        $this->setKeywordsFromId($lastId);
         $this->get('dbManager')->closeStatement($statement);
 
         return $sql;
@@ -85,11 +92,16 @@ class API extends SQLHandler implements Interfaces\APIInterface
         // Construct the delete statement.
         $sql = "DELETE FROM {$this->getEntity()} WHERE {$whereClause}";
 
-        // Execute statement.
-        $statement = $this->execute($sql);
+        try {
+            // Execute statement.
+            $statement = $this->execute($sql);
 
-        // Throw an exception if errors are found.
-        $this->throwExceptionIfErrors($statement);
+            // Throw an exception if errors are found.
+            $this->throwExceptionIfErrors($statement);
+        } catch (Exception $e) {
+            throw new Exceptions\DeleteException($this->getEntity(), $e);
+        }
+
         $this->get('dbManager')->closeStatement($statement);
 
         return $sql;
@@ -123,14 +135,18 @@ class API extends SQLHandler implements Interfaces\APIInterface
         // Build up the update statement.
         $sql = "UPDATE {$this->getEntity()} SET {$updateClause} WHERE {$whereClause}";
 
-        // Execute statement.
-        $statement = $this->execute($sql);
+        try {
+            // Execute statement.
+            $statement = $this->execute($sql);
 
-        // If no exception is throw, save the last id.
-        $this->setKeywordsFromCriteria(
-            $this->getEntity(),
-            $whereClause
-        );
+            // If no exception is throw, save the last id.
+            $this->setKeywordsFromCriteria(
+                $this->getEntity(),
+                $whereClause
+            );
+        } catch (Exception $e) {
+            throw new Exceptions\UpdateException($this->getEntity(), $e);
+        }
 
         $this->get('dbManager')->closeStatement($statement);
 
@@ -153,11 +169,15 @@ class API extends SQLHandler implements Interfaces\APIInterface
         $searchConditionOperator = $this->get('sqlBuilder')->getSearchConditionOperatorForColumns($query);
         $selectWhereClause = $this->constructSQLClause($this->getCommandType(), $searchConditionOperator, $columns);
 
-        // Execute sql for setting last id.
-        return $this->setKeywordsFromCriteria(
-            $this->getEntity(),
-            $selectWhereClause
-        );
+        try {
+            // Execute sql for setting last id.
+            return $this->setKeywordsFromCriteria(
+                $this->getEntity(),
+                $selectWhereClause
+            );
+        } catch (Exception $e) {
+            throw new Exceptions\SelectException($this->getEntity(), $e);
+        }
     }
 
     /**
