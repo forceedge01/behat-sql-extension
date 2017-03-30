@@ -6,6 +6,7 @@ use Behat\Behat\Context\Context;
 use Behat\Gherkin\Node\TableNode;
 use Exception;
 use Traversable;
+use Representations\SQLCommand;
 
 /*
  * This file is part of the Behat\SQLExtension
@@ -21,7 +22,7 @@ use Traversable;
  *
  * @author Abdul Wahab Qureshi <its.inevitable@hotmail.com>
  */
-class SQLHandler implements Context
+class SQLHandler implements Context, Interfaces\SQLHandlerInterface
 {
     /**
      * Entity being worked on.
@@ -82,6 +83,11 @@ class SQLHandler implements Context
      * Holds the history of commands executed.
      */
     private $sqlHistory;
+
+    /**
+     * @var Representations\SQLCommand.
+     */
+    protected $queryParams;
 
     /**
      * Construct the object.
@@ -319,6 +325,13 @@ class SQLHandler implements Context
         $this->lastQuery = $sql;
         $statement = $this->dbManager->execute($sql);
         $this->lastId = $this->dbManager->getLastInsertId($this->getEntity());
+
+        // If last id is not provided, check if it was supplied in the sql for an insert statement.
+        if (! $this->lastId and
+            $this->getCommandType() === Interfaces\SQLHandlerInterface::COMMAND_TYPE_INSERT and
+            isset($this->queryParams->getRawValues()[$this->primaryKey])) {
+            $this->lastId = $this->queryParams->getRawValues()[$this->primaryKey];
+        }
 
         $this->get('sqlHistory')->addToHistory(
             $this->getCommandType(),
