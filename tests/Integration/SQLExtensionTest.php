@@ -132,6 +132,10 @@ class SQLExtensionTest extends TestHelper
                 $this->getPdoStatementWithRows(1, [[0 => 'id', 'id' => 237463]]),
                 $this->getPdoStatementWithRows(1, [[0 => 'id', 'id' => 237463]])
             ));
+        $this->testObject->get('dbManager')->getConnection()->expects($this->any())
+            ->method('lastInsertId')
+            ->with($this->isType('string'))
+            ->willReturn(5);
         $result = $this->testObject->iHaveAWhere($entity, $column);
         // Expected SQL.
         $expectedSQL = "INSERT INTO dev_database.unique1 (`column1`, `column2`, `column3`, `column4`) VALUES ('abc', 'xyz', NULL, 'what\'s up doc')";
@@ -745,7 +749,10 @@ class SQLExtensionTest extends TestHelper
                 $this->getPdoStatementWithRows(1, true),
                 $this->getPdoStatementWithRows(1, [[0 => 'id', 'id' => 237463]])
             ));
-
+        $this->testObject->get('dbManager')->getConnection()->expects($this->any())
+            ->method('lastInsertId')
+            ->with($this->isType('string'))
+            ->willReturn(5);
         $result = $this->testObject->iHaveAWhere($entity, $column);
         // Expected SQL.
         $expectedSQL = "INSERT INTO dev_database.unique (`column1`, `column2`, `column3`) VALUES ('abc', 'behat-test-string-234234234', 'what\'s up doc')";

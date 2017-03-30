@@ -34,13 +34,16 @@ class API extends SQLHandler implements Interfaces\APIInterface
         // Normalize data.
         $this->setEntity($table);
 
-        // $this->debugLog('No record found, trying to insert.');
-
         $query = $this->convertToQuery($values);
-        $values = $this->resolveQuery($query);
+        $resolvedValues = $this->resolveQuery($query);
+
+        $this->queryParams = new Representations\QueryParams($this->getEntity(), $values, $resolvedValues);
 
         // If the record does not already exist, create it.
-        list($columnNames, $columnValues) = $this->getTableColumns($this->getEntity(), $values);
+        list($columnNames, $columnValues) = $this->getTableColumns(
+            $this->queryParams->getTable(),
+            $this->queryParams->getResolvedValues()
+        );
 
         // Build up the sql.
         $this->setCommandType('insert');
@@ -55,15 +58,14 @@ class API extends SQLHandler implements Interfaces\APIInterface
             // If an ID was generated for us, use that to store results in keystore,
             // else use criteria.
             $lastId = $this->getLastId();
-            if (! $lastId && isset($values[$this->primaryKey])) {
-                $lastId = $values[$this->primaryKey];
+            if (! $lastId && isset($resolvedValues[$this->primaryKey])) {
+                $lastId = $resolvedValues[$this->primaryKey];
             }
-
-            $this->setKeywordsFromId($lastId);
         } catch (Exception $e) {
             throw new Exceptions\InsertException($this->getEntity(), $e);
         }
 
+        $this->setKeywordsFromId($lastId);
         $this->get('dbManager')->closeStatement($statement);
 
         return $sql;
@@ -84,10 +86,16 @@ class API extends SQLHandler implements Interfaces\APIInterface
         $this->setCommandType('delete');
 
         $query = $this->convertToQuery($columns);
-        $columns = $this->resolveQuery($query);
+        $resolvedValues = $this->resolveQuery($query);
+
+        $this->queryParams = new Representations\QueryParams($this->getEntity(), $columns, $resolvedValues);
 
         $searchConditionOperator = $this->get('sqlBuilder')->getSearchConditionOperatorForColumns($query);
-        $whereClause = $this->constructSQLClause($this->getCommandType(), $searchConditionOperator, $columns);
+        $whereClause = $this->constructSQLClause(
+            $this->getCommandType(),
+            $searchConditionOperator,
+            $this->queryParams->getResolvedValues()
+        );
 
         // Construct the delete statement.
         $sql = "DELETE FROM {$this->getEntity()} WHERE {$whereClause}";
@@ -127,10 +135,16 @@ class API extends SQLHandler implements Interfaces\APIInterface
         $updateClause = $this->constructSQLClause($this->getCommandType(), ', ', $with);
 
         $query = $this->convertToQuery($columns);
-        $columns = $this->resolveQuery($query);
+        $resolvedValues = $this->resolveQuery($query);
+
+        $this->queryParams = new Representations\QueryParams($this->getEntity(), $columns, $resolvedValues);
 
         $searchConditionOperator = $this->get('sqlBuilder')->getSearchConditionOperatorForColumns($query);
-        $whereClause = $this->constructSQLClause($this->getCommandType(), $searchConditionOperator, $columns);
+        $whereClause = $this->constructSQLClause(
+            $this->getCommandType(),
+            $searchConditionOperator,
+            $this->queryParams->getResolvedValues()
+        );
 
         // Build up the update statement.
         $sql = "UPDATE {$this->getEntity()} SET {$updateClause} WHERE {$whereClause}";
@@ -164,10 +178,16 @@ class API extends SQLHandler implements Interfaces\APIInterface
         $this->setCommandType('select');
 
         $query = $this->convertToQuery($columns);
-        $columns = $this->resolveQuery($query);
+        $resolvedValues = $this->resolveQuery($query);
+
+        $this->queryParams = new Representations\QueryParams($this->getEntity(), $columns, $resolvedValues);
 
         $searchConditionOperator = $this->get('sqlBuilder')->getSearchConditionOperatorForColumns($query);
-        $selectWhereClause = $this->constructSQLClause($this->getCommandType(), $searchConditionOperator, $columns);
+        $selectWhereClause = $this->constructSQLClause(
+            $this->getCommandType(),
+            $searchConditionOperator,
+            $this->queryParams->getResolvedValues()
+        );
 
         try {
             // Execute sql for setting last id.
@@ -188,6 +208,8 @@ class API extends SQLHandler implements Interfaces\APIInterface
         $this->debugLog('------- I SHOULD HAVE A WITH -------');
         $this->setEntity($table);
         $this->setCommandType('select');
+
+        $this->queryParams = new Representations\QueryParams($this->getEntity(), $with);
 
         $query = $this->convertToQuery($with);
         $selectWhereClause = $this->resolveQueryToSQLClause($this->getCommandType(), $query);
@@ -219,6 +241,8 @@ class API extends SQLHandler implements Interfaces\APIInterface
 
         $this->setEntity($table);
         $this->setCommandType('select');
+
+        $this->queryParams = new Representations\QueryParams($this->getEntity(), $with);
 
         $query = $this->convertToQuery($with);
         $selectWhereClause = $this->resolveQueryToSQLClause($this->getCommandType(), $query);

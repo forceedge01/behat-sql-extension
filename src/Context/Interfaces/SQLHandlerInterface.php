@@ -28,6 +28,26 @@ interface SQLHandlerInterface
     const IGNORE_DUPLICATE = true;
 
     /**
+     * Insert command type.
+     */
+    const COMMAND_TYPE_INSERT = 'insert';
+
+    /**
+     * Update command type.
+     */
+    const COMMAND_TYPE_UPDATE = 'update';
+
+    /**
+     * Select command type.
+     */
+    const COMMAND_TYPE_SELECT = 'select';
+
+    /**
+     * Delete command type.
+     */
+    const COMMAND_TYPE_DELETE = 'delete';
+
+    /**
      * returns sample data for a data type.
      */
     public function sampleData($type);
@@ -44,7 +64,7 @@ interface SQLHandlerInterface
 
     /**
      * Constructs a clause based on the glue, to be used for where and update clause.
-     * 
+     *
      * @param string $commandType
      * @param string $glue
      * @param array $columns
