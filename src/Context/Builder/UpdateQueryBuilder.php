@@ -22,13 +22,21 @@ class UpdateQueryBuilder extends QueryBuilder
     /**
      * @param Representations\QueryParams $queryParams The query params.
      * @param string $updateClause The string column names.
-     * @param string $whereClause The string column values.
      */
-    public function __construct(Representations\QueryParams $queryParams, $updateClause, $whereClause)
+    public function __construct(Representations\QueryParams $queryParams, $updateClause)
     {
         $this->updateClause = $updateClause;
-        $this->whereClause = $whereClause;
         parent::__construct($queryParams);
+    }
+
+    /**
+     * @param string $whereClause The where clause.
+     */
+    public function setWhereClause($whereClause)
+    {
+        $this->whereClause = $whereClause;
+
+        return $this;
     }
 
     /**

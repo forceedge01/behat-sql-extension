@@ -16,12 +16,20 @@ class SelectQueryBuilder extends QueryBuilder
 
     /**
      * @param Representations\QueryParams $queryParams The query params.
-     * @param string $whereClause The string column values.
      */
-    public function __construct(Representations\QueryParams $queryParams, $whereClause)
+    public function __construct(Representations\QueryParams $queryParams)
+    {
+        parent::__construct($queryParams);
+    }
+
+    /**
+     * @param string $whereClause The where clause.
+     */
+    public function setWhereClause($whereClause)
     {
         $this->whereClause = $whereClause;
-        parent::__construct($queryParams);
+
+        return $this;
     }
 
     /**

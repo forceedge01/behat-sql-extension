@@ -95,7 +95,8 @@ class API extends SQLHandler implements Interfaces\APIInterface
             $this->queryParams->getResolvedValues()
         );
 
-        $deleteQueryBuilder = new Builder\DeleteQueryBuilder($this->queryParams, $whereClause);
+        $deleteQueryBuilder = new Builder\DeleteQueryBuilder($this->queryParams);
+        $deleteQueryBuilder->setWhereClause($whereClause);
         $query = Builder\QueryDirector::build($deleteQueryBuilder);
 
         try {
@@ -144,7 +145,8 @@ class API extends SQLHandler implements Interfaces\APIInterface
             $this->queryParams->getResolvedValues()
         );
 
-        $updateQueryBuilder = new Builder\UpdateQueryBuilder($this->queryParams, $updateClause, $whereClause);
+        $updateQueryBuilder = new Builder\UpdateQueryBuilder($this->queryParams, $updateClause);
+        $updateQueryBuilder->setWhereClause($whereClause);
         $query = Builder\QueryDirector::build($updateQueryBuilder);
 
         try {
@@ -187,7 +189,8 @@ class API extends SQLHandler implements Interfaces\APIInterface
             $this->queryParams->getResolvedValues()
         );
 
-        $selectQueryBuilder = new Builder\SelectQueryBuilder($this->queryParams, $selectWhereClause);
+        $selectQueryBuilder = new Builder\SelectQueryBuilder($this->queryParams);
+        $selectQueryBuilder->setWhereClause($selectWhereClause);
         $query = Builder\QueryDirector::build($selectQueryBuilder);
 
         try {
@@ -215,7 +218,8 @@ class API extends SQLHandler implements Interfaces\APIInterface
         $query = $this->convertToQuery($with);
         $selectWhereClause = $this->resolveQueryToSQLClause($this->getCommandType(), $query);
 
-        $selectQueryBuilder = new Builder\SelectQueryBuilder($this->queryParams, $selectWhereClause);
+        $selectQueryBuilder = new Builder\SelectQueryBuilder($this->queryParams);
+        $selectQueryBuilder->setWhereClause($selectWhereClause);
         $query = Builder\QueryDirector::build($selectQueryBuilder);
 
         // Execute the sql query, if the query throws a generic not found error,
@@ -248,7 +252,8 @@ class API extends SQLHandler implements Interfaces\APIInterface
         $query = $this->convertToQuery($with);
         $selectWhereClause = $this->resolveQueryToSQLClause($this->getCommandType(), $query);
 
-        $selectQueryBuilder = new Builder\SelectQueryBuilder($this->queryParams, $selectWhereClause);
+        $selectQueryBuilder = new Builder\SelectQueryBuilder($this->queryParams);
+        $selectQueryBuilder->setWhereClause($selectWhereClause);
         $query = Builder\QueryDirector::build($selectQueryBuilder);
 
         // Execute the sql query, if the query throws a generic not found error,
