@@ -38,19 +38,17 @@ class API extends SQLHandler implements Interfaces\APIInterface
         $resolvedValues = $this->resolveQuery($query);
 
         $this->queryParams = new Representations\QueryParams($this->getEntity(), $values, $resolvedValues);
-
-        // If the record does not already exist, create it.
         list($columnNames, $columnValues) = $this->getTableColumns(
             $this->queryParams->getTable(),
             $this->queryParams->getResolvedValues()
         );
 
-        // Build up the sql.
-        $this->setCommandType('insert');
-        $sql = "INSERT INTO {$this->getEntity()} ({$columnNames}) VALUES ({$columnValues})";
+        $insertQueryBuilder = new Builder\InsertQueryBuilder($this->queryParams, $columnNames, $columnValues);
+        $query = Builder\QueryDirector::build($insertQueryBuilder);
 
         try {
-            $statement = $this->execute($sql);
+            $this->setCommandType('insert');
+            $statement = $this->execute($query->getSql());
 
             // Throw exception if no rows were effected.
             $this->throwErrorIfNoRowsAffected($statement, Interfaces\SQLHandlerInterface::IGNORE_DUPLICATE);
@@ -68,7 +66,7 @@ class API extends SQLHandler implements Interfaces\APIInterface
         $this->setKeywordsFromId($lastId);
         $this->get('dbManager')->closeStatement($statement);
 
-        return $sql;
+        return $query->getSql();
     }
 
     /**
@@ -97,12 +95,12 @@ class API extends SQLHandler implements Interfaces\APIInterface
             $this->queryParams->getResolvedValues()
         );
 
-        // Construct the delete statement.
-        $sql = "DELETE FROM {$this->getEntity()} WHERE {$whereClause}";
+        $deleteQueryBuilder = new Builder\DeleteQueryBuilder($this->queryParams, $whereClause);
+        $query = Builder\QueryDirector::build($deleteQueryBuilder);
 
         try {
             // Execute statement.
-            $statement = $this->execute($sql);
+            $statement = $this->execute($query->getSql());
 
             // Throw an exception if errors are found.
             $this->throwExceptionIfErrors($statement);
@@ -112,7 +110,7 @@ class API extends SQLHandler implements Interfaces\APIInterface
 
         $this->get('dbManager')->closeStatement($statement);
 
-        return $sql;
+        return $query->getSql();
     }
 
     /**
@@ -146,12 +144,12 @@ class API extends SQLHandler implements Interfaces\APIInterface
             $this->queryParams->getResolvedValues()
         );
 
-        // Build up the update statement.
-        $sql = "UPDATE {$this->getEntity()} SET {$updateClause} WHERE {$whereClause}";
+        $updateQueryBuilder = new Builder\UpdateQueryBuilder($this->queryParams, $updateClause, $whereClause);
+        $query = Builder\QueryDirector::build($updateQueryBuilder);
 
         try {
             // Execute statement.
-            $statement = $this->execute($sql);
+            $statement = $this->execute($query->getSql());
 
             // If no exception is throw, save the last id.
             $this->setKeywordsFromCriteria(
@@ -164,7 +162,7 @@ class API extends SQLHandler implements Interfaces\APIInterface
 
         $this->get('dbManager')->closeStatement($statement);
 
-        return $sql;
+        return $query->getSql();
     }
 
     /**
@@ -188,6 +186,9 @@ class API extends SQLHandler implements Interfaces\APIInterface
             $searchConditionOperator,
             $this->queryParams->getResolvedValues()
         );
+
+        $selectQueryBuilder = new Builder\SelectQueryBuilder($this->queryParams, $selectWhereClause);
+        $query = Builder\QueryDirector::build($selectQueryBuilder);
 
         try {
             // Execute sql for setting last id.
@@ -214,12 +215,12 @@ class API extends SQLHandler implements Interfaces\APIInterface
         $query = $this->convertToQuery($with);
         $selectWhereClause = $this->resolveQueryToSQLClause($this->getCommandType(), $query);
 
-        // Create the sql to be inserted.
-        $sql = "SELECT * FROM {$this->getEntity()} WHERE {$selectWhereClause}";
+        $selectQueryBuilder = new Builder\SelectQueryBuilder($this->queryParams, $selectWhereClause);
+        $query = Builder\QueryDirector::build($selectQueryBuilder);
 
         // Execute the sql query, if the query throws a generic not found error,
         // catch it and give it some context.
-        $statement = $this->execute($sql);
+        $statement = $this->execute($query->getSql());
         if (! $this->hasFetchedRows($statement)) {
             throw new Exceptions\RecordNotFoundException(
                 $selectWhereClause,
@@ -229,7 +230,7 @@ class API extends SQLHandler implements Interfaces\APIInterface
 
         $this->get('dbManager')->closeStatement($statement);
 
-        return $sql;
+        return $query->getSql();
     }
 
     /**
@@ -247,12 +248,12 @@ class API extends SQLHandler implements Interfaces\APIInterface
         $query = $this->convertToQuery($with);
         $selectWhereClause = $this->resolveQueryToSQLClause($this->getCommandType(), $query);
 
-        // Create the sql to be inserted.
-        $sql = "SELECT * FROM {$this->getEntity()} WHERE {$selectWhereClause}";
+        $selectQueryBuilder = new Builder\SelectQueryBuilder($this->queryParams, $selectWhereClause);
+        $query = Builder\QueryDirector::build($selectQueryBuilder);
 
         // Execute the sql query, if the query throws a generic not found error,
         // catch it and give it some context.
-        $statement = $this->execute($sql);
+        $statement = $this->execute($query->getSql());
 
         if ($this->hasFetchedRows($statement)) {
             throw new Exceptions\RecordFoundException(
@@ -263,6 +264,6 @@ class API extends SQLHandler implements Interfaces\APIInterface
 
         $this->get('dbManager')->closeStatement($statement);
 
-        return $sql;
+        return $query->getSql();
     }
 }
