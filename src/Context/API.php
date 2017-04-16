@@ -14,7 +14,7 @@ use Exception;
  */
 
 /**
- * SQL Context.
+ * SQL API.
  *
  * @author Abdul Wahab Qureshi <its.inevitable@hotmail.com>
  */
