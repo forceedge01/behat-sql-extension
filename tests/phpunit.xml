@@ -7,7 +7,8 @@
     convertWarningsToExceptions="true">
     <testsuites>
         <testsuite name="Genesis SQL Extension">
-            <directory>./src</directory>
+            <directory>./Unit</directory>
+            <directory>./Integration</directory>
         </testsuite>
     </testsuites>
     <filter>

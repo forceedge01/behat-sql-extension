@@ -31,6 +31,7 @@ class Extension implements ExtensionInterface
         if (isset($config['connection_details'])) {
             DEFINE('SQLDBENGINE', $config['connection_details']['engine']);
             DEFINE('SQLDBHOST', $config['connection_details']['host']);
+            DEFINE('SQLDBPORT', $config['connection_details']['port']);
             DEFINE('SQLDBSCHEMA', $config['connection_details']['schema']);
             DEFINE('SQLDBNAME', $config['connection_details']['dbname']);
             DEFINE('SQLDBUSERNAME', $config['connection_details']['username']);
@@ -38,7 +39,7 @@ class Extension implements ExtensionInterface
             DEFINE('SQLDBPREFIX', $config['connection_details']['dbprefix']);
             session_start();
             // Store any keywords set in behat.yml file
-            if (isset($config['keywords']) and $config['keywords']) {
+            if (isset($config['keywords']) && $config['keywords']) {
                 foreach ($config['keywords'] as $keyword => $value) {
                     $_SESSION['behat']['GenesisSqlExtension']['keywords'][$keyword] = $value;
                 }
@@ -70,6 +71,9 @@ class Extension implements ExtensionInterface
                         scalarNode('host')->
                             defaultValue('127.0.0.1')->
                         end()->
+                        scalarNode('port')->
+                            defaultValue('')->
+                        end()->
                         scalarNode('schema')->
                             defaultValue(null)->
                         end()->
@@ -88,6 +92,9 @@ class Extension implements ExtensionInterface
                     end()->
                 end()->
                 arrayNode('keywords')->
+                    ignoreExtraKeys(false)->
+                end()->
+                arrayNode('notQuotableKeywords')->
                     ignoreExtraKeys(false)->
                 end()->
             end()->
