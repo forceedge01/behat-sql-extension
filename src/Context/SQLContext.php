@@ -4,7 +4,6 @@ namespace Genesis\SQLExtension\Context;
 
 use Behat\Behat\Context\Step\Given;
 use Behat\Gherkin\Node\TableNode;
-use Exception;
 
 /*
  * This file is part of the Behat\SQLExtension

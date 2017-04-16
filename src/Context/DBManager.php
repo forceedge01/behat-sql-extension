@@ -82,7 +82,8 @@ class DBManager implements Interfaces\DBManagerInterface
      */
     public function getPrimaryKeyForTable($database, $table)
     {
-        $sql = sprintf('
+        $sql = sprintf(
+            '
             SELECT `COLUMN_NAME`
             FROM `information_schema`.`COLUMNS`
             WHERE (`TABLE_SCHEMA` = "%s")

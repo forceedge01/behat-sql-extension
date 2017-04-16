@@ -2,9 +2,6 @@
 
 namespace Genesis\SQLExtension\Context;
 
-use Behat\Behat\Context\Step\Given;
-use Behat\Gherkin\Node\TableNode;
-use Genesis\SQLExtension\Context\Exceptions;
 use Exception;
 
 /*
@@ -26,10 +23,46 @@ class API extends SQLHandler implements Interfaces\APIInterface
     /**
      * {@inheritDoc}
      */
+    public function select($table, array $columns)
+    {
+        $this->debugLog('------- SELECT -------');
+
+        $this->setEntity($table);
+        $this->setCommandType('select');
+
+        $query = $this->convertToQuery($columns);
+        $resolvedValues = $this->resolveQuery($query);
+
+        $this->queryParams = new Representations\QueryParams($this->getEntity(), $columns, $resolvedValues);
+
+        $searchConditionOperator = $this->get('sqlBuilder')->getSearchConditionOperatorForColumns($query);
+        $selectWhereClause = $this->constructSQLClause(
+            $this->getCommandType(),
+            $searchConditionOperator,
+            $this->queryParams->getResolvedValues()
+        );
+
+        $selectQueryBuilder = new Builder\SelectQueryBuilder($this->queryParams);
+        $selectQueryBuilder->setWhereClause($selectWhereClause);
+        $query = Builder\QueryDirector::build($selectQueryBuilder);
+
+        try {
+            // Execute sql for setting last id.
+            return $this->setKeywordsFromCriteria(
+                $this->getEntity(),
+                $selectWhereClause
+            );
+        } catch (Exception $e) {
+            throw new Exceptions\SelectException($this->getEntity(), $e);
+        }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
     public function insert($table, array $values)
     {
-        $this->debugLog('------- I HAVE WHERE -------');
-        $this->debugLog('Trying to select existing record.');
+        $this->debugLog('------- INSERT -------');
 
         // Normalize data.
         $this->setEntity($table);
@@ -72,54 +105,9 @@ class API extends SQLHandler implements Interfaces\APIInterface
     /**
      * {@inheritDoc}
      */
-    public function delete($table, array $columns)
-    {
-        $this->debugLog('------- I DONT HAVE WHERE -------');
-
-        if (! $columns) {
-            throw new Exception('You must provide a where clause!');
-        }
-
-        $this->setEntity($table);
-        $this->setCommandType('delete');
-
-        $query = $this->convertToQuery($columns);
-        $resolvedValues = $this->resolveQuery($query);
-
-        $this->queryParams = new Representations\QueryParams($this->getEntity(), $columns, $resolvedValues);
-
-        $searchConditionOperator = $this->get('sqlBuilder')->getSearchConditionOperatorForColumns($query);
-        $whereClause = $this->constructSQLClause(
-            $this->getCommandType(),
-            $searchConditionOperator,
-            $this->queryParams->getResolvedValues()
-        );
-
-        $deleteQueryBuilder = new Builder\DeleteQueryBuilder($this->queryParams);
-        $deleteQueryBuilder->setWhereClause($whereClause);
-        $query = Builder\QueryDirector::build($deleteQueryBuilder);
-
-        try {
-            // Execute statement.
-            $statement = $this->execute($query->getSql());
-
-            // Throw an exception if errors are found.
-            $this->throwExceptionIfErrors($statement);
-        } catch (Exception $e) {
-            throw new Exceptions\DeleteException($this->getEntity(), $e);
-        }
-
-        $this->get('dbManager')->closeStatement($statement);
-
-        return $query->getSql();
-    }
-
-    /**
-     * {@inheritDoc}
-     */
     public function update($table, array $with, array $columns)
     {
-        $this->debugLog('------- I HAVE AN EXISTING WITH WHERE -------');
+        $this->debugLog('------- UPDATE -------');
 
         if (! $columns) {
             throw new Exception('You must provide a where clause!');
@@ -170,12 +158,16 @@ class API extends SQLHandler implements Interfaces\APIInterface
     /**
      * {@inheritDoc}
      */
-    public function select($table, array $columns)
+    public function delete($table, array $columns)
     {
-        $this->debugLog('------- I HAVE AN EXISTING WHERE -------');
+        $this->debugLog('------- DELETE -------');
+
+        if (! $columns) {
+            throw new Exception('You must provide a where clause!');
+        }
 
         $this->setEntity($table);
-        $this->setCommandType('select');
+        $this->setCommandType('delete');
 
         $query = $this->convertToQuery($columns);
         $resolvedValues = $this->resolveQuery($query);
@@ -183,25 +175,29 @@ class API extends SQLHandler implements Interfaces\APIInterface
         $this->queryParams = new Representations\QueryParams($this->getEntity(), $columns, $resolvedValues);
 
         $searchConditionOperator = $this->get('sqlBuilder')->getSearchConditionOperatorForColumns($query);
-        $selectWhereClause = $this->constructSQLClause(
+        $whereClause = $this->constructSQLClause(
             $this->getCommandType(),
             $searchConditionOperator,
             $this->queryParams->getResolvedValues()
         );
 
-        $selectQueryBuilder = new Builder\SelectQueryBuilder($this->queryParams);
-        $selectQueryBuilder->setWhereClause($selectWhereClause);
-        $query = Builder\QueryDirector::build($selectQueryBuilder);
+        $deleteQueryBuilder = new Builder\DeleteQueryBuilder($this->queryParams);
+        $deleteQueryBuilder->setWhereClause($whereClause);
+        $query = Builder\QueryDirector::build($deleteQueryBuilder);
 
         try {
-            // Execute sql for setting last id.
-            return $this->setKeywordsFromCriteria(
-                $this->getEntity(),
-                $selectWhereClause
-            );
+            // Execute statement.
+            $statement = $this->execute($query->getSql());
+
+            // Throw an exception if errors are found.
+            $this->throwExceptionIfErrors($statement);
         } catch (Exception $e) {
-            throw new Exceptions\SelectException($this->getEntity(), $e);
+            throw new Exceptions\DeleteException($this->getEntity(), $e);
         }
+
+        $this->get('dbManager')->closeStatement($statement);
+
+        return $query->getSql();
     }
 
     /**
@@ -209,7 +205,7 @@ class API extends SQLHandler implements Interfaces\APIInterface
      */
     public function assertExists($table, array $with)
     {
-        $this->debugLog('------- I SHOULD HAVE A WITH -------');
+        $this->debugLog('------- EXISTS -------');
         $this->setEntity($table);
         $this->setCommandType('select');
 
@@ -242,7 +238,7 @@ class API extends SQLHandler implements Interfaces\APIInterface
      */
     public function assertNotExists($table, array $with)
     {
-        $this->debugLog('------- I SHOULD NOT HAVE A WHERE -------');
+        $this->debugLog('------- NOT-EXISTS -------');
 
         $this->setEntity($table);
         $this->setCommandType('select');

@@ -5,12 +5,10 @@ Installation
 ------------
 require with composer
 ```bash
-require "genesis/behat-sql-extension"
+composer require "genesis/behat-sql-extension"
 ```
 
-=======
 Instantiation
-
 -------------
 
 Instantiating the sql extension in your FeatureContext class.
