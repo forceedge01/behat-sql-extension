@@ -6,7 +6,6 @@ use Behat\Behat\Context\Context;
 use Behat\Gherkin\Node\TableNode;
 use Exception;
 use Traversable;
-use Representations\SQLCommand;
 
 /*
  * This file is part of the Behat\SQLExtension
@@ -233,7 +232,7 @@ class SQLHandler implements Context, Interfaces\SQLHandlerInterface
             );
 
         $this->setCommandType('select');
-        $statement = $this->execute($query);
+        $statement = $this->execute($query->getSql());
         $this->throwExceptionIfErrors($statement);
         $this->throwErrorIfNoRowsAffected($statement);
 
@@ -308,6 +307,8 @@ class SQLHandler implements Context, Interfaces\SQLHandlerInterface
 
     /**
      * Prints out messages when in debug mode.
+     *
+     * @param mixed $log
      */
     public function debugLog($log)
     {
@@ -350,6 +351,9 @@ class SQLHandler implements Context, Interfaces\SQLHandlerInterface
 
     /**
      * Save the last insert id in the session for later retrieval.
+     *
+     * @param mixed $entity
+     * @param mixed $id
      */
     protected function saveLastId($entity, $id)
     {
@@ -360,6 +364,8 @@ class SQLHandler implements Context, Interfaces\SQLHandlerInterface
 
     /**
      * Check for any mysql errors.
+     *
+     * @param mixed $ignoreDuplicate
      */
     public function throwErrorIfNoRowsAffected(Traversable $sqlStatement, $ignoreDuplicate = false)
     {
@@ -402,6 +408,8 @@ class SQLHandler implements Context, Interfaces\SQLHandlerInterface
 
     /**
      * Get the duplicate key from the error message.
+     *
+     * @param mixed $error
      */
     public function getKeyFromDuplicateError($error)
     {
@@ -467,6 +475,9 @@ class SQLHandler implements Context, Interfaces\SQLHandlerInterface
 
     /**
      * Do what needs to be done with the last insert id.
+     *
+     * @param mixed $entity
+     * @param mixed $id
      */
     public function handleLastId($entity, $id)
     {
@@ -484,6 +495,7 @@ class SQLHandler implements Context, Interfaces\SQLHandlerInterface
      *
      * @param string $entity The table to get the columns of.
      * @param array $overridingColumns The overriding columns.
+     * @param mixed $table
      *
      * @return array
      */
@@ -524,6 +536,8 @@ class SQLHandler implements Context, Interfaces\SQLHandlerInterface
 
     /**
      * Get the entity the way the user had inputted it.
+     *
+     * @param mixed $entity
      */
     public function getUserInputEntity($entity)
     {
@@ -564,6 +578,8 @@ class SQLHandler implements Context, Interfaces\SQLHandlerInterface
 
     /**
      * Make a string SQL safe.
+     *
+     * @param mixed $string
      */
     public function makeSQLSafe($string)
     {
@@ -576,6 +592,8 @@ class SQLHandler implements Context, Interfaces\SQLHandlerInterface
 
     /**
      * Remove any quote chars.
+     *
+     * @param mixed $string
      */
     public function makeSQLUnsafe($string)
     {
@@ -584,6 +602,9 @@ class SQLHandler implements Context, Interfaces\SQLHandlerInterface
 
     /**
      * Get the database name, prefix or not depending on config.
+     *
+     * @param mixed $prefix
+     * @param mixed $entity
      *
      * @return string
      */
@@ -600,6 +621,8 @@ class SQLHandler implements Context, Interfaces\SQLHandlerInterface
 
     /**
      * Set the entity for further processing.
+     *
+     * @param mixed $entity
      */
     public function setEntity($entity)
     {
@@ -652,6 +675,7 @@ class SQLHandler implements Context, Interfaces\SQLHandlerInterface
      * Get the required table columns for a table.
      *
      * @param string $entity
+     * @param mixed $table
      *
      * @return array
      */
@@ -688,6 +712,8 @@ class SQLHandler implements Context, Interfaces\SQLHandlerInterface
 
     /**
      * Get all id's inserted for an entity.
+     *
+     * @param null|mixed $entity
      */
     public function getLastIds($entity = null)
     {

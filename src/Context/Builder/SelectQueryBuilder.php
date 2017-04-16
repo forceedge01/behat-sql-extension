@@ -15,6 +15,11 @@ class SelectQueryBuilder extends QueryBuilder
     private $whereClause;
 
     /**
+     * @var string
+     */
+    private $selectColumns = '*';
+
+    /**
      * @param Representations\QueryParams $queryParams The query params.
      */
     public function __construct(Representations\QueryParams $queryParams)
@@ -33,13 +38,23 @@ class SelectQueryBuilder extends QueryBuilder
     }
 
     /**
+     * @param string $columns The columns to set.
+     */
+    public function setColumns($columns)
+    {
+        $this->selectColumns = $columns;
+
+        return $this;
+    }
+
+    /**
      * @return $this
      */
     public function buildQuery()
     {
         $table = $this->query->getQueryParams()->getTable();
 
-        $sql = "SELECT * FROM {$table} WHERE {$this->whereClause}";
+        $sql = "SELECT {$this->selectColumns} FROM {$table} WHERE {$this->whereClause}";
         $this->query->setSql($sql);
 
         return $this;

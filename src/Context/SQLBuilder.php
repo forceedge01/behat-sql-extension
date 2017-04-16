@@ -94,7 +94,7 @@ class SQLBuilder implements Interfaces\SQLBuilderInterface
     /**
      * Converts the incoming string param from steps to array.
      *
-     * @param string $columns
+     * @param mixed $query
      *
      * @return array
      */
@@ -135,7 +135,7 @@ class SQLBuilder implements Interfaces\SQLBuilderInterface
      */
     public function quoteOrNot($val)
     {
-        return ((is_string($val) || is_numeric($val)) && !$this->isNotQuotable($val)) ?
+        return ((is_string($val) || is_numeric($val)) && ! $this->isNotQuotable($val)) ?
             sprintf(
                 "'%s'",
                 str_replace(
@@ -189,7 +189,7 @@ class SQLBuilder implements Interfaces\SQLBuilderInterface
         // Get all rows and extract the heading.
         $rows = $node->getRows();
 
-        if (! $rows || !isset($rows[1])) {
+        if (! $rows || ! isset($rows[1])) {
             throw new Exception('No data provided to loop through.');
         }
 
@@ -221,7 +221,7 @@ class SQLBuilder implements Interfaces\SQLBuilderInterface
         // Get all rows and extract the heading.
         $rows = $node->getRows();
 
-        if (! $rows || !isset($rows[1])) {
+        if (! $rows || ! isset($rows[1])) {
             throw new Exception('No data provided to loop through.');
         }
 
@@ -261,7 +261,7 @@ class SQLBuilder implements Interfaces\SQLBuilderInterface
             case 'character varying':
             case 'tinytext':
             case 'longtext':
-                return $this->quoteOrNot(sprintf("behat-test-string-%s", time()));
+                return $this->quoteOrNot(sprintf('behat-test-string-%s', time()));
             case 'char':
                 return "'f'";
             case 'timestamp':
@@ -270,7 +270,7 @@ class SQLBuilder implements Interfaces\SQLBuilderInterface
             case 'null':
                 return null;
             default:
-                return $this->quoteOrNot(sprintf("behat-test-string-%s", time()));
+                return $this->quoteOrNot(sprintf('behat-test-string-%s', time()));
         }
     }
 
@@ -336,7 +336,7 @@ class SQLBuilder implements Interfaces\SQLBuilderInterface
      * @param string $externalRef The external ref enclosed in [].
      * @param string $prefix The database prefix.
      *
-     * @return string
+     * @return Representations\Query
      */
     public function getSQLQueryForExternalReference($externalRef, $prefix = null)
     {
@@ -361,9 +361,15 @@ class SQLBuilder implements Interfaces\SQLBuilderInterface
         // Construct where clause.
         $searchConditionOperator = $this->getSearchConditionOperatorForColumns($where);
         $whereClause = $this->constructSQLClause('SELECT', $searchConditionOperator, $this->convertToArray($where));
-        $query = sprintf('SELECT %s FROM %s WHERE %s', $column, $qualifiedTableName, $whereClause);
 
-        Debugger::log(sprintf('Built query "%s" for external ref "%s"', $query, $externalRef));
+        $queryParams = new Representations\QueryParams($qualifiedTableName, $this->convertToArray($where));
+        $queryBuilder = new Builder\SelectQueryBuilder($queryParams);
+        $queryBuilder
+            ->setWhereClause($whereClause)
+            ->setColumns($column);
+        $query = Builder\QueryDirector::build($queryBuilder);
+
+        Debugger::log(sprintf('Built query "%s" for external ref "%s"', $query->getSql(), $externalRef));
 
         return $query;
     }
@@ -421,7 +427,7 @@ class SQLBuilder implements Interfaces\SQLBuilderInterface
         preg_match_all($pattern, $query, $refs);
 
         // If there are any external ref matches, then replace them with placeholders.
-        if (isset($refs[0]) and !empty($refs[0])) {
+        if (isset($refs[0]) and ! empty($refs[0])) {
             Debugger::log('External refs found: ' . print_r($refs[0], true));
             foreach ($refs[0] as $ref) {
                 $placeholder = $this->getPlaceholderForRef($ref);
@@ -442,6 +448,7 @@ class SQLBuilder implements Interfaces\SQLBuilderInterface
      *
      * @param string $prefix The prefix to prepend.
      * @param string $table The table to prefix.
+     * @param mixed $entity
      *
      * @return string|null If no database name is given, returns null.
      */
@@ -451,9 +458,9 @@ class SQLBuilder implements Interfaces\SQLBuilderInterface
             $database = explode('.', $entity, 2)[0];
 
             return $prefix . $database;
-        } else {
-            return null;
         }
+
+        return null;
     }
 
     /**
@@ -493,7 +500,6 @@ class SQLBuilder implements Interfaces\SQLBuilderInterface
         return ' AND ';
     }
 
-
     /**
      * Check whether an and is supported by the columns.
      *
@@ -503,6 +509,6 @@ class SQLBuilder implements Interfaces\SQLBuilderInterface
      */
     public function isAndOperatorForColumns($columns)
     {
-        return (' AND ' === $this->getSearchConditionOperatorForColumns($columns));
+        return ' AND ' === $this->getSearchConditionOperatorForColumns($columns);
     }
 }
