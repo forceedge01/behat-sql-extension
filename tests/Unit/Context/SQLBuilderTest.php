@@ -20,8 +20,9 @@ function time()
 
 namespace Genesis\SQLExtension\Tests\Unit\Context;
 
-use Genesis\SQLExtension\Context\SQLBuilder;
 use Behat\Gherkin\Node\TableNode;
+use Genesis\SQLExtension\Context\Representations;
+use Genesis\SQLExtension\Context\SQLBuilder;
 use Genesis\SQLExtension\Tests\TestHelper;
 
 /**
@@ -35,7 +36,7 @@ class SQLBuilderTest extends TestHelper
     const TINY_INT_NUMBER = 5;
 
     /**
-     * @var object $testObject The object to be tested.
+     * @var object The object to be tested.
      */
     protected $testObject;
 
@@ -91,19 +92,19 @@ class SQLBuilderTest extends TestHelper
         // Execute
 
         $result = $this->testObject->constructSQLClause('select', ' AND ', $columns);
-        $expected = "`firstname` is null AND `lastname` is not null AND `postcode` is not NULL AND `address` is NULL";
+        $expected = '`firstname` is null AND `lastname` is not null AND `postcode` is not NULL AND `address` is NULL';
         // Assert Result
         $this->assertEquals($expected, $result);
 
         // Execute
         $result = $this->testObject->constructSQLClause('update', ' AND ', $columns);
-        $expected = "`firstname` is null AND `lastname` is not null AND `postcode` is not NULL AND `address` is NULL";
+        $expected = '`firstname` is null AND `lastname` is not null AND `postcode` is not NULL AND `address` is NULL';
         // Assert Result
         $this->assertEquals($expected, $result);
 
         // Execute
         $result = $this->testObject->constructSQLClause('delete', ' AND ', $columns);
-        $expected = "`firstname` is null AND `lastname` is not null AND `postcode` is not NULL AND `address` is NULL";
+        $expected = '`firstname` is null AND `lastname` is not null AND `postcode` is not NULL AND `address` is NULL';
         // Assert Result
         $this->assertEquals($expected, $result);
     }
@@ -514,7 +515,8 @@ class SQLBuilderTest extends TestHelper
         // Assert Result
         $expectedSQL = "SELECT id FROM user WHERE `email` = 'abdul@easyfundraising.org.uk' AND `status` = 1";
 
-        $this->assertEquals($expectedSQL, $result);
+        $this->assertInstanceOf(Representations\Query::class, $result);
+        $this->assertEquals($expectedSQL, $result->getSql());
     }
 
     /**
@@ -531,7 +533,8 @@ class SQLBuilderTest extends TestHelper
         // Assert Result
         $expectedSQL = "SELECT id FROM mydb.user WHERE `email` = 'abdul@easyfundraising.org.uk' AND `status` = 1";
 
-        $this->assertEquals($expectedSQL, $result);
+        $this->assertInstanceOf(Representations\Query::class, $result);
+        $this->assertEquals($expectedSQL, $result->getSql());
     }
 
     /**

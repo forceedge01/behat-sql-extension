@@ -2,12 +2,13 @@
 
 namespace Genesis\SQLExtension\Tests\Unit\Context;
 
+use Exception;
 use Genesis\SQLExtension\Context\Interfaces\DBManagerInterface;
 use Genesis\SQLExtension\Context\Interfaces\KeyStoreInterface;
 use Genesis\SQLExtension\Context\Interfaces\SQLBuilderInterface;
 use Genesis\SQLExtension\Context\Interfaces\SQLHistoryInterface;
+use Genesis\SQLExtension\Context\Representations;
 use Genesis\SQLExtension\Context\SQLHandler;
-use Exception;
 use Genesis\SQLExtension\Tests\TestHelper;
 use ReflectionClass;
 
@@ -174,7 +175,12 @@ class SQLHandlerTest extends TestHelper
         $expected = ['abc' => 123];
         $expectedExtRefPlaceholder = 'abc:ext-ref-placeholder_0';
         $expectedConvertArray = ['abc' => 'ext-ref-placeholder_0'];
-        $externalRefQuery = 'SELECT user.abc_id FROM user WHERE `email` = "abdul@email.com"';
+        $externalRefQuery = $this->getMockBuilder(Representations\Query::class)
+            ->disableOriginalConstructor()
+            ->getMock();
+        $externalRefQuery->expects($this->any())
+            ->method('getSql')
+            ->willReturn('SELECT user.abc_id FROM user WHERE `email` = "abdul@email.com"');
 
         $this->mockDependency('sqlBuilderMock', 'parseExternalQueryReferences', [$queries], $expectedExtRefPlaceholder);
         $this->mockDependency('sqlBuilderMock', 'convertToArray', [$expectedExtRefPlaceholder], $expectedConvertArray);
@@ -184,7 +190,7 @@ class SQLHandlerTest extends TestHelper
 
         $statementMock = $this->getPdoStatementWithRows(true, [['id' => 123]]);
 
-        $this->mockDependency('dbHelperMock', 'execute', [$externalRefQuery], $statementMock);
+        $this->mockDependency('dbHelperMock', 'execute', [$externalRefQuery->getSql()], $statementMock);
         $this->mockDependency('dbHelperMock', 'getFirstValueFromStatement', [$statementMock], [123]);
 
         $this->mockDependency('keyStoreMock', 'getKeywordIfExists', ['ext-ref-placeholder_0'], 'ext-ref-placeholder_0');
@@ -581,7 +587,7 @@ class SQLHandlerTest extends TestHelper
     public function testGetLastId()
     {
         $expectedValue = 992837;
-        
+
         $property = $this->reflection->getProperty('entity');
         $property->setAccessible(true);
         $property->setValue($this->testObject, 'company');
