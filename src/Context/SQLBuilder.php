@@ -94,7 +94,6 @@ class SQLBuilder implements Interfaces\SQLBuilderInterface
     /**
      * Converts the incoming string param from steps to array.
      *
-     * @param string $columns
      * @param mixed $query
      *
      * @return array
