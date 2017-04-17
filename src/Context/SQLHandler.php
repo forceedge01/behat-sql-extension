@@ -189,13 +189,11 @@ class SQLHandler implements Context, Interfaces\SQLHandlerInterface
      *
      * @return array
      */
-    public function convertToFilteredArray($query)
+    public function convertToResolvedArray(array $values)
     {
         // Match all external query references.
-        $query = $this->get('sqlBuilder')->parseExternalQueryReferences($query);
-
-        // Convert column string to array.
-        $columns = $this->get('sqlBuilder')->convertToArray($query);
+        $columns = $this->get('sqlBuilder')->parseExternalQueryReferences($this->convertToQuery($values));
+        $columns = $this->get('sqlBuilder')->convertToArray($columns);
 
         $filteredColumns = [];
 
@@ -246,13 +244,13 @@ class SQLHandler implements Context, Interfaces\SQLHandlerInterface
     /**
      * @param string $query
      *
-     * @depreciated Use convertToFilteredArray instead.
+     * @depreciated Use convertToResolvedArray instead.
      */
     public function filterAndConvertToArray($query)
     {
-        $this->debugLog(sprintf('Depreciated method "%s", use convertToFilteredArray instead.', __FUNCTION__));
+        $this->debugLog(sprintf('Depreciated method "%s", use convertToResolvedArray instead.', __FUNCTION__));
 
-        return $this->convertToFilteredArray($query);
+        return $this->convertToResolvedArray($query);
     }
 
     /**
@@ -756,28 +754,29 @@ class SQLHandler implements Context, Interfaces\SQLHandlerInterface
     }
 
     /**
-     * @param string $query The query to resolve.
+     * @param array $values The values to resolve.
      *
      * @return array
      */
-    protected function resolveQuery($query)
+    protected function resolveQuery(array $values)
     {
-        $query = $this->get('keyStore')->parseKeywordsInString($query);
+        foreach ($values as $index => $value) {
+            $values[$index] = $this->get('keyStore')->parseKeywordsInString($value);
+        }
 
-        return $this->convertToFilteredArray($query);
+        return $this->convertToResolvedArray($values);
     }
 
     /**
      * @param string $commandType The command type.
-     * @param string $query The query to resolve to sql clause.
+     * @param array $query The query to resolve to sql clause.
      *
      * @return string
      */
-    protected function resolveQueryToSQLClause($commandType, $query)
+    protected function resolveQueryToSQLClause($commandType, array $query)
     {
         $resolveQuery = $this->resolveQuery($query);
-        $searchConditionOperator = $this->get('sqlBuilder')->getSearchConditionOperatorForColumns($query);
-        $sqlClause = $this->constructSQLClause($commandType, $searchConditionOperator, $resolveQuery);
+        $sqlClause = $this->constructSQLClause($commandType, ' AND ', $resolveQuery);
 
         return $sqlClause;
     }

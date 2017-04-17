@@ -145,33 +145,33 @@ class SQLHandlerTest extends TestHelper
     }
 
     /**
-     * testConvertToFilteredArray Test that convertToFilteredArray executes as expected.
+     * testconvertToResolvedArray Test that convertToResolvedArray executes as expected.
      */
-    public function testConvertToFilteredArray()
+    public function testconvertToResolvedArray()
     {
-        $queries = 'abc:123';
+        $queries = ['abc' => '123'];
         $expected = ['abc' => 123];
 
         $this->mockDependency('sqlBuilderMock', 'convertToArray', [$queries], $expected);
         $this->mockDependency('keyStoreMock', 'getKeywordIfExists', [123], 123);
 
-        $this->mockDependency('sqlBuilderMock', 'parseExternalQueryReferences', [$queries], $queries);
+        $this->mockDependency('sqlBuilderMock', 'parseExternalQueryReferences', ['abc:123'], $queries);
         $this->mockDependency('sqlBuilderMock', 'isExternalReferencePlaceholder', [123], false);
 
         // Execute
-        $result = $this->testObject->convertToFilteredArray($queries);
+        $result = $this->testObject->convertToResolvedArray($queries);
 
         $this->assertEquals($expected, $result);
     }
 
     /**
-     * testConvertToFilteredArray Test that convertToFilteredArray executes as expected.
+     * testconvertToResolvedArray Test that convertToResolvedArray executes as expected.
      *
      * @group externalRef
      */
-    public function testConvertToFilteredArrayWithExternalRef()
+    public function testconvertToResolvedArrayWithExternalRef()
     {
-        $queries = 'abc:[user.abc_id|email:abdul@email.com]';
+        $queries = ['abc' => '[user.abc_id|email:abdul@email.com]'];
         $expected = ['abc' => 123];
         $expectedExtRefPlaceholder = 'abc:ext-ref-placeholder_0';
         $expectedConvertArray = ['abc' => 'ext-ref-placeholder_0'];
@@ -182,7 +182,7 @@ class SQLHandlerTest extends TestHelper
             ->method('getSql')
             ->willReturn('SELECT user.abc_id FROM user WHERE `email` = "abdul@email.com"');
 
-        $this->mockDependency('sqlBuilderMock', 'parseExternalQueryReferences', [$queries], $expectedExtRefPlaceholder);
+        $this->mockDependency('sqlBuilderMock', 'parseExternalQueryReferences', ['abc:[user.abc_id|email:abdul@email.com]'], $expectedExtRefPlaceholder);
         $this->mockDependency('sqlBuilderMock', 'convertToArray', [$expectedExtRefPlaceholder], $expectedConvertArray);
         $this->mockDependency('sqlBuilderMock', 'isExternalReferencePlaceholder', [$expectedConvertArray['abc']], true);
         $this->mockDependency('sqlBuilderMock', 'getRefFromPlaceholder', [$expectedConvertArray['abc']], '[user.abc_id|email:abdul@email.com]');
@@ -196,7 +196,7 @@ class SQLHandlerTest extends TestHelper
         $this->mockDependency('keyStoreMock', 'getKeywordIfExists', ['ext-ref-placeholder_0'], 'ext-ref-placeholder_0');
 
         // Execute
-        $result = $this->testObject->convertToFilteredArray($queries);
+        $result = $this->testObject->convertToResolvedArray($queries);
 
         $this->assertEquals($expected, $result);
     }
