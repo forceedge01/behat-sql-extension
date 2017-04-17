@@ -15,7 +15,7 @@ require "genesis/behat-sql-extension"
 
 DB Support
 ----------
-Tested with PostgreSQL. Expected to work with MySQL as well.
+Using PDO library, Tested with MySQL/PostgreSQL.
 
 Contributing to this extension
 ==============================
