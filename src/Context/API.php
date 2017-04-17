@@ -48,9 +48,8 @@ class API extends SQLHandler implements Interfaces\APIInterface
 
         try {
             // Execute sql for setting last id.
-            return $this->setKeywordsFromCriteria(
-                $this->getEntity(),
-                $selectWhereClause
+            return $this->setKeywordsFromQuery(
+                $query
             );
         } catch (Exception $e) {
             throw new Exceptions\SelectException($this->getEntity(), $e);
@@ -96,7 +95,11 @@ class API extends SQLHandler implements Interfaces\APIInterface
             throw new Exceptions\InsertException($this->getEntity(), $e);
         }
 
-        $this->setKeywordsFromId($lastId);
+        $queryBuilder = new Builder\SelectQueryBuilder($this->queryParams);
+        $queryBuilder->setWhereClause("{$this->primaryKey} = {$this->quoteOrNot($lastId)}");
+        $selectQuery = Builder\QueryDirector::build($queryBuilder);
+
+        $this->setKeywordsFromQuery($selectQuery);
         $this->get('dbManager')->closeStatement($statement);
 
         return $query->getSql();
@@ -141,10 +144,13 @@ class API extends SQLHandler implements Interfaces\APIInterface
             // Execute statement.
             $statement = $this->execute($query->getSql());
 
+            $queryBuilder = new Builder\SelectQueryBuilder($this->queryParams);
+            $queryBuilder->setWhereClause($whereClause);
+            $selectQuery = Builder\QueryDirector::build($queryBuilder);
+
             // If no exception is throw, save the last id.
-            $this->setKeywordsFromCriteria(
-                $this->getEntity(),
-                $whereClause
+            $this->setKeywordsFromQuery(
+                $selectQuery
             );
         } catch (Exception $e) {
             throw new Exceptions\UpdateException($this->getEntity(), $e);

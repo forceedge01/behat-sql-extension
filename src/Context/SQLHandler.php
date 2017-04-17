@@ -434,18 +434,18 @@ class SQLHandler implements Context, Interfaces\SQLHandlerInterface
     /**
      * Set all keys from the current entity.
      *
-     * @param string $entity
-     * @param string $criteria
+     * @param Representations\Query $query
+     *
+     * @return array
      */
-    public function setKeywordsFromCriteria($entity, $criteria)
+    public function setKeywordsFromQuery(Representations\Query $query)
     {
-        $result = $this->fetchByCriteria(
-            $entity,
-            $criteria
+        $result = $this->fetchByQuery(
+            $query
         );
 
         return $this->setKeywordsFromRecord(
-            $entity,
+            $query->getQueryParams()->getTable(),
             $result[0]
         );
     }
@@ -455,6 +455,8 @@ class SQLHandler implements Context, Interfaces\SQLHandlerInterface
      *
      * @param string $entity
      * @param array $record
+     *
+     * @return array
      */
     public function setKeywordsFromRecord($entity, array $record)
     {
@@ -731,20 +733,20 @@ class SQLHandler implements Context, Interfaces\SQLHandlerInterface
     /**
      * Get a record by a criteria.
      *
-     * @param string $entity
-     * @param string $criteria The SQL criteria.
+     * @param Representations\Query $query
+     *
+     * @return array
      */
-    public function fetchByCriteria($entity, $criteria)
+    public function fetchByQuery(Representations\Query $query)
     {
-        $this->setCommandType('select');
-        $sql = sprintf('SELECT * FROM %s WHERE %s', $entity, $criteria);
-        $statement = $this->execute($sql);
+        $this->setCommandType($query->getType());
+        $statement = $this->execute($query->getSql());
         $result = $statement->fetchAll();
 
         if (! $result) {
             throw new Exceptions\RecordNotFoundException(
-                $criteria,
-                $entity
+                $query->getSql(),
+                $query->getQueryParams()->getTable()
             );
         }
 
@@ -778,15 +780,5 @@ class SQLHandler implements Context, Interfaces\SQLHandlerInterface
         $sqlClause = $this->constructSQLClause($commandType, $searchConditionOperator, $resolveQuery);
 
         return $sqlClause;
-    }
-
-    /**
-     * @param int $id The id.
-     *
-     * @return void
-     */
-    protected function setKeywordsFromId($id)
-    {
-        $this->setKeywordsFromCriteria($this->getEntity(), "{$this->primaryKey} = {$this->quoteOrNot($id)}");
     }
 }

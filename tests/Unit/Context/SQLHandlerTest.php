@@ -607,15 +607,25 @@ class SQLHandlerTest extends TestHelper
     }
 
     /**
-     * testFetchByCriteria Test that fetchByCriteria executes as expected.
+     * testFetchByQuery Test that fetchByQuery executes as expected.
      *
      * @expectedException Genesis\SQLExtension\Context\Exceptions\RecordNotFoundException
      */
-    public function testFetchByCriteriaNoRows()
+    public function testFetchByQueryNoRows()
     {
         // Prepare / Mock
-        $entity = 'user';
-        $criteria = 'name = "Abdul"';
+        $queryParamsMock = $this->getMockBuilder(Representations\QueryParams::class)
+            ->disableOriginalConstructor()
+            ->getMock();
+        $query = $this->getMockBuilder(Representations\Query::class)
+            ->disableOriginalConstructor()
+            ->getMock();
+        $query->expects($this->any())
+            ->method('getType')
+            ->willReturn('select');
+        $query->expects($this->any())
+            ->method('getQueryParams')
+            ->willReturn($queryParamsMock);
 
         $this->dependencies['dbHelperMock']
             ->expects($this->once())
@@ -627,17 +637,21 @@ class SQLHandlerTest extends TestHelper
             ));
 
         // Execute
-        $this->testObject->fetchByCriteria($entity, $criteria);
+        $this->testObject->fetchByQuery($query);
     }
 
     /**
-     * testFetchByCriteria Test that fetchByCriteria executes as expected.
+     * testFetchByQuery Test that fetchByQuery executes as expected.
      */
-    public function testFetchByCriteriaWithRows()
+    public function testFetchByQueryWithRows()
     {
         // Prepare / Mock
-        $entity = 'user';
-        $criteria = 'name = "Abdul"';
+        $query = $this->getMockBuilder(Representations\Query::class)
+            ->disableOriginalConstructor()
+            ->getMock();
+        $query->expects($this->any())
+            ->method('getType')
+            ->willReturn('select');
 
         $expectedRecord = [['id' => 123]];
         $this->dependencies['dbHelperMock']
@@ -651,7 +665,7 @@ class SQLHandlerTest extends TestHelper
             ));
 
         // Execute
-        $result = $this->testObject->fetchByCriteria($entity, $criteria);
+        $result = $this->testObject->fetchByQuery($query);
 
         $this->assertEquals($expectedRecord, $result);
     }

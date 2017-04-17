@@ -4,6 +4,7 @@ namespace Genesis\SQLExtension\Context\Interfaces;
 
 use Behat\Gherkin\Node\TableNode;
 use Exception;
+use Genesis\SQLExtension\Context\Representations;
 use Traversable;
 
 /*
@@ -49,6 +50,8 @@ interface SQLHandlerInterface
 
     /**
      * returns sample data for a data type.
+     *
+     * @param mixed $type
      */
     public function sampleData($type);
 
@@ -59,6 +62,8 @@ interface SQLHandlerInterface
 
     /**
      * Set the clause type.
+     *
+     * @param mixed $commandType
      */
     public function setCommandType($commandType);
 
@@ -73,31 +78,44 @@ interface SQLHandlerInterface
 
     /**
      * Sets a behat keyword.
+     *
+     * @param mixed $key
+     * @param mixed $value
      */
     public function setKeyword($key, $value);
 
     /**
      * Fetches a specific keyword from the behat keywords store.
+     *
+     * @param mixed $key
      */
     public function getKeyword($key);
 
     /**
      * Checks the value for possible keywords set in behat.yml file.
+     *
+     * @param mixed $value
      */
     public function checkForKeyword($value);
 
     /**
      * Prints out messages when in debug mode.
+     *
+     * @param mixed $log
      */
     public function debugLog($log);
 
     /**
      * Get all id's inserted for an entity.
+     *
+     * @param null|mixed $entity
      */
     public function getLastIds($entity = null);
 
     /**
      * Check for any mysql errors.
+     *
+     * @param mixed $ignoreDuplicate
      */
     public function throwErrorIfNoRowsAffected(Traversable $sqlStatement, $ignoreDuplicate = false);
 
@@ -113,33 +131,39 @@ interface SQLHandlerInterface
 
     /**
      * Quotes value if needed for sql.
+     *
+     * @param mixed $val
      */
     public function quoteOrNot($val);
 
     /**
      * Get the duplicate key from the error message.
+     *
+     * @param mixed $error
      */
     public function getKeyFromDuplicateError($error);
 
     /**
      * Set all keys from the current entity.
-     * 
-     * @param string $entity
-     * @param string $criteria
+     *
+     * @param Representations\Query $query
+     *
+     * @return void
      */
-    public function setKeywordsFromCriteria($entity, $criteria);
+    public function setKeywordsFromQuery(Representations\Query $query);
 
     /**
      * Get a record by a criteria.
-     * 
-     * @param string $entity
-     * @param string $criteria
+     *
+     * @param Representations\Query $query
+     *
+     * @return array
      */
-    public function fetchByCriteria($entity, $criteria);
+    public function fetchByQuery(Representations\Query $query);
 
     /**
      * Set the record as keywords for re-use.
-     * 
+     *
      * @param string $entity
      * @param array $record
      */
@@ -147,11 +171,16 @@ interface SQLHandlerInterface
 
     /**
      * Do what needs to be done with the last insert id.
+     *
+     * @param mixed $entity
+     * @param mixed $id
      */
     public function handleLastId($entity, $id);
 
     /**
      * Get the entity the way the user had inputted it.
+     *
+     * @param mixed $entity
      */
     public function getUserInputEntity($entity);
 
@@ -185,6 +214,8 @@ interface SQLHandlerInterface
 
     /**
      * Set the entity for further processing.
+     *
+     * @param mixed $entity
      */
     public function setEntity($entity);
 
