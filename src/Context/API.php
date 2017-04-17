@@ -30,10 +30,7 @@ class API extends SQLHandler implements Interfaces\APIInterface
         $this->setEntity($table);
         $this->setCommandType('select');
 
-        // This makes the library only support AND and not OR in sql queries.
-        // $query = $this->convertToQuery($columns);
         $resolvedValues = $this->resolveQuery($columns);
-
         $this->queryParams = new Representations\QueryParams($this->getEntity(), $columns, $resolvedValues);
 
         // $searchConditionOperator = $this->get('sqlBuilder')->getSearchConditionOperatorForColumns($query);
@@ -67,8 +64,6 @@ class API extends SQLHandler implements Interfaces\APIInterface
 
         // Normalize data.
         $this->setEntity($table);
-
-        // $query = $this->convertToQuery($values);
         $resolvedValues = $this->resolveQuery($values);
 
         $this->queryParams = new Representations\QueryParams($this->getEntity(), $values, $resolvedValues);
@@ -122,7 +117,6 @@ class API extends SQLHandler implements Interfaces\APIInterface
         $this->setCommandType('update');
 
         // Build up the update clause.
-        // $query = $this->convertToQuery($with);
         $with = $this->resolveQuery($with);
         $updateClause = $this->constructSQLClause($this->getCommandType(), ', ', $with);
 
@@ -176,8 +170,6 @@ class API extends SQLHandler implements Interfaces\APIInterface
 
         $this->setEntity($table);
         $this->setCommandType('delete');
-
-        // $query = $this->convertToQuery($where);
         $resolvedValues = $this->resolveQuery($where);
 
         $this->queryParams = new Representations\QueryParams($this->getEntity(), $where, $resolvedValues);
@@ -218,8 +210,6 @@ class API extends SQLHandler implements Interfaces\APIInterface
         $this->setCommandType('select');
 
         $this->queryParams = new Representations\QueryParams($this->getEntity(), $where);
-
-        // $query = $this->convertToQuery($where);
         $selectWhereClause = $this->resolveQueryToSQLClause($this->getCommandType(), $where);
 
         $selectQueryBuilder = new Builder\SelectQueryBuilder($this->queryParams);
@@ -252,8 +242,6 @@ class API extends SQLHandler implements Interfaces\APIInterface
         $this->setCommandType('select');
 
         $this->queryParams = new Representations\QueryParams($this->getEntity(), $with);
-
-        // $query = $this->convertToQuery($with);
         $selectWhereClause = $this->resolveQueryToSQLClause($this->getCommandType(), $with);
 
         $selectQueryBuilder = new Builder\SelectQueryBuilder($this->queryParams);
