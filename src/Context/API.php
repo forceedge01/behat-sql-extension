@@ -30,12 +30,14 @@ class API extends SQLHandler implements Interfaces\APIInterface
         $this->setEntity($table);
         $this->setCommandType('select');
 
-        $query = $this->convertToQuery($columns);
-        $resolvedValues = $this->resolveQuery($query);
+        // This makes the library only support AND and not OR in sql queries.
+        // $query = $this->convertToQuery($columns);
+        $resolvedValues = $this->resolveQuery($columns);
 
         $this->queryParams = new Representations\QueryParams($this->getEntity(), $columns, $resolvedValues);
 
-        $searchConditionOperator = $this->get('sqlBuilder')->getSearchConditionOperatorForColumns($query);
+        // $searchConditionOperator = $this->get('sqlBuilder')->getSearchConditionOperatorForColumns($query);
+        $searchConditionOperator = ' AND ';
         $selectWhereClause = $this->constructSQLClause(
             $this->getCommandType(),
             $searchConditionOperator,
@@ -66,8 +68,8 @@ class API extends SQLHandler implements Interfaces\APIInterface
         // Normalize data.
         $this->setEntity($table);
 
-        $query = $this->convertToQuery($values);
-        $resolvedValues = $this->resolveQuery($query);
+        // $query = $this->convertToQuery($values);
+        $resolvedValues = $this->resolveQuery($values);
 
         $this->queryParams = new Representations\QueryParams($this->getEntity(), $values, $resolvedValues);
         list($columnNames, $columnValues) = $this->getTableColumns(
@@ -108,11 +110,11 @@ class API extends SQLHandler implements Interfaces\APIInterface
     /**
      * {@inheritDoc}
      */
-    public function update($table, array $with, array $columns)
+    public function update($table, array $with, array $where)
     {
         $this->debugLog('------- UPDATE -------');
 
-        if (! $columns) {
+        if (! $where) {
             throw new Exception('You must provide a where clause!');
         }
 
@@ -120,19 +122,19 @@ class API extends SQLHandler implements Interfaces\APIInterface
         $this->setCommandType('update');
 
         // Build up the update clause.
-        $query = $this->convertToQuery($with);
-        $with = $this->resolveQuery($query);
+        // $query = $this->convertToQuery($with);
+        $with = $this->resolveQuery($with);
         $updateClause = $this->constructSQLClause($this->getCommandType(), ', ', $with);
 
-        $query = $this->convertToQuery($columns);
-        $resolvedValues = $this->resolveQuery($query);
+        // $query = $this->convertToQuery($columns);
+        $resolvedValues = $this->resolveQuery($where);
 
-        $this->queryParams = new Representations\QueryParams($this->getEntity(), $columns, $resolvedValues);
+        $this->queryParams = new Representations\QueryParams($this->getEntity(), $where, $resolvedValues);
 
-        $searchConditionOperator = $this->get('sqlBuilder')->getSearchConditionOperatorForColumns($query);
+        // $searchConditionOperator = $this->get('sqlBuilder')->getSearchConditionOperatorForColumns($query);
         $whereClause = $this->constructSQLClause(
             $this->getCommandType(),
-            $searchConditionOperator,
+            ' AND ',
             $this->queryParams->getResolvedValues()
         );
 
@@ -164,26 +166,26 @@ class API extends SQLHandler implements Interfaces\APIInterface
     /**
      * {@inheritDoc}
      */
-    public function delete($table, array $columns)
+    public function delete($table, array $where)
     {
         $this->debugLog('------- DELETE -------');
 
-        if (! $columns) {
+        if (! $where) {
             throw new Exception('You must provide a where clause!');
         }
 
         $this->setEntity($table);
         $this->setCommandType('delete');
 
-        $query = $this->convertToQuery($columns);
-        $resolvedValues = $this->resolveQuery($query);
+        // $query = $this->convertToQuery($where);
+        $resolvedValues = $this->resolveQuery($where);
 
-        $this->queryParams = new Representations\QueryParams($this->getEntity(), $columns, $resolvedValues);
+        $this->queryParams = new Representations\QueryParams($this->getEntity(), $where, $resolvedValues);
 
-        $searchConditionOperator = $this->get('sqlBuilder')->getSearchConditionOperatorForColumns($query);
+        // $searchConditionOperator = $this->get('sqlBuilder')->getSearchConditionOperatorForColumns($query);
         $whereClause = $this->constructSQLClause(
             $this->getCommandType(),
-            $searchConditionOperator,
+            ' AND ',
             $this->queryParams->getResolvedValues()
         );
 
@@ -209,16 +211,16 @@ class API extends SQLHandler implements Interfaces\APIInterface
     /**
      * {@inheritDoc}
      */
-    public function assertExists($table, array $with)
+    public function assertExists($table, array $where)
     {
         $this->debugLog('------- EXISTS -------');
         $this->setEntity($table);
         $this->setCommandType('select');
 
-        $this->queryParams = new Representations\QueryParams($this->getEntity(), $with);
+        $this->queryParams = new Representations\QueryParams($this->getEntity(), $where);
 
-        $query = $this->convertToQuery($with);
-        $selectWhereClause = $this->resolveQueryToSQLClause($this->getCommandType(), $query);
+        // $query = $this->convertToQuery($where);
+        $selectWhereClause = $this->resolveQueryToSQLClause($this->getCommandType(), $where);
 
         $selectQueryBuilder = new Builder\SelectQueryBuilder($this->queryParams);
         $selectQueryBuilder->setWhereClause($selectWhereClause);
@@ -251,8 +253,8 @@ class API extends SQLHandler implements Interfaces\APIInterface
 
         $this->queryParams = new Representations\QueryParams($this->getEntity(), $with);
 
-        $query = $this->convertToQuery($with);
-        $selectWhereClause = $this->resolveQueryToSQLClause($this->getCommandType(), $query);
+        // $query = $this->convertToQuery($with);
+        $selectWhereClause = $this->resolveQueryToSQLClause($this->getCommandType(), $with);
 
         $selectQueryBuilder = new Builder\SelectQueryBuilder($this->queryParams);
         $selectQueryBuilder->setWhereClause($selectWhereClause);

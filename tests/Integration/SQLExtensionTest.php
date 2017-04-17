@@ -3,8 +3,8 @@
 namespace Genesis\SQLExtension\Tests\Integation;
 
 use Behat\Gherkin\Node\TableNode;
-use Genesis\SQLExtension\Context;
 use Exception;
+use Genesis\SQLExtension\Context;
 use Genesis\SQLExtension\Tests\TestHelper;
 
 /**
@@ -14,7 +14,7 @@ use Genesis\SQLExtension\Tests\TestHelper;
 class SQLExtensionTest extends TestHelper
 {
     /**
-     * @var object $testObject The object to be tested.
+     * @var object The object to be tested.
      */
     private $testObject;
 
@@ -590,7 +590,6 @@ class SQLExtensionTest extends TestHelper
         $this->assertCount(0, $this->testObject->get('sqlHistory')->getHistory()['update']);
     }
 
-
     /**
      * test that the keywords resolve using any call.
      *
@@ -641,55 +640,6 @@ class SQLExtensionTest extends TestHelper
      *
      * @group externalRef
      */
-    // public function testInsertResolvesExternalRefs()
-    // {
-    //     // Set keyword
-    //     $keyword = 'hjlasjdkfhlajksfdhklasdfj';
-    //     $this->testObject->setKeyword('abc', $keyword);
-
-    //     // Set external ref.
-    //     $externalRefId = 3443;
-    //     $entity = 'database.unique';
-    //     $column = "column1:{abc},column2:[user.id|email:its.its.inevitable@hotmail.com],column3:what\'s up doc";
-
-    //     $expectedResult = [
-    //         0 => 3443,
-    //         'id' => 3443
-    //     ];
-
-    //     $this->testObject->get('dbManager')->getConnection()->expects($this->any())
-    //         ->method('prepare')
-    //         ->with($this->isType('string'))
-    //         ->will($this->onConsecutiveCalls(
-    //             $this->getPdoStatementWithRows(0, [[0 => 'id']]),
-    //             $this->getPdoStatementWithRows(1, true),
-    //             $this->getPdoStatementWithRows(1, [['column_name' => 'id', 'data_type' => 'int']]),
-    //             $this->getPdoStatementWithRows(1, true),
-    //             $this->getPdoStatementWithRows(1, [[0 => 'id', 'id' => 237463]])
-    //         ));
-
-    //     $result = $this->testObject->insert($entity, $column);
-
-    //     // Expected SQL.
-    //     $expectedSQL = "INSERT INTO dev_database.unique (`column1`, `column2`, `column3`) VALUES ('hjlasjdkfhlajksfdhklasdfj', 'behat-test-string-234234234', 'what\'s up doc')";
-
-    //     // Assert.
-    //     $this->assertEquals($expectedSQL, $result);
-    //     $this->assertNotNull($this->testObject->getEntity());
-    //     $this->assertEquals('select', $this->testObject->getCommandType());
-
-    //     // Check history.
-    //     $this->assertCount(1, $this->testObject->get('sqlHistory')->getHistory()['insert']);
-    //     $this->assertCount(2, $this->testObject->get('sqlHistory')->getHistory()['select']);
-    //     $this->assertCount(0, $this->testObject->get('sqlHistory')->getHistory()['delete']);
-    //     $this->assertCount(0, $this->testObject->get('sqlHistory')->getHistory()['update']);
-    // }
-
-    /**
-     * testInsertResolvesExternalRefs Test that insert executes as expected.
-     *
-     * @group externalRef
-     */
     public function testShouldHaveResolvesExternalRefs()
     {
         // Set keyword
@@ -730,7 +680,6 @@ class SQLExtensionTest extends TestHelper
         $this->assertCount(0, $this->testObject->get('sqlHistory')->getHistory()['update']);
     }
 
-
     /**
      * Test that this method works with values provided.
      */
@@ -755,7 +704,8 @@ class SQLExtensionTest extends TestHelper
             ->willReturn(5);
         $result = $this->testObject->iHaveAWhere($entity, $column);
         // Expected SQL.
-        $expectedSQL = "INSERT INTO dev_database.unique (`column1`, `column2`, `column3`) VALUES ('abc', 'behat-test-string-234234234', 'what\'s up doc')";
+        $timeString = '\'behat-test-string-' . \Genesis\SQLExtension\Tests\Unit\Context\SQLBuilderTest::TYPE_STRING_TIME . '\'';
+        $expectedSQL = "INSERT INTO dev_database.unique (`column1`, `column2`, `column3`) VALUES ('abc', {$timeString}, 'what\'s up doc')";
         // Assert.
         $this->assertEquals($expectedSQL, $result);
         $this->assertNotNull($this->testObject->getEntity());

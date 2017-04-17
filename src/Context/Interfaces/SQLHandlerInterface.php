@@ -194,11 +194,11 @@ interface SQLHandlerInterface
     /**
      * Filter keywords and convert queries to an array.
      *
-     * @param string $columns
+     * @param array $values
      *
      * @return array
      */
-    public function convertToFilteredArray($columns);
+    public function convertToResolvedArray(array $values);
 
     /**
      * @param  TableNode $node The node with all fields and data.
