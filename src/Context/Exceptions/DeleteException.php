@@ -9,7 +9,7 @@ class DeleteException extends BaseException
     const CODE = 0;
 
     /**
-     * @param string $dataProperty The property that was not found.
+     * @param string $table The property that was not found.
      * @param BaseException $e The original exception.
      * @param mixed $table
      */
