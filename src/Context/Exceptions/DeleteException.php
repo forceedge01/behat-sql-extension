@@ -2,15 +2,16 @@
 
 namespace Genesis\SQLExtension\Context\Exceptions;
 
-use Exception;
+use Exception as BaseException;
 
-class DeleteException extends Exception
+class DeleteException extends BaseException
 {
     const CODE = 0;
 
     /**
      * @param string $dataProperty The property that was not found.
      * @param BaseException $e The original exception.
+     * @param mixed $table
      */
     public function __construct($table, BaseException $e)
     {
