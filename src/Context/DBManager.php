@@ -66,9 +66,14 @@ class DBManager implements Interfaces\DBManagerInterface
     public function getConnection()
     {
         if (! $this->connection) {
-            list($dns, $username, $password) = $this->getConnectionDetails();
+            list($dns, $username, $password, $options) = $this->getConnectionDetails();
 
-            $this->connection = new \PDO($dns, $username, $password);
+            $this->connection = new \PDO(
+                $dns,
+                $username,
+                $password,
+                $options
+            );
         }
 
         return $this->connection;
@@ -249,7 +254,8 @@ class DBManager implements Interfaces\DBManagerInterface
                 $port
             ),
             $this->params['DBUSER'],
-            $this->params['DBPASSWORD']
+            $this->params['DBPASSWORD'],
+            $this->params['DBOPTIONS']
         ];
     }
 
@@ -289,6 +295,7 @@ class DBManager implements Interfaces\DBManagerInterface
             $this->params['DBUSER'] = $this->arrayIfElse($dbParams, 'username', SQLDBUSERNAME);
             $this->params['DBPASSWORD'] = $this->arrayIfElse($dbParams, 'password', SQLDBPASSWORD);
             $this->params['DBENGINE'] = $this->arrayIfElse($dbParams, 'engine', SQLDBENGINE);
+            $this->params['DBOPTIONS'] = $_SESSION['behat']['GenesisSqlExtension']['connection_details']['connection_options'];
         } else {
             $params = getenv('BEHAT_ENV_PARAMS');
 
