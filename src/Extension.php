@@ -50,6 +50,18 @@ class Extension implements ExtensionInterface
             if (isset($config['notQuotableKeywords'])) {
                 $_SESSION['behat']['GenesisSqlExtension']['notQuotableKeywords'] = $config['notQuotableKeywords'];
             }
+
+            if (isset($config['connection_details']['connection_options'])) {
+                $options = [];
+
+                foreach($config['connection_details']['connection_options'] as $option=>$value) {
+                    $options[constant('\PDO::' . $option)] = $value;
+                }
+
+                $_SESSION['behat']['GenesisSqlExtension']['connection_details']['connection_options'] = $options;
+            } else {
+                $_SESSION['behat']['GenesisSqlExtension']['connection_details']['connection_options'] = [];
+            }
         }
     }
 
@@ -87,6 +99,9 @@ class Extension implements ExtensionInterface
                         end()->
                         scalarNode('dbprefix')->
                             defaultValue(null)->
+                        end()->
+                        arrayNode('connection_options')->
+                            ignoreExtraKeys(false)->
                         end()->
                     end()->
                 end()->
