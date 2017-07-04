@@ -2,8 +2,8 @@
 
 namespace Genesis\SQLExtension\Context;
 
-use Traversable;
 use Exception;
+use Traversable;
 
 /**
  * DBManager that handles the database connection.
@@ -48,6 +48,8 @@ class DBManager implements Interfaces\DBManagerInterface
 
     /**
      * Set the connection.
+     *
+     * @param mixed $connection
      *
      * @return $this
      */
@@ -147,7 +149,7 @@ class DBManager implements Interfaces\DBManagerInterface
      */
     public function hasFetchedRows(Traversable $statement)
     {
-        return ($statement->rowCount());
+        return (bool) ($statement->rowCount());
     }
 
     /**
@@ -285,6 +287,11 @@ class DBManager implements Interfaces\DBManagerInterface
     private function setDBParams(array $dbParams = array())
     {
         if (defined('SQLDBENGINE') || $dbParams) {
+            $options = [];
+            if (isset($_SESSION['behat']['GenesisSqlExtension']['connection_details']['connection_options'])) {
+                $options = $_SESSION['behat']['GenesisSqlExtension']['connection_details']['connection_options'];
+            }
+
             // Allow params to be over-ridable.
             $this->params['DBSCHEMA'] = $this->arrayIfElse($dbParams, 'schema', SQLDBSCHEMA);
             $this->params['DBNAME'] = $this->arrayIfElse($dbParams, 'name', SQLDBNAME);
@@ -294,7 +301,7 @@ class DBManager implements Interfaces\DBManagerInterface
             $this->params['DBUSER'] = $this->arrayIfElse($dbParams, 'username', SQLDBUSERNAME);
             $this->params['DBPASSWORD'] = $this->arrayIfElse($dbParams, 'password', SQLDBPASSWORD);
             $this->params['DBENGINE'] = $this->arrayIfElse($dbParams, 'engine', SQLDBENGINE);
-            $this->params['DBOPTIONS'] = $_SESSION['behat']['GenesisSqlExtension']['connection_details']['connection_options'];
+            $this->params['DBOPTIONS'] = $options;
         } else {
             $params = getenv('BEHAT_ENV_PARAMS');
 

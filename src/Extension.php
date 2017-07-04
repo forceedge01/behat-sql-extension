@@ -54,7 +54,7 @@ class Extension implements ExtensionInterface
             if (isset($config['connection_details']['connection_options'])) {
                 $options = [];
 
-                foreach($config['connection_details']['connection_options'] as $option=>$value) {
+                foreach ($config['connection_details']['connection_options'] as $option => $value) {
                     $options[constant('\PDO::' . $option)] = $value;
                 }
 
