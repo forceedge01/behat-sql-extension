@@ -25,6 +25,7 @@ class SQLExtensionTest extends TestHelper
     {
         $_SESSION['behat']['GenesisSqlExtension']['notQuotableKeywords'] = [];
         $_SESSION['behat']['GenesisSqlExtension']['keywords'] = [];
+        $_SESSION['behat']['GenesisSqlExtension']['connection_details']['connection_options'] = [];
         $databaseParams = [];
 
         $this->testObject = new Context\SQLContext(
