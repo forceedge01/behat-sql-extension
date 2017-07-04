@@ -150,7 +150,7 @@ class DBManager implements Interfaces\DBManagerInterface
      */
     public function hasFetchedRows(Traversable $statement)
     {
-        return $statement->rowCount();
+        return (bool) ($statement->rowCount());
     }
 
     /**
