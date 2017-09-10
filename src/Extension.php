@@ -51,6 +51,24 @@ class Extension implements ExtensionInterface
             if (isset($config['notQuotableKeywords'])) {
                 $_SESSION['behat']['GenesisSqlExtension']['notQuotableKeywords'] = $config['notQuotableKeywords'];
             }
+
+            if (isset($config['connection_details']['connection_options'])) {
+                $options = [];
+
+                foreach($config['connection_details']['connection_options'] as $option=>$value) {
+                    $options[constant('\PDO::' . $option)] = $value;
+                }
+
+                $_SESSION['behat']['GenesisSqlExtension']['connection_details']['connection_options'] = $options;
+            } else {
+                $_SESSION['behat']['GenesisSqlExtension']['connection_details']['connection_options'] = [];
+            }
+        }
+
+        // Check if we need to enable debug mode. This is not controllable from the config file.
+        if (isset($config['debug']) and $config['debug']) {
+            echo 'Genesis debug mode enabled, to see debugging please use the pretty formatter.' . PHP_EOL . PHP_EOL;
+            define('DEBUG_MODE', 1);
         }
     }
 
@@ -63,6 +81,9 @@ class Extension implements ExtensionInterface
     {
         $builder->
             children()->
+                scalarNode('debug')->
+                    defaultValue(false)->
+                end()->
                 arrayNode('connection_details')->
                     children()->
                         scalarNode('engine')->
@@ -88,6 +109,9 @@ class Extension implements ExtensionInterface
                         end()->
                         scalarNode('dbprefix')->
                             defaultValue(null)->
+                        end()->
+                        arrayNode('connection_options')->
+                            ignoreExtraKeys(false)->
                         end()->
                     end()->
                 end()->

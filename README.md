@@ -254,12 +254,14 @@ Note: the 'in the database' part of the step definition is optional and is only 
 ### Debug mode
 
 Debug mode can be used to print sql queries and results to the screen for quick debugging.
-```gherkin
-# file: debug.feature
+```yml
+# file: behat.yml
 
 # Enable debug mode to check for errors
-Given I am in debug mode
-And I have a "user" where "email:its.inevitable@hotmail.com"
+...
+Genesis\SQLExtension\Extension:
+    debug: true
+    ...
 ```
 
 The above "I have" command will output something like this to the screen:
