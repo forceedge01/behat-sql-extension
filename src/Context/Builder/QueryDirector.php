@@ -2,6 +2,8 @@
 
 namespace Genesis\SQLExtension\Context\Builder;
 
+use Genesis\SQLExtension\Context\Representations;
+
 /**
  * QueryDirector class.
  *
@@ -11,6 +13,11 @@ namespace Genesis\SQLExtension\Context\Builder;
  */
 class QueryDirector
 {
+    /**
+     * @param QueryBuilder $queryBuilder The query builder to use to build.
+     *
+     * @return Representations\Query
+     */
     public static function build(QueryBuilder $queryBuilder)
     {
         return $queryBuilder
