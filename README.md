@@ -25,6 +25,8 @@ $this->sqlContext = new Context\SQLContext(
 );
 ```
 
+Please note that the Context\SQLHistory parameter is optional and you may leave it.
+
 Setup
 -----
 After composer has installed the extension you would need to setup the connection details. This can be done in 2 ways:
