@@ -76,6 +76,8 @@ class DBManager implements Interfaces\DBManagerInterface
                 $password,
                 $options
             );
+
+            $this->connection->setAttribute(\PDO::MYSQL_ATTR_USE_BUFFERED_QUERY, false);
         }
 
         return $this->connection;
