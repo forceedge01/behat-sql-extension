@@ -1,7 +1,7 @@
 {
     "name": "genesis/behat-sql-extension",
     "type": "behat-extension",
-    "description": "SQL extension that facilitates fixture data creation on the fly for Behat",
+    "description": "SQL/PDO extension that facilitates fixture data creation on the fly for Behat",
     "keywords": ["web", "test", "browser", "gui", "bdd", "behaviour", "testing", "test", "integration", "fixture", "PDO"],
     "license": "MIT",
     "authors": [
