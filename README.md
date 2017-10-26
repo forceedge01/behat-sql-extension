@@ -296,4 +296,4 @@ Anything the DSL does will be done using the above methods (i.e setting keywords
 Contributing to this extension
 ==============================
 
-Found a bug? Excellent, I want to know all about it. Please log an issue for the love of the project, or just open a PR i'd love to approve.
+Found a bug? Excellent, I want to know all about it. Please log an issue here [a link](https://github.com/forceedge01/behat-sql-extension/issues) for the love of the project, or just open a PR I'd love to approve.
