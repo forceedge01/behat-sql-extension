@@ -1,4 +1,4 @@
-# genesis-behat-sql-extension
+# Behat SQL Extension
 Generic library: Provides easy data manipulation with any PDO enabled database for Behat. Core features:
 
 - Out of the box step definitions for simple db interactions.
