@@ -13,7 +13,7 @@ use Genesis\SQLExtension\Tests\TestHelper;
 class DBManagerTest extends TestHelper
 {
     /**
-     * @var object $testObject The object to be tested.
+     * @var object The object to be tested.
      */
     protected $testObject;
 
@@ -38,7 +38,7 @@ class DBManagerTest extends TestHelper
     {
         $result = $this->testObject->getParams();
 
-        $this->assertTrue(is_array($result));
+        $this->assertInternalType('array', $result);
     }
 
     public function testGetSetConnectionAlreadySet()
@@ -391,7 +391,8 @@ class DBManagerTest extends TestHelper
             'DBHOST' => 'cup',
             'DBUSER' => 'of',
             'DBPASSWORD' => 'tea',
-            'DBPORT' => ''
+            'DBPORT' => '',
+            'DBOPTIONS' => []
         ];
 
         $property = $this
@@ -409,7 +410,7 @@ class DBManagerTest extends TestHelper
         $expectedConnectionString = 'banana:dbname=hot;host=cup';
 
         // Assert Result
-        $this->assertTrue(is_array($result));
+        $this->assertInternalType('array', $result);
         $this->assertEquals($expectedConnectionString, $result[0]);
         $this->assertEquals($paramsValue['DBUSER'], $result[1]);
         $this->assertEquals($paramsValue['DBPASSWORD'], $result[2]);
@@ -427,7 +428,8 @@ class DBManagerTest extends TestHelper
             'DBHOST' => 'cup',
             'DBUSER' => 'of',
             'DBPASSWORD' => 'tea',
-            'DBPORT' => 3380
+            'DBPORT' => 3380,
+            'DBOPTIONS' => []
         ];
 
         $property = $this
@@ -445,7 +447,7 @@ class DBManagerTest extends TestHelper
         $expectedConnectionString = 'banana:dbname=hot;host=cup;port=3380';
 
         // Assert Result
-        $this->assertTrue(is_array($result));
+        $this->assertInternalType('array', $result);
         $this->assertEquals($expectedConnectionString, $result[0]);
         $this->assertEquals($paramsValue['DBUSER'], $result[1]);
         $this->assertEquals($paramsValue['DBPASSWORD'], $result[2]);
