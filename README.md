@@ -1,4 +1,4 @@
-# genesis-behat-sql-extension [ ![Codeship Status for forceedge01/behat-sql-extension](https://app.codeship.com/projects/2782d770-9c56-0135-d99c-3e0263b62404/status?branch=behat/3.x)](https://app.codeship.com/projects/252932)
+# Behat SQL Extension [ ![Codeship Status for forceedge01/behat-sql-extension](https://app.codeship.com/projects/2782d770-9c56-0135-d99c-3e0263b62404/status?branch=behat/3.x)](https://app.codeship.com/projects/252932)
 Generic library: Provides easy data manipulation with any PDO enabled database for Behat. Core features:
 
 - Out of the box step definitions for simple db interactions.
