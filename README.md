@@ -124,9 +124,6 @@ DB Support
 ----------
 Tested with MySQL.
 
-Contributing to this extension
-==============================
-
 Calls provided by this extension
 --------------------------------
 
@@ -281,21 +278,22 @@ Executing SQL: INSERT INTO user (email) VALUES ('its.inevitable@hotmail.com')
 Last ID fetched: 57
 ```
 
-### Extended use in feature context file.
+### The SQLContext API
 
-The extension provides wrapper methods for the same functionality as the dsl language. To give the code more context use the following:
+The extension provides an easy API for the same functionality as the DSL language. To give the code more context use the following:
 
 ```php
   $this
-    ->select($table, $where) # select a record, essentially perform a iHaveAnExistingWhere.
-    ->insert($table, $where) # Insert a new record if it does not exist, same as iHaveAWith
-    ->update($table, $update, $where) # Update an existing record, same as iHaveAnExistingWithWhere
-    ->delete($table, $where) # Delete a record, same as iDontHaveAWhere
+    ->select(string $table, array $where) # select a record, essentially perform a iHaveAnExistingWhere.
+    ->insert(string $table, array $where) # Insert a new record if it does not exist, same as iHaveAWith
+    ->update(string $table, array $update, array $where) # Update an existing record, same as iHaveAnExistingWithWhere
+    ->delete(string $table, array $where) # Delete a record, same as iDontHaveAWhere
     ;
 ```
 
 Anything the DSL does will be done using the above methods (i.e setting keywords, outputting to debug log etc...)
 
-### Upgrading from version 2.x to 3.0:
+Contributing to this extension
+==============================
 
-The only major change in version 3.0 is the introduction of the SQLHistory object. Just set the constructor object and that should be it.
+Found a bug? Excellent, I want to know all about it. Please log an issue for the love of the project, or just open a PR i'd love to approve.
