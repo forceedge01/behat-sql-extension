@@ -1,4 +1,4 @@
-# Behat SQL Extension
+# Behat SQL Extension [ ![Codeship Status for forceedge01/behat-sql-extension](https://app.codeship.com/projects/2782d770-9c56-0135-d99c-3e0263b62404/status?branch=behat/3.x)](https://app.codeship.com/projects/252932)
 Generic library: Provides easy data manipulation with any PDO enabled database for Behat. Core features:
 
 - Out of the box step definitions for simple db interactions.
@@ -13,6 +13,8 @@ There are two versions maintained at the moment dependent on the version of Beha
 
  - [behat 2.5.x](https://github.com/forceedge01/genesis-behat-sql-extension/tree/behat/2.5.x) [ ![Codeship Status for forceedge01/behat-sql-extension](https://app.codeship.com/projects/2782d770-9c56-0135-d99c-3e0263b62404/status?branch=behat/2.5.x)](https://app.codeship.com/projects/252932)
  - [behat 3.x](https://github.com/forceedge01/genesis-behat-sql-extension/tree/behat/3.x) [ ![Codeship Status for forceedge01/behat-sql-extension](https://app.codeship.com/projects/2782d770-9c56-0135-d99c-3e0263b62404/status?branch=behat/3.x)](https://app.codeship.com/projects/252932)
+=======
+>>>>>>> 3757a555671501639038b064c2541c06e2d87a18
 
 Installation
 ------------
@@ -37,6 +39,8 @@ $this->sqlContext = new Context\SQLContext(
     new Context\SQLHistory()
 );
 ```
+
+Please note that the Context\SQLHistory parameter is optional and you may leave it.
 
 Setup
 -----
@@ -126,9 +130,6 @@ The fields needs to be preset but may be left empty.
 DB Support
 ----------
 Tested with MySQL.
-
-Contributing to this extension
-==============================
 
 Calls provided by this extension
 --------------------------------
@@ -284,21 +285,22 @@ Executing SQL: INSERT INTO user (email) VALUES ('its.inevitable@hotmail.com')
 Last ID fetched: 57
 ```
 
-### Extended use in feature context file.
+### The SQLContext API
 
-The extension provides wrapper methods for the same functionality as the dsl language. To give the code more context use the following:
+The extension provides an easy API for the same functionality as the DSL language. To give the code more context use the following:
 
 ```php
   $this
-    ->select($table, $where) # select a record, essentially perform a iHaveAnExistingWhere.
-    ->insert($table, $where) # Insert a new record if it does not exist, same as iHaveAWith
-    ->update($table, $update, $where) # Update an existing record, same as iHaveAnExistingWithWhere
-    ->delete($table, $where) # Delete a record, same as iDontHaveAWhere
+    ->select(string $table, array $where) # select a record, essentially perform a iHaveAnExistingWhere.
+    ->insert(string $table, array $where) # Insert a new record if it does not exist, same as iHaveAWith
+    ->update(string $table, array $update, array $where) # Update an existing record, same as iHaveAnExistingWithWhere
+    ->delete(string $table, array $where) # Delete a record, same as iDontHaveAWhere
     ;
 ```
 
 Anything the DSL does will be done using the above methods (i.e setting keywords, outputting to debug log etc...)
 
-### Upgrading from version 2.x to 3.0:
+Contributing to this extension
+==============================
 
-The only major change in version 3.0 is the introduction of the SQLHistory object. Just set the constructor object and that should be it.
+Found a bug? Excellent, I want to know all about it. Please log an issue here [a link](https://github.com/forceedge01/behat-sql-extension/issues) for the love of the project, or just open a PR I'd love to approve.

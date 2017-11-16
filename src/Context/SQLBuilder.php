@@ -115,7 +115,7 @@ class SQLBuilder implements Interfaces\SQLBuilderInterface
 
         foreach ($columns as $column) {
             if (strpos($column, ':') == false) {
-                throw new Exception('Unable to explode columns based on ":" separator');
+                throw new Exception('Unable to explode columns based on ":" separator for column' . $column);
             }
 
             list($col, $val) = explode(':', $column, self::EXPLODE_MAX_LIMIT);

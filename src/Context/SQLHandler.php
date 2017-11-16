@@ -94,13 +94,13 @@ class SQLHandler implements Context, Interfaces\SQLHandlerInterface
      * @param Interfaces\DBManagerInterface $dbManager
      * @param Interfaces\SQLBuilderInterface $sqlBuilder
      * @param Interfaces\KeyStoreInterface $keyStore
-     * @param Interfaces\SQLHistoryInterface $sqlHistory
+     * @param Interfaces\SQLHistoryInterface|null $sqlHistory
      */
     public function __construct(
         Interfaces\DBManagerInterface $dbManager,
         Interfaces\SQLBuilderInterface $sqlBuilder,
         Interfaces\KeyStoreInterface $keyStore,
-        Interfaces\SQLHistoryInterface $sqlHistory
+        Interfaces\SQLHistoryInterface $sqlHistory = null
     ) {
         $this->dbManager = $dbManager;
         $this->keyStore = $keyStore;
@@ -332,12 +332,14 @@ class SQLHandler implements Context, Interfaces\SQLHandlerInterface
             $this->lastId = $this->queryParams->getRawValues()[$this->primaryKey];
         }
 
-        $this->get('sqlHistory')->addToHistory(
-            $this->getCommandType(),
-            $this->getUserInputEntity($this->getEntity()),
-            $sql,
-            $this->lastId
-        );
+        if ($this->get('sqlHistory') instanceof Interfaces\SQLHistoryInterface) {
+            $this->get('sqlHistory')->addToHistory(
+                $this->getCommandType(),
+                $this->getUserInputEntity($this->getEntity()),
+                $sql,
+                $this->lastId
+            );
+        }
 
         // If their is an id, save it!
         if ($this->lastId) {
@@ -465,8 +467,6 @@ class SQLHandler implements Context, Interfaces\SQLHandlerInterface
         foreach ($record as $column => $value) {
             if (! is_numeric($column)) {
                 $this->setKeyword(sprintf('%s.%s', $entity, $column), $value);
-                // For backward compatibility.
-                $this->setKeyword(sprintf('%s_%s', $entity, $column), $value);
             }
         }
 

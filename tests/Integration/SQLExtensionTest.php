@@ -143,7 +143,7 @@ class SQLExtensionTest extends TestHelper
         // Assert.
         $this->assertEquals($expectedSQL, $result);
         $this->assertNotNull($this->testObject->getEntity());
-        $this->assertEquals(237463, $this->testObject->getKeyword('database.unique1_id'));
+        $this->assertEquals(237463, $this->testObject->getKeyword('database.unique1.id'));
         // After execution select all values.
         $this->assertEquals('select', $this->testObject->getCommandType());
 
@@ -231,8 +231,8 @@ class SQLExtensionTest extends TestHelper
         // Assert.
         $this->assertEquals($expectedSQL, $result);
         $this->assertNotNull($this->testObject->getEntity());
-        $this->assertEquals(1234, $this->testObject->getKeyword('database.someTable2_id'));
-        $this->assertEquals('Abdul', $this->testObject->getKeyword('database.someTable2_name'));
+        $this->assertEquals(1234, $this->testObject->getKeyword('database.someTable2.id'));
+        $this->assertEquals('Abdul', $this->testObject->getKeyword('database.someTable2.name'));
         // After execution select all values.
         $this->assertEquals('select', $this->testObject->getCommandType());
 
@@ -579,9 +579,6 @@ class SQLExtensionTest extends TestHelper
         $this->assertEquals($expectedResult, $result);
 
         $this->assertEquals('abc', $this->testObject->getKeyword('abc.my_entity.column1'));
-        $this->assertEquals('abc', $this->testObject->getKeyword('abc.my_entity_column1'));
-
-        $this->assertEquals('random', $this->testObject->getKeyword('abc.my_entity_column2'));
         $this->assertEquals('random', $this->testObject->getKeyword('abc.my_entity.column2'));
 
         // Check history.
@@ -624,9 +621,6 @@ class SQLExtensionTest extends TestHelper
         $this->assertEquals($expectedResult, $result);
 
         $this->assertEquals($keyword, $this->testObject->getKeyword('abc.my_entity.column1'));
-        $this->assertEquals($keyword, $this->testObject->getKeyword('abc.my_entity_column1'));
-
-        $this->assertEquals('random', $this->testObject->getKeyword('abc.my_entity_column2'));
         $this->assertEquals('random', $this->testObject->getKeyword('abc.my_entity.column2'));
 
         // Check history.
@@ -710,7 +704,7 @@ class SQLExtensionTest extends TestHelper
         // Assert.
         $this->assertEquals($expectedSQL, $result);
         $this->assertNotNull($this->testObject->getEntity());
-        $this->assertEquals(237463, $this->testObject->getKeyword('database.unique_id'));
+        $this->assertEquals(237463, $this->testObject->getKeyword('database.unique.id'));
         $this->assertEquals('select', $this->testObject->getCommandType());
 
         // Check history.
