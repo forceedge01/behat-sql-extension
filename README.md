@@ -9,13 +9,6 @@ Generic library: Provides easy data manipulation with any PDO enabled database f
 - Maintain SQL history for all queries executed for clean up later on.
 - An API for advanced integration.
 
-There are two versions maintained at the moment dependent on the version of Behat, for a more tailored README around usage of this extension please choose the appropriate branch first.
-
- - [behat 2.5.x](https://github.com/forceedge01/genesis-behat-sql-extension/tree/behat/2.5.x) [ ![Codeship Status for forceedge01/behat-sql-extension](https://app.codeship.com/projects/2782d770-9c56-0135-d99c-3e0263b62404/status?branch=behat/2.5.x)](https://app.codeship.com/projects/252932)
- - [behat 3.x](https://github.com/forceedge01/genesis-behat-sql-extension/tree/behat/3.x) [ ![Codeship Status for forceedge01/behat-sql-extension](https://app.codeship.com/projects/2782d770-9c56-0135-d99c-3e0263b62404/status?branch=behat/3.x)](https://app.codeship.com/projects/252932)
-=======
->>>>>>> 3757a555671501639038b064c2541c06e2d87a18
-
 Installation
 ------------
 require with composer
