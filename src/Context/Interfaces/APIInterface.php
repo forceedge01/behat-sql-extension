@@ -2,9 +2,7 @@
 
 namespace Genesis\SQLExtension\Context\Interfaces;
 
-use Behat\Gherkin\Node\TableNode;
-
-interface APIInterface
+interface APIInterface extends SQLHandlerInterface
 {
     /**
      * User friendly version of iHaveAWith.
