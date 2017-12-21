@@ -21,7 +21,7 @@ use Traversable;
  *
  * @author Abdul Wahab Qureshi <its.inevitable@hotmail.com>
  */
-class SQLHandler implements Context, Interfaces\SQLHandlerInterface
+abstract class SQLHandler implements Context, Interfaces\SQLHandlerInterface
 {
     /**
      * Entity being worked on.

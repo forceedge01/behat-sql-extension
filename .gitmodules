@@ -1,0 +1,3 @@
+[submodule "vagrant-php54"]
+	path = vagrant-php54
+	url = https://github.com/forceedge01/vagrant-php54
