@@ -297,3 +297,11 @@ Contributing to this extension
 ==============================
 
 Found a bug? Excellent, I want to know all about it. Please log an issue here [a link](https://github.com/forceedge01/behat-sql-extension/issues) for the love of the project, or just open a PR I'd love to approve.
+
+To get the right dev machine sorted, use the VM provided. To get you going, run the following command:
+
+```
+git submodule init && git submodule update
+cd vagrant-php54 && vagrant up
+```
+
