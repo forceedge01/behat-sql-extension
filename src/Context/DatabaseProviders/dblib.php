@@ -10,9 +10,9 @@ class dblib extends BaseProvider
     /**
      * {@inheritDoc}
      */
-    public function getConnectionString($dbname, $host)
+    public function getPdoDnsString($dbname, $host)
     {
-        throw new \Exception('Method getConnectionString() is not implemented.');
+        throw new \Exception('Method getPdoDnsString() is not implemented.');
     }
 
     /**

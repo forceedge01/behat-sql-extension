@@ -5,29 +5,15 @@ namespace Genesis\SQLExtension\Context\DatabaseProviders;
 /**
  * sqlite class.
  */
-class sqlite extends BaseProvider
+class sqlite extends mysql
 {
     /**
+     * @param string $dbpath The absolute path or :memory for in memory db.
+     *
      * {@inheritDoc}
      */
-    public function getConnectionString($dbname, $host)
+    public function getPdoDnsString($dbpath, $host = null, $port = null)
     {
-        throw new \Exception('Method getConnectionString() is not implemented.');
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public function getPrimaryKeyForTable($database, $schema, $table)
-    {
-        throw new \Exception('Method getPrimaryKeyForTable() is not implemented.');
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public function getRequiredTableColumns($database, $schema, $table)
-    {
-        throw new \Exception('Method getRequiredTableColumns() is not implemented.');
+        return "sqlite:{$dbpath}";
     }
 }

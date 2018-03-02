@@ -8,11 +8,7 @@ namespace Genesis\SQLExtension\Context\DatabaseProviders;
 class mysql extends BaseProvider
 {
     /**
-     * @param string $dbname
-     * @param string $host
-     * @param int $port
-     *
-     * @return string
+     * {@inheritDoc}
      */
     public function getPdoDnsString($dbname, $host, $port = 3306)
     {
@@ -25,11 +21,7 @@ class mysql extends BaseProvider
     }
 
     /**
-     * @param string $database
-     * @param string $schema
-     * @param string $table
-     *
-     * @return string|bool
+     * {@inheritDoc}
      */
     public function getPrimaryKeyForTable($database, $schema, $table)
     {
@@ -57,11 +49,7 @@ class mysql extends BaseProvider
     }
 
     /**
-     * @param string $database
-     * @param string $schema
-     * @param string $table
-     *
-     * @return array
+     * {@inheritDoc}
      */
     public function getRequiredTableColumns($database, $schema, $table)
     {
