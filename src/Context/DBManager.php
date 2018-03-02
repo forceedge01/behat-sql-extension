@@ -3,6 +3,8 @@
 namespace Genesis\SQLExtension\Context;
 
 use Exception;
+use Genesis\SQLExtension\Context\DatabaseProviders;
+use Genesis\SQLExtension\Context\Interfaces\DatabaseProviderInterface;
 use Traversable;
 
 /**
@@ -21,10 +23,17 @@ class DBManager implements Interfaces\DBManagerInterface
     private $params;
 
     /**
+     * @var DatabaseProviderInterface
+     */
+    private $databaseProvider;
+
+    /**
      * @param array $params
      */
     public function __construct(array $params = array())
     {
+        $dbProviderFactory = new DatabaseProviders\Factory();
+        $this->databaseProvider = $dbProviderFactory->getProvider($params['engine'], $this);
         $this->setDBParams($params);
     }
 
@@ -85,31 +94,15 @@ class DBManager implements Interfaces\DBManagerInterface
      * @param string $database
      * @param string $table
      *
-     * @result string|bool
+     * @return string|bool
      */
     public function getPrimaryKeyForTable($database, $table)
     {
-        $sql = sprintf(
-            '
-            SELECT `COLUMN_NAME`
-            FROM `information_schema`.`COLUMNS`
-            WHERE (`TABLE_SCHEMA` = "%s")
-            AND (`TABLE_NAME` = "%s")
-            AND (`COLUMN_KEY` = "PRI")',
+        return $this->databaseProvider->getPrimaryKeyForTable(
             $database,
+            $this->params['DBSCHEMA'],
             $table
         );
-
-        $statement = $this->execute($sql);
-        $this->throwExceptionIfErrors($statement);
-        $result = $statement->fetchAll();
-        $this->closeStatement($statement);
-
-        if (! $result) {
-            return false;
-        }
-
-        return $result[0][0];
     }
 
     /**
@@ -162,64 +155,11 @@ class DBManager implements Interfaces\DBManagerInterface
      */
     public function getRequiredTableColumns($table)
     {
-        $resetSchema = false;
-        // If the DBSCHEMA is not set, try using the database name if provided with the table.
-        // If this happens the schema generation is dynamic so keep resetting the stored schema.
-        if (! $this->params['DBSCHEMA']) {
-            $resetSchema = true;
-            preg_match('/(.*)\./', $table, $db);
-
-            if (isset($db[1])) {
-                $this->params['DBSCHEMA'] = $db[1];
-            }
-        }
-
-        // Parse out the table name.
-        $table = preg_replace('/(.*\.)/', '', $table);
-        $table = trim($table, '`');
-
-        // Statement to extract all required columns for a table.
-        $sqlStatement = "
-            SELECT 
-                `column_name`, `data_type` 
-            FROM 
-                information_schema.columns 
-            WHERE 
-                is_nullable = 'NO'
-            AND 
-                table_name = '%s'
-            AND 
-                table_schema = '%s';";
-
-        // Get not null columns
-        $sql = sprintf(
-            $sqlStatement,
-            $table,
-            $this->params['DBSCHEMA']
+        return $this->databaseProvider->getRequiredTableColumns(
+            $this->params['DBNAME'],
+            $this->params['DBSCHEMA'],
+            $table
         );
-
-        // Reset schema after the fields have been extracted.
-        if ($resetSchema) {
-            $this->params['DBSCHEMA'] = null;
-        }
-
-        $statement = $this->execute($sql);
-        $result = $statement->fetchAll();
-        $this->closeStatement($statement);
-
-        if (! $result) {
-            return [];
-        }
-
-        $cols = [];
-        foreach ($result as $column) {
-            $cols[$column['column_name']] = $column['data_type'];
-        }
-
-        // Dont populate primary key, let db handle that
-        unset($cols['id']);
-
-        return $cols;
     }
 
     /**
@@ -241,19 +181,11 @@ class DBManager implements Interfaces\DBManagerInterface
      */
     private function getConnectionDetails()
     {
-        // Check if port is provided, if not leave empty to use default.
-        $port = '';
-        if ($this->params['DBPORT']) {
-            $port = ';port=' . $this->params['DBPORT'];
-        }
-
         return [
-            sprintf(
-                '%s:dbname=%s;host=%s%s',
-                $this->params['DBENGINE'],
+            $this->databaseProvider->getPdoDnsString(
                 $this->params['DBNAME'],
                 $this->params['DBHOST'],
-                $port
+                $this->params['DBPORT']
             ),
             $this->params['DBUSER'],
             $this->params['DBPASSWORD'],
