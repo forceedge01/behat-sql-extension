@@ -3,6 +3,7 @@
 namespace Genesis\SQLExtension\Context\DatabaseProviders;
 
 use Genesis\SQLExtension\Context\Interfaces\DBManagerInterface;
+use Genesis\SQLExtension\Context\Interfaces\DatabaseProviderInterface;
 
 /**
  * base class.

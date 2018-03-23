@@ -37,7 +37,7 @@ class DeleteQueryBuilder extends QueryBuilder
      */
     public function buildQuery()
     {
-        $table = $this->query->getQueryParams()->getTable();
+        $table = $this->query->getQueryParams()->getEntity()->getEntityName();
 
         $sql = "DELETE FROM {$table} WHERE {$this->whereClause}";
         $this->query->setSql($sql);

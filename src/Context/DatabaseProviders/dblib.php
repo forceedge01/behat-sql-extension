@@ -8,11 +8,32 @@ namespace Genesis\SQLExtension\Context\DatabaseProviders;
 class dblib extends BaseProvider
 {
     /**
+     * @var array
+     */
+    private static $primaryKeys = [];
+
+    /**
      * {@inheritDoc}
      */
-    public function getPdoDnsString($dbname, $host)
+    public function getPdoDnsString($dbname, $host, $port)
     {
-        throw new \Exception('Method getPdoDnsString() is not implemented.');
+        return "dblib:host=$host:$port;dbname=$dbname";
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function getLeftDelimiterForReservedWord()
+    {
+        return '[';
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function getRightDelimiterForReservedWord()
+    {
+        return ']';
     }
 
     /**
@@ -20,7 +41,45 @@ class dblib extends BaseProvider
      */
     public function getPrimaryKeyForTable($database, $schema, $table)
     {
-        throw new \Exception('Method getPrimaryKeyForTable() is not implemented.');
+        $database = $this->normaliseMsSQLPotentialKeyword($database);
+        $schema = $this->normaliseMsSQLPotentialKeyword($schema);
+        $table = $this->normaliseMsSQLPotentialKeyword($table);
+
+        $key = $database . $schema . $table;
+
+        if (isset(self::$primaryKeys[$key])) {
+            return self::$primaryKeys[$key];
+        }
+
+        $additionalWhereClause = '';
+        if ($database) {
+            $additionalWhereClause = " AND TC.TABLE_CATALOG = '$database'";
+        }
+
+        if ($schema) {
+            $additionalWhereClause .= " AND TC.TABLE_SCHEMA = '$schema'";
+        }
+
+        $sql = "
+            SELECT KU.table_name as TABLENAME,column_name as PRIMARYKEYCOLUMN
+            FROM INFORMATION_SCHEMA.TABLE_CONSTRAINTS AS TC
+            INNER JOIN
+                INFORMATION_SCHEMA.KEY_COLUMN_USAGE AS KU
+                      ON TC.CONSTRAINT_TYPE = 'PRIMARY KEY' AND
+                         TC.CONSTRAINT_NAME = KU.CONSTRAINT_NAME AND 
+                         KU.table_name='$table' $additionalWhereClause;
+        ";
+
+        $statement = $this->getExecutor()->execute($sql);
+        $result = $statement->fetchAll();
+
+        if (isset($result[0]['PRIMARYKEYCOLUMN'])) {
+            self::$primaryKeys[$key] = $result[0]['PRIMARYKEYCOLUMN'];
+        } else {
+            self::$primaryKeys[$key] = '';
+        }
+
+        return self::$primaryKeys[$key];
     }
 
     /**
@@ -28,6 +87,52 @@ class dblib extends BaseProvider
      */
     public function getRequiredTableColumns($database, $schema, $table)
     {
-        throw new \Exception('Method getRequiredTableColumns() is not implemented.');
+        $additionalWhereClause = '';
+        if ($database) {
+            $additionalWhereClause = " AND TABLE_CATALOG = '$database'";
+        }
+
+        if ($schema) {
+            $additionalWhereClause .= " AND TABLE_SCHEMA = '$schema'";
+        }
+
+        $sql = "
+            SELECT
+                COLUMN_NAME, DATA_TYPE, CHARACTER_MAXIMUM_LENGTH
+            FROM
+                information_schema.columns TC
+            WHERE
+                TABLE_NAME = '$table'
+            AND
+                IS_NULLABLE = 'NO'
+            AND
+                Column_DEFAULT IS null {$additionalWhereClause};
+        ";
+
+        $statement = $this->getExecutor()->execute($sql);
+        $result = $statement->fetchAll();
+
+        $columns = [];
+        foreach ($result as $value) {
+            $columns[$value['COLUMN_NAME']] = [
+                'type' => $value['DATA_TYPE'],
+                'length' => $value['CHARACTER_MAXIMUM_LENGTH']
+            ];
+        }
+
+        $primaryKey = $this->getPrimaryKeyForTable($database, $schema, $table);
+        unset($columns[$primaryKey]);
+
+        return $columns;
+    }
+
+    /**
+     * @param string $keyword
+     *
+     * @return string
+     */
+    private function normaliseMsSQLPotentialKeyword($keyword)
+    {
+        return str_replace(['[', ']'], '', $keyword);
     }
 }

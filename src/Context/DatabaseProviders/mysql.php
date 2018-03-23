@@ -23,6 +23,22 @@ class mysql extends BaseProvider
     /**
      * {@inheritDoc}
      */
+    public function getLeftDelimiterForReservedWord()
+    {
+        return '`';
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function getRightDelimiterForReservedWord()
+    {
+        return '`';
+    }
+
+    /**
+     * {@inheritDoc}
+     */
     public function getPrimaryKeyForTable($database, $schema, $table)
     {
         $sql = sprintf(
@@ -104,7 +120,10 @@ class mysql extends BaseProvider
 
         $cols = [];
         foreach ($result as $column) {
-            $cols[$column['column_name']] = $column['data_type'];
+            $cols[$column['column_name']] = [
+                'type' => $column['data_type'],
+                'length' => 5000
+            ];
         }
 
         // Dont populate primary key, let db handle that

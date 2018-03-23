@@ -23,7 +23,7 @@ interface DBManagerInterface
      *
      * @result string|bool
      */
-    public function getPrimaryKeyForTable($database, $table);
+    public function getPrimaryKeyForTable($database, $schema, $table);
 
     /**
      * @param string $sql
@@ -40,9 +40,11 @@ interface DBManagerInterface
     /**
      * Gets a column list for a table with their type.
      *
+     * @param string $database
+     * @param string $schema
      * @param string $table
      */
-    public function getRequiredTableColumns($table);
+    public function getRequiredTableColumns($database, $schema, $table);
 
     /**
      * Get the last insert id.

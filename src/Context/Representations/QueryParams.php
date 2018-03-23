@@ -8,9 +8,9 @@ namespace Genesis\SQLExtension\Context\Representations;
 class QueryParams extends Representation
 {
     /**
-     * @var string $table.
+     * @var string.
      */
-    private $table;
+    private $entity;
 
     /**
      * @var array The rawValues to work with.
@@ -23,13 +23,13 @@ class QueryParams extends Representation
     private $resolvedValues;
 
     /**
-     * @param string $table The table.
+     * @param Entity $entity The table.
      * @param array $rawValues The values array.
      * @param array $resolvedValues The resolved values.
      */
-    public function __construct($table, array $rawValues, array $resolvedValues = [])
+    public function __construct(Entity $entity, array $rawValues, array $resolvedValues = [])
     {
-        $this->table = $table;
+        $this->entity = $entity;
         $this->rawValues = $rawValues;
         $this->resolvedValues = $resolvedValues;
     }
@@ -39,9 +39,9 @@ class QueryParams extends Representation
      *
      * @return string
      */
-    public function getTable()
+    public function getEntity()
     {
-        return $this->table;
+        return $this->entity;
     }
 
     /**
@@ -51,9 +51,9 @@ class QueryParams extends Representation
      *
      * @return $this
      */
-    public function setTable($table)
+    public function setEntity(Entity $entity)
     {
-        $this->table = $table;
+        $this->entity = $entity;
 
         return $this;
     }

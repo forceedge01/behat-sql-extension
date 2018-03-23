@@ -33,8 +33,19 @@ class DBManager implements Interfaces\DBManagerInterface
     public function __construct(array $params = array())
     {
         $dbProviderFactory = new DatabaseProviders\Factory();
-        $this->databaseProvider = $dbProviderFactory->getProvider($params['engine'], $this);
+        $this->databaseProvider = $dbProviderFactory->getProvider(
+            $dbProviderFactory->getClass($params['engine']),
+            $this
+        );
         $this->setDBParams($params);
+    }
+
+    /**
+     * @return DatabaseProviderInterface
+     */
+    public function getDatabaseProvider()
+    {
+        return $this->databaseProvider;
     }
 
     /**
@@ -92,15 +103,16 @@ class DBManager implements Interfaces\DBManagerInterface
 
     /**
      * @param string $database
+     * @param string $schema
      * @param string $table
      *
      * @return string|bool
      */
-    public function getPrimaryKeyForTable($database, $table)
+    public function getPrimaryKeyForTable($database, $schema, $table)
     {
         return $this->databaseProvider->getPrimaryKeyForTable(
             $database,
-            $this->params['DBSCHEMA'],
+            $schema,
             $table
         );
     }
@@ -153,11 +165,11 @@ class DBManager implements Interfaces\DBManagerInterface
      *
      * @return array
      */
-    public function getRequiredTableColumns($table)
+    public function getRequiredTableColumns($database, $schema, $table)
     {
         return $this->databaseProvider->getRequiredTableColumns(
-            $this->params['DBNAME'],
-            $this->params['DBSCHEMA'],
+            $database,
+            $schema,
             $table
         );
     }
@@ -219,21 +231,37 @@ class DBManager implements Interfaces\DBManagerInterface
      */
     private function setDBParams(array $dbParams = array())
     {
-        if (defined('SQLDBENGINE') || $dbParams) {
+        if ($dbParams) {
             $options = [];
             if (isset($_SESSION['behat']['GenesisSqlExtension']['connection_details']['connection_options'])) {
                 $options = $_SESSION['behat']['GenesisSqlExtension']['connection_details']['connection_options'];
             }
 
             // Allow params to be over-ridable.
-            $this->params['DBSCHEMA'] = $this->arrayIfElse($dbParams, 'schema', SQLDBSCHEMA);
-            $this->params['DBNAME'] = $this->arrayIfElse($dbParams, 'name', SQLDBNAME);
-            $this->params['DBPREFIX'] = $this->arrayIfElse($dbParams, 'prefix', SQLDBPREFIX);
-            $this->params['DBHOST'] = $this->arrayIfElse($dbParams, 'host', SQLDBHOST);
-            $this->params['DBPORT'] = $this->arrayIfElse($dbParams, 'port', SQLDBPORT);
-            $this->params['DBUSER'] = $this->arrayIfElse($dbParams, 'username', SQLDBUSERNAME);
-            $this->params['DBPASSWORD'] = $this->arrayIfElse($dbParams, 'password', SQLDBPASSWORD);
-            $this->params['DBENGINE'] = $this->arrayIfElse($dbParams, 'engine', SQLDBENGINE);
+            $this->params['DBSCHEMA'] = $this->arrayIfElse($dbParams, 'schema', null);
+            $this->params['DBNAME'] = $this->arrayIfElse($dbParams, 'name', null);
+            $this->params['DBPREFIX'] = $this->arrayIfElse($dbParams, 'prefix', null);
+            $this->params['DBHOST'] = $this->arrayIfElse($dbParams, 'host', null);
+            $this->params['DBPORT'] = $this->arrayIfElse($dbParams, 'port', null);
+            $this->params['DBUSER'] = $this->arrayIfElse($dbParams, 'username', null);
+            $this->params['DBPASSWORD'] = $this->arrayIfElse($dbParams, 'password', null);
+            $this->params['DBENGINE'] = $this->arrayIfElse($dbParams, 'engine', null);
+            $this->params['DBOPTIONS'] = $options;
+        } elseif (defined('SQLDBENGINE') || $dbParams) {
+            $options = [];
+            if (isset($_SESSION['behat']['GenesisSqlExtension']['connection_details']['connection_options'])) {
+                $options = $_SESSION['behat']['GenesisSqlExtension']['connection_details']['connection_options'];
+            }
+
+            // Allow params to be over-ridable.
+            $this->params['DBSCHEMA'] = SQLDBSCHEMA;
+            $this->params['DBNAME'] = SQLDBNAME;
+            $this->params['DBPREFIX'] = SQLDBPREFIX;
+            $this->params['DBHOST'] = SQLDBHOST;
+            $this->params['DBPORT'] = SQLDBPORT;
+            $this->params['DBUSER'] = SQLDBUSERNAME;
+            $this->params['DBPASSWORD'] = SQLDBPASSWORD;
+            $this->params['DBENGINE'] = SQLDBENGINE;
             $this->params['DBOPTIONS'] = $options;
         } else {
             $params = getenv('BEHAT_ENV_PARAMS');
@@ -322,5 +350,21 @@ class DBManager implements Interfaces\DBManagerInterface
         $statement = null;
 
         return $this;
+    }
+
+    /**
+     * @return string
+     */
+    public function getLeftDelimiterForReservedWord()
+    {
+        return $this->databaseProvider->getLeftDelimiterForReservedWord();
+    }
+
+    /**
+     * @return string
+     */
+    public function getRightDelimiterForReservedWord()
+    {
+        return $this->databaseProvider->getRightDelimiterForReservedWord();
     }
 }

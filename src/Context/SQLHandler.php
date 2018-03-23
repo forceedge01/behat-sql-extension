@@ -5,6 +5,7 @@ namespace Genesis\SQLExtension\Context;
 use Behat\Behat\Context\Context;
 use Behat\Gherkin\Node\TableNode;
 use Exception;
+use Genesis\SQLExtension\Context\Representations\Entity;
 use Traversable;
 
 /*
@@ -24,7 +25,7 @@ use Traversable;
 class SQLHandler implements Context, Interfaces\SQLHandlerInterface
 {
     /**
-     * Entity being worked on.
+     * Entity being worked on i.e the table.
      */
     protected $entity;
 
@@ -39,19 +40,29 @@ class SQLHandler implements Context, Interfaces\SQLHandlerInterface
     private $lastId;
 
     /**
+     * Represents a table.
+     */
+    // private $entity;
+
+    /**
      * The database name.
      */
-    private $databaseName;
+    // private $databaseName;
+
+    /**
+     * The schema name.
+     */
+    // private $schemaName;
 
     /**
      * The table name.
      */
-    private $tableName;
+    // private $tableName;
 
     /**
      * The table's primary key.
      */
-    protected $primaryKey;
+    // protected $primaryKey;
 
     /**
      * The clause type being executed.
@@ -106,6 +117,8 @@ class SQLHandler implements Context, Interfaces\SQLHandlerInterface
         $this->keyStore = $keyStore;
         $this->sqlBuilder = $sqlBuilder;
         $this->sqlHistory = $sqlHistory;
+
+        $this->sqlBuilder->setDatabaseProvider($this->dbManager->getDatabaseProvider());
     }
 
     /**
@@ -127,9 +140,12 @@ class SQLHandler implements Context, Interfaces\SQLHandlerInterface
     /**
      * returns sample data for a data type.
      *
-     * @param string $type
+     * @param array $type [
+     *     'type' => 'int',
+     *     'length' => 5 // optional
+     * ]
      */
-    public function sampleData($type)
+    public function sampleData(array $type)
     {
         return $this->sqlBuilder->sampleData($type);
     }
@@ -323,19 +339,20 @@ class SQLHandler implements Context, Interfaces\SQLHandlerInterface
         $this->debugLog(sprintf('Executing SQL: %s', $sql));
         $this->lastQuery = $sql;
         $statement = $this->dbManager->execute($sql);
-        $this->lastId = $this->dbManager->getLastInsertId($this->getEntity());
+        $this->lastId = $this->dbManager->getLastInsertId($this->getEntity()->getTableName());
+        $primaryKey = $this->getEntity()->getPrimaryKey();
 
         // If last id is not provided, check if it was supplied in the sql for an insert statement.
         if (! $this->lastId and
             $this->getCommandType() === Interfaces\SQLHandlerInterface::COMMAND_TYPE_INSERT and
-            isset($this->queryParams->getRawValues()[$this->primaryKey])) {
-            $this->lastId = $this->queryParams->getRawValues()[$this->primaryKey];
+            isset($this->queryParams->getRawValues()[$primaryKey])) {
+            $this->lastId = $this->queryParams->getRawValues()[$primaryKey];
         }
 
         if ($this->get('sqlHistory') instanceof Interfaces\SQLHistoryInterface) {
             $this->get('sqlHistory')->addToHistory(
                 $this->getCommandType(),
-                $this->getUserInputEntity($this->getEntity()),
+                $this->getEntity()->getEntityName(),
                 $sql,
                 $this->lastId
             );
@@ -355,11 +372,11 @@ class SQLHandler implements Context, Interfaces\SQLHandlerInterface
      * @param mixed $entity
      * @param mixed $id
      */
-    protected function saveLastId($entity, $id)
+    protected function saveLastId($rawTable, $id)
     {
         $this->debugLog(sprintf('Last ID fetched: %d', $id));
 
-        $_SESSION['behat']['GenesisSqlExtension']['last_id'][$entity][$this->getCommandType()][] = $id;
+        $_SESSION['behat']['GenesisSqlExtension']['last_id'][$rawTable][$this->getCommandType()][] = $id;
     }
 
     /**
@@ -385,10 +402,8 @@ class SQLHandler implements Context, Interfaces\SQLHandlerInterface
      */
     public function getLastId()
     {
-        $entity = $this->getUserInputEntity($this->getEntity());
-
         try {
-            return $this->getKeyword($entity . '.' . $this->primaryKey);
+            return $this->getKeyword($this->getEntity()->getRawInput() . '.' . $this->getEntity()->getPrimaryKey());
         } catch (Exception $e) {
             return false;
         }
@@ -445,7 +460,7 @@ class SQLHandler implements Context, Interfaces\SQLHandlerInterface
         );
 
         return $this->setKeywordsFromRecord(
-            $query->getQueryParams()->getTable(),
+            $query->getQueryParams()->getEntity()->getRawInput(),
             $result[0]
         );
     }
@@ -458,15 +473,12 @@ class SQLHandler implements Context, Interfaces\SQLHandlerInterface
      *
      * @return array
      */
-    public function setKeywordsFromRecord($entity, array $record)
+    public function setKeywordsFromRecord($rawTable, array $record)
     {
-        // Normalise the entity.
-        $entity = $this->getUserInputEntity($entity);
-
         // Set all columns as reusable.
         foreach ($record as $column => $value) {
             if (! is_numeric($column)) {
-                $this->setKeyword(sprintf('%s.%s', $entity, $column), $value);
+                $this->setKeyword(sprintf('%s.%s', $rawTable, $column), $value);
             }
         }
 
@@ -476,18 +488,18 @@ class SQLHandler implements Context, Interfaces\SQLHandlerInterface
     /**
      * Do what needs to be done with the last insert id.
      *
-     * @param mixed $entity
+     * @param Entity $entity
      * @param mixed $id
      */
-    public function handleLastId($entity, $id)
+    public function handleLastId(Entity $entity, $id)
     {
-        $entity = $this->getUserInputEntity($entity);
+        // $entity = $this->getUserInputEntity($entity);
         $this->lastId = $id;
-        $entity = $this->makeSQLUnsafe($entity);
-        $this->saveLastId($entity, $this->lastId);
-        $this->setKeyword($entity . '.' . $this->primaryKey, $this->lastId);
+        // $entity = $this->makeSQLUnsafe($entity);
+        $this->saveLastId($entity->getRawInput(), $this->lastId);
+        $this->setKeyword($entity->getRawInput() . '.' . $entity->getPrimaryKey(), $this->lastId);
         // For backward compatibility.
-        $this->setKeyword($entity . '_' . $this->primaryKey, $this->lastId);
+        // $this->setKeyword($entity->getRawInput() . '_' . $this->primaryKey, $this->lastId);
     }
 
     /**
@@ -495,22 +507,24 @@ class SQLHandler implements Context, Interfaces\SQLHandlerInterface
      *
      * @param string $entity The table to get the columns of.
      * @param array $overridingColumns The overriding columns.
-     * @param mixed $table
      *
      * @return array
      */
-    public function getTableColumns($table, array $overridingColumns = array())
+    public function getTableColumns(Entity $entity, array $overridingColumns = array())
     {
         $columnClause = [];
 
+        $requiredColumns = $this->getRequiredTableColumns($entity);
+        $entity->setRequiredColumns($requiredColumns);
+
         // Get all columns for insertion
-        $allColumns = array_merge(
-            $this->getRequiredTableColumns($table),
-            $overridingColumns
-        );
+        $allColumns = array_merge($requiredColumns, $overridingColumns);
+        $leftDelimiter = $this->get('dbManager')->getLeftDelimiterForReservedWord();
+        $rightDelimiter = $this->get('dbManager')->getRightDelimiterForReservedWord();
 
         // Set values for columns
         foreach ($allColumns as $col => $type) {
+            $delimitedColumn = $leftDelimiter . $col . $rightDelimiter;
             // Check if a column is provided, if not use sample data to fill in.
             if (isset($overridingColumns[$col])) {
                 // If the value is provided get value and check if its a keyword.
@@ -520,11 +534,10 @@ class SQLHandler implements Context, Interfaces\SQLHandlerInterface
                 if (! $value) {
                     $value = $overridingColumns[$col];
                 }
-
                 // Assign value back to the column.
-                $columnClause['`'.$col.'`'] = $this->quoteOrNot($value);
+                $columnClause[$delimitedColumn] = $this->quoteOrNot($value);
             } else {
-                $columnClause['`'.$col.'`'] = $this->sampleData($type);
+                $columnClause[$delimitedColumn] = $this->sampleData($type);
             }
         }
 
@@ -539,14 +552,14 @@ class SQLHandler implements Context, Interfaces\SQLHandlerInterface
      *
      * @param mixed $entity
      */
-    public function getUserInputEntity($entity)
-    {
-        // Get rid of any special chars introduced.
-        $entity = $this->makeSQLUnsafe($entity);
+    // public function getUserInputEntity($entity)
+    // {
+    //     // Get rid of any special chars introduced.
+    //     $entity = $this->makeSQLUnsafe($entity);
 
-        // Only replace first occurrence.
-        return preg_replace('/' . $this->getParams()['DBPREFIX'] . '/', '', $entity, 1);
-    }
+    //     // Only replace first occurrence.
+    //     return preg_replace('/' . $this->getParams()['DBPREFIX'] . '/', '', $entity, 1);
+    // }
 
     /**
      * @param  TableNode $node The node with all fields and data.
@@ -581,24 +594,26 @@ class SQLHandler implements Context, Interfaces\SQLHandlerInterface
      *
      * @param mixed $string
      */
-    public function makeSQLSafe($string)
-    {
-        $string = str_replace('', '', $string);
+    // public function makeSQLSafe($string)
+    // {
+        // $string = str_replace('', '', $string);
 
-        $chunks = explode('.', $string);
+        // $chunks = explode('.', $string);
 
-        return implode('.', $chunks);
-    }
+        // return implode('.', $chunks);
+
+    //     return $string;
+    // }
 
     /**
      * Remove any quote chars.
      *
      * @param mixed $string
      */
-    public function makeSQLUnsafe($string)
-    {
-        return str_replace('`', '', $string);
-    }
+    // public function makeSQLUnsafe($string)
+    // {
+    //     return str_replace('`', '', $string);
+    // }
 
     /**
      * Get the database name, prefix or not depending on config.
@@ -608,43 +623,65 @@ class SQLHandler implements Context, Interfaces\SQLHandlerInterface
      *
      * @return string
      */
-    private function getPrefixedDatabaseName($prefix, $entity)
-    {
-        // If the entity does not already contain the database name, add that.
-        if (strpos($entity, '.')  === false) {
-            return $prefix .= $this->getParams()['DBNAME'];
-        }
+    // private function getPrefixedDatabaseName($prefix, $entity)
+    // {
+    //     // If the entity does not already contain the database name, add that.
+    //     if (strpos($entity, '.')  === false) {
+    //         return $prefix .= $this->getParams()['DBNAME'];
+    //     }
 
-        return $this->get('sqlBuilder')
-            ->getPrefixedDatabaseName($prefix, $entity);
-    }
+    //     return $this->get('sqlBuilder')
+    //         ->getPrefixedDatabaseName($prefix, $entity);
+    // }
 
     /**
      * Set the entity for further processing.
      *
-     * @param mixed $entity
+     * @param Entity $entity
      */
-    public function setEntity($entity)
+    public function resolveEntity($entity)
     {
         $this->debugLog(sprintf('ENTITY: %s', $entity));
 
-        $this->databaseName = $this->getPrefixedDatabaseName($this->getParams()['DBPREFIX'], $entity);
-        $this->tableName = $this->get('sqlBuilder')->getTableName($entity);
+        // An entity references a table, with or without the database and the schema information.
+        // Check accordingly.
+        $result = explode('.', $entity);
 
-        $this->entity = $this->makeSQLSafe($this->databaseName . '.' . $this->tableName);
-        $this->debugLog(sprintf('SET ENTITY: %s', $this->entity));
+        switch (count($result)) {
+            // Just the table name.
+            case 1:
+                $this->entity = new Entity($entity, $result[0]);
+                break;
+            // Database and table name;
+            case 2:
+                $this->entity = new Entity($entity, $result[1], $this->getParams()['DBPREFIX'] . $result[0]);
+                break;
+            // Scheme provided as well.
+            case 3:
+                $this->entity = new Entity($entity, $result[2], $this->getParams()['DBPREFIX'] . $result[0], $result[1]);
+                break;
+            default:
+                throw new Exception('Explode produced too many chunks of the entity to handle.');
+        }
+
+        $this->debugLog(sprintf('SET ENTITY: %s', $this->entity->getEntityName()));
 
         // Set the primary key for the current table.
-        $primaryKey = $this->dbManager->getPrimaryKeyForTable($this->databaseName, $this->tableName);
+        $primaryKey = $this->dbManager->getPrimaryKeyForTable(
+            $this->entity->getDatabaseName(),
+            $this->entity->getSchemaName(),
+            $this->entity->getTableName()
+        );
 
+        // Bug, some tables may genuinely not have a primary key on them.
         if (! $primaryKey) {
             $primaryKey = 'id';
         }
 
-        $this->primaryKey = $primaryKey;
-        $this->debugLog(sprintf('PRIMARY KEY: %s', $this->primaryKey));
+        $this->entity->setPrimaryKey($primaryKey);
+        $this->debugLog(sprintf('PRIMARY KEY: %s', $this->entity->getPrimaryKey()));
 
-        return $this;
+        return $this->entity;
     }
 
     /**
@@ -674,14 +711,17 @@ class SQLHandler implements Context, Interfaces\SQLHandlerInterface
     /**
      * Get the required table columns for a table.
      *
-     * @param string $entity
-     * @param mixed $table
+     * @param Entity $entity
      *
      * @return array
      */
-    public function getRequiredTableColumns($table)
+    public function getRequiredTableColumns(Entity $entity)
     {
-        return $this->dbManager->getRequiredTableColumns($table);
+        return $this->dbManager->getRequiredTableColumns(
+            $entity->getDatabaseName(),
+            $entity->getSchemaName(),
+            $entity->getTableName()
+        );
     }
 
     /**
@@ -744,7 +784,7 @@ class SQLHandler implements Context, Interfaces\SQLHandlerInterface
         if (! $result) {
             throw new Exceptions\RecordNotFoundException(
                 $query->getSql(),
-                $query->getQueryParams()->getTable()
+                $query->getQueryParams()->getEntity()->getEntityName()
             );
         }
 

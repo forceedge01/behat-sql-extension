@@ -5,6 +5,7 @@ namespace Genesis\SQLExtension\Context\Interfaces;
 use Behat\Gherkin\Node\TableNode;
 use Exception;
 use Genesis\SQLExtension\Context\Representations;
+use Genesis\SQLExtension\Context\Representations\Entity;
 use Traversable;
 
 /*
@@ -51,9 +52,9 @@ interface SQLHandlerInterface
     /**
      * returns sample data for a data type.
      *
-     * @param mixed $type
+     * @param array $type
      */
-    public function sampleData($type);
+    public function sampleData(array $type);
 
     /**
      * Get the clause type.
@@ -172,17 +173,10 @@ interface SQLHandlerInterface
     /**
      * Do what needs to be done with the last insert id.
      *
-     * @param mixed $entity
-     * @param mixed $id
+     * @param Entity $entity
+     * @param int $id
      */
-    public function handleLastId($entity, $id);
-
-    /**
-     * Get the entity the way the user had inputted it.
-     *
-     * @param mixed $entity
-     */
-    public function getUserInputEntity($entity);
+    public function handleLastId(Entity $entity, $id);
 
     /**
      * @param  TableNode $node The node with all fields and data.
@@ -217,7 +211,7 @@ interface SQLHandlerInterface
      *
      * @param mixed $entity
      */
-    public function setEntity($entity);
+    public function resolveEntity($entity);
 
     /**
      * Get the entity on which actions are being performed.

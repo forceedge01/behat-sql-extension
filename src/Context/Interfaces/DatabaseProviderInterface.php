@@ -32,13 +32,29 @@ interface DatabaseProviderInterface
     public function getPrimaryKeyForTable($database, $schema, $table);
 
     /**
-     * Get the mandatory table column names.
+     * Get the mandatory table column names excluding the primary key.
      *
      * @param string $database
      * @param string $schema
      * @param string $table
      *
-     * @return array
+     * @return array The array should contain the following:
+     * [
+     *     'columnName' => [
+     *         'type' => 'dataType',
+     *         'length' => 'maxLength'
+     *     ]
+     * ]
      */
     public function getRequiredTableColumns($database, $schema, $table);
+
+    /**
+     * {@inheritDoc}
+     */
+    public function getLeftDelimiterForReservedWord();
+
+    /**
+     * {@inheritDoc}
+     */
+    public function getRightDelimiterForReservedWord();
 }

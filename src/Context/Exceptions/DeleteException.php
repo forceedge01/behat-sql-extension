@@ -3,6 +3,7 @@
 namespace Genesis\SQLExtension\Context\Exceptions;
 
 use Exception as BaseException;
+use Genesis\SQLExtension\Context\Representations\Entity;
 
 class DeleteException extends BaseException
 {
@@ -13,9 +14,9 @@ class DeleteException extends BaseException
      * @param BaseException $e The original exception.
      * @param mixed $table
      */
-    public function __construct($table, BaseException $e)
+    public function __construct(Entity $entity, BaseException $e)
     {
-        $message = "Unable to delete data from table '$table', Error: " . $e->getMessage();
+        $message = "Unable to delete data from table '{$entity->getEntityName()}', Error: " . $e->getMessage();
         parent::__construct($message, self::CODE, $e);
     }
 }

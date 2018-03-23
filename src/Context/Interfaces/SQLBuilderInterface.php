@@ -3,6 +3,7 @@
 namespace Genesis\SQLExtension\Context\Interfaces;
 
 use Behat\Gherkin\Node\TableNode;
+use Genesis\SQLExtension\Context\Interfaces\DatabaseProviderInterface;
 
 interface SQLBuilderInterface
 {
@@ -10,6 +11,13 @@ interface SQLBuilderInterface
      * Will explode resulting in max 2 values.
      */
     const EXPLODE_MAX_LIMIT = 2;
+
+    /**
+     * @param DatabaseProviderInterface $databaseProvider
+     *
+     * @return this
+     */
+    public function setDatabaseProvider(DatabaseProviderInterface $databaseProvider);
 
     /**
      * Constructs a clause based on the glue, to be used for where and update clause.
@@ -53,9 +61,9 @@ interface SQLBuilderInterface
     /**
      * returns sample data for a data type.
      *
-     * @param string $type
+     * @param array $type
      */
-    public function sampleData($type);
+    public function sampleData(array $type);
 
     /**
      * Get reference for a placeholder.
