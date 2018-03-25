@@ -19,9 +19,11 @@ interface DBManagerInterface
     public function getConnection();
 
     /**
-     * @param string $entity
+     * @param string $database
+     * @param string $schema
+     * @param string $table
      *
-     * @result string|bool
+     * @return string|bool
      */
     public function getPrimaryKeyForTable($database, $schema, $table);
 

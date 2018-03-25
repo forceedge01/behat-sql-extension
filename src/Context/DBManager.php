@@ -28,6 +28,16 @@ class DBManager implements Interfaces\DBManagerInterface
     private $databaseProvider;
 
     /**
+     * @var array Caches primary key of tables.
+     */
+    private static $primaryKeys;
+
+    /**
+     * @var array Caches any columns we've retrieved for given table.
+     */
+    private static $requiredColumns;
+
+    /**
      * @param array $params
      */
     public function __construct(array $params = array())
@@ -110,11 +120,17 @@ class DBManager implements Interfaces\DBManagerInterface
      */
     public function getPrimaryKeyForTable($database, $schema, $table)
     {
-        return $this->databaseProvider->getPrimaryKeyForTable(
-            $database,
-            $schema,
-            $table
-        );
+        $keyReference = $database . $schema . $table;
+
+        if (! isset(self::$primaryKeys[$keyReference])) {
+            self::$primaryKeys[$keyReference] = $this->databaseProvider->getPrimaryKeyForTable(
+                $database,
+                $schema,
+                $table
+            );
+        }
+
+        return self::$primaryKeys[$keyReference];
     }
 
     /**
@@ -161,17 +177,25 @@ class DBManager implements Interfaces\DBManagerInterface
     /**
      * Gets a column list for a table with their type.
      *
+     * @param string $database
+     * @param string $schema
      * @param string $table
      *
      * @return array
      */
     public function getRequiredTableColumns($database, $schema, $table)
     {
-        return $this->databaseProvider->getRequiredTableColumns(
-            $database,
-            $schema,
-            $table
-        );
+        $requiredColumnReference = $database . $schema . $table;
+
+        if (! isset(self::$requiredColumns[$requiredColumnReference])) {
+            self::$requiredColumns[$requiredColumnReference] = $this->databaseProvider->getRequiredTableColumns(
+                $database,
+                $schema,
+                $table
+            );
+        }
+
+        return self::$requiredColumns[$requiredColumnReference];
     }
 
     /**
