@@ -46,11 +46,11 @@ class DBManager implements Interfaces\DBManagerInterface
         DatabaseProviderFactoryInterface $dbProviderFactory,
         array $params = array()
     ) {
+        $this->setDBParams($params);
         $this->databaseProvider = $dbProviderFactory->getProvider(
-            $dbProviderFactory->getClass($params['engine']),
+            $dbProviderFactory->getClass($this->params['DBENGINE']),
             $this
         );
-        $this->setDBParams($params);
     }
 
     /**
@@ -258,7 +258,7 @@ class DBManager implements Interfaces\DBManagerInterface
      */
     private function setDBParams(array $dbParams = array())
     {
-        if ($dbParams) {
+        if (isset($dbParams['engine'])) {
             $options = [];
             if (isset($_SESSION['behat']['GenesisSqlExtension']['connection_details']['connection_options'])) {
                 $options = $_SESSION['behat']['GenesisSqlExtension']['connection_details']['connection_options'];
@@ -274,7 +274,7 @@ class DBManager implements Interfaces\DBManagerInterface
             $this->params['DBPASSWORD'] = $this->arrayIfElse($dbParams, 'password', null);
             $this->params['DBENGINE'] = $this->arrayIfElse($dbParams, 'engine', null);
             $this->params['DBOPTIONS'] = $options;
-        } elseif (defined('SQLDBENGINE') || $dbParams) {
+        } elseif (defined('SQLDBENGINE')) {
             $options = [];
             if (isset($_SESSION['behat']['GenesisSqlExtension']['connection_details']['connection_options'])) {
                 $options = $_SESSION['behat']['GenesisSqlExtension']['connection_details']['connection_options'];

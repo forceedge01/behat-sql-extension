@@ -113,19 +113,6 @@ class SQLHandler implements Context, Interfaces\SQLHandlerInterface
     }
 
     /**
-     * returns sample data for a data type.
-     *
-     * @param array $type [
-     *     'type' => 'int',
-     *     'length' => 5 // optional
-     * ]
-     */
-    // public function sampleData(array $type)
-    // {
-    //     return $this->sqlBuilder->sampleData($type);
-    // }
-
-    /**
      * Set the clause type.
      *
      * @param string $commandType
@@ -501,7 +488,7 @@ class SQLHandler implements Context, Interfaces\SQLHandlerInterface
         foreach ($allColumns as $col => $type) {
             $delimitedColumn = $leftDelimiter . $col . $rightDelimiter;
             // Check if a column is provided, if not use sample data to fill in.
-            if (isset($overridingColumns[$col])) {
+            if (array_key_exists($col, $overridingColumns)) {
                 // If the value is provided get value and check if its a keyword.
                 $value = $this->checkForKeyword($overridingColumns[$col]);
 
@@ -658,8 +645,6 @@ class SQLHandler implements Context, Interfaces\SQLHandlerInterface
 
         return $this->entity;
     }
-
-    public function sampleData(array $type){}
 
     /**
      * Get the entity on which actions are being performed.

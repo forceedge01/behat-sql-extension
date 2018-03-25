@@ -29,7 +29,7 @@ class SQLExtensionTest extends TestHelper
         $databaseParams = [];
 
         $this->testObject = new Context\SQLContext(
-            'mysql',
+            null,
             null,
             null,
             null,
@@ -515,6 +515,16 @@ class SQLExtensionTest extends TestHelper
     public function testISaveTheIdAs()
     {
         $key = 'myval';
+        $entity = 'database.someTable4';
+        $with = 'column1:abc,column2:%xyz%';
+
+        $this->testObject->get('dbManager')->getConnection()->expects($this->any())
+             ->method('prepare')
+             ->with($this->isType('string'))
+             ->willReturn($this->getPdoStatementWithRows(true, [[0 => 'id']]));
+
+        $this->testObject->iShouldHaveAWith($entity, $with);
+
         $this->testObject->iSaveTheIdAs($key);
     }
 
@@ -575,7 +585,7 @@ class SQLExtensionTest extends TestHelper
         // Execute
         $result = $this->testObject->iHaveAnExistingWhere($entity, $where);
 
-        $this->assertEquals('dev_abc.my_entity', $this->testObject->getEntity());
+        $this->assertEquals('dev_abc.my_entity', $this->testObject->getEntity()->getEntityName());
         $this->assertEquals($expectedResult, $result);
 
         $this->assertEquals('abc', $this->testObject->getKeyword('abc.my_entity.column1'));
@@ -617,7 +627,7 @@ class SQLExtensionTest extends TestHelper
         // Execute
         $result = $this->testObject->iHaveAnExistingWhere($entity, $where);
 
-        $this->assertEquals('dev_abc.my_entity', $this->testObject->getEntity());
+        $this->assertEquals('dev_abc.my_entity', $this->testObject->getEntity()->getEntityName());
         $this->assertEquals($expectedResult, $result);
 
         $this->assertEquals($keyword, $this->testObject->getKeyword('abc.my_entity.column1'));
@@ -677,30 +687,39 @@ class SQLExtensionTest extends TestHelper
 
     /**
      * Test that this method works with values provided.
+     *
+     * @runInSeparateProcess
      */
     public function testIHaveAWhereWithOrStatementAndExternalRef()
     {
         $entity = 'database.unique';
         $column = "column1:abc||column2:[user.id|abc:1||name:Abdul]||column3:what\'s up doc";
 
-        $this->testObject->get('dbManager')->getConnection()->expects($this->any())
+        $this->testObject->get('dbManager')->getConnection()->expects($this->atLeastOnce())
             ->method('prepare')
             ->with($this->isType('string'))
             ->will($this->onConsecutiveCalls(
+                // Call to get the primary key.
                 $this->getPdoStatementWithRows(0, [[0 => 'id']]),
+                // Call for the external reference.
+                $this->getPdoStatementWithRows(1, [[0 => '17', 'id' => '17']]),
+                // Call to get the required columns.
+                $this->getPdoStatementWithRows(1, [['column_name' => 'column4', 'data_type' => 'datetime']]),
+                // Insert the new record.
                 $this->getPdoStatementWithRows(1, true),
-                $this->getPdoStatementWithRows(1, [['column_name' => 'id', 'data_type' => 'int']]),
-                $this->getPdoStatementWithRows(1, true),
+                // Call to get the record back with the newly created data.
                 $this->getPdoStatementWithRows(1, [[0 => 'id', 'id' => 237463]])
             ));
-        $this->testObject->get('dbManager')->getConnection()->expects($this->any())
+        $this->testObject->get('dbManager')->getConnection()->expects($this->atLeastOnce())
             ->method('lastInsertId')
             ->with($this->isType('string'))
             ->willReturn(5);
+
         $result = $this->testObject->iHaveAWhere($entity, $column);
+        
         // Expected SQL.
-        $timeString = '\'behat-test-string-' . \Genesis\SQLExtension\Tests\Unit\Context\SQLBuilderTest::TYPE_STRING_TIME . '\'';
-        $expectedSQL = "INSERT INTO dev_database.unique (`column1`, `column2`, `column3`) VALUES ('abc', {$timeString}, 'what\'s up doc')";
+        $expectedSQL = "INSERT INTO dev_database.unique (`column4`, `column1`, `column2`, `column3`) VALUES (CURRENT_TIMESTAMP, 'abc', 17, 'what\'s up doc')";
+
         // Assert.
         $this->assertEquals($expectedSQL, $result);
         $this->assertNotNull($this->testObject->getEntity());

@@ -50,13 +50,6 @@ interface SQLHandlerInterface
     const COMMAND_TYPE_DELETE = 'delete';
 
     /**
-     * returns sample data for a data type.
-     *
-     * @param array $type
-     */
-    public function sampleData(array $type);
-
-    /**
      * Get the clause type.
      */
     public function getCommandType();
