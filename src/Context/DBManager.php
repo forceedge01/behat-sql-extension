@@ -4,6 +4,7 @@ namespace Genesis\SQLExtension\Context;
 
 use Exception;
 use Genesis\SQLExtension\Context\DatabaseProviders;
+use Genesis\SQLExtension\Context\Interfaces\DatabaseProviderFactoryInterface;
 use Genesis\SQLExtension\Context\Interfaces\DatabaseProviderInterface;
 use Traversable;
 
@@ -38,11 +39,13 @@ class DBManager implements Interfaces\DBManagerInterface
     private static $requiredColumns;
 
     /**
+     * @param DatabaseProviderFactoryInterface $dbProviderFactory
      * @param array $params
      */
-    public function __construct(array $params = array())
-    {
-        $dbProviderFactory = new DatabaseProviders\Factory();
+    public function __construct(
+        DatabaseProviderFactoryInterface $dbProviderFactory,
+        array $params = array()
+    ) {
         $this->databaseProvider = $dbProviderFactory->getProvider(
             $dbProviderFactory->getClass($params['engine']),
             $this

@@ -2,6 +2,7 @@
 
 namespace Genesis\SQLExtension\Context\Interfaces;
 
+use Genesis\SQLExtension\Context\Interfaces\DatabaseProviderInterface;
 use Traversable;
 
 interface DBManagerInterface
@@ -97,4 +98,19 @@ interface DBManagerInterface
      * @return $this self.
      */
     public function closeStatement(Traversable $statement);
+
+    /**
+     * @return DatabaseProviderInterface
+     */
+    public function getDatabaseProvider();
+
+    /**
+     * @return string
+     */
+    public function getLeftDelimiterForReservedWord();
+
+    /**
+     * @return string
+     */
+    public function getRightDelimiterForReservedWord();
 }

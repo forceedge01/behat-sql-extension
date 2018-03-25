@@ -29,7 +29,7 @@ class SQLExtensionTest extends TestHelper
         $databaseParams = [];
 
         $this->testObject = new Context\SQLContext(
-            null,
+            'mysql',
             null,
             null,
             null,

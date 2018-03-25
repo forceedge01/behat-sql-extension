@@ -4,6 +4,7 @@ namespace Genesis\SQLExtension\Context;
 
 use Behat\Behat\Context\Step\Given;
 use Behat\Gherkin\Node\TableNode;
+use Genesis\SQLExtension\Context\DatabaseProviders;
 
 /*
  * This file is part of the Behat\SQLExtension
@@ -45,7 +46,7 @@ class SQLContext extends API implements Interfaces\SQLContextInterface
         ];
 
         parent::__construct(
-            new DBManager($dbConnectionDetails),
+            new DBManager(new DatabaseProviders\Factory(), $dbConnectionDetails),
             new SQLBuilder(),
             new LocalKeyStore(),
             new SQLHistory()

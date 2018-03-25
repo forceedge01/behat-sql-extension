@@ -4,7 +4,7 @@ namespace Genesis\SQLExtension\Context;
 
 use Exception;
 
-session_start();
+// session_start();
 
 /*
  * This file is part of the Behat\SQLExtension
@@ -267,7 +267,7 @@ class API extends SQLHandler implements Interfaces\APIInterface
         if ($this->hasFetchedRows($statement)) {
             throw new Exceptions\RecordFoundException(
                 $selectWhereClause,
-                $this->getEntity()
+                $this->getEntity()->getRawInput()
             );
         }
 

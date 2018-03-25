@@ -3,6 +3,8 @@
 namespace Genesis\SQLExtension\Tests\Unit\Context;
 
 use Genesis\SQLExtension\Context\DBManager;
+use Genesis\SQLExtension\Context\DatabaseProviders\mysql;
+use Genesis\SQLExtension\Context\Interfaces\DatabaseProviderFactoryInterface;
 use Genesis\SQLExtension\Context\PDO;
 use Genesis\SQLExtension\Tests\TestHelper;
 
@@ -18,16 +20,32 @@ class DBManagerTest extends TestHelper
     protected $testObject;
 
     /**
+     * @var array
+     */
+    protected $dependencies;
+
+    /**
      * Setup unit testing.
      */
     public function setup()
     {
-        $params = [];
+        $params = [
+            'engine' => 'mysql'
+        ];
 
         $connection = $this->getMockBuilder(PDO::class)
             ->getMock();
 
-        $this->testObject = new DBManager($params);
+        $this->dependencies['databaseProvider'] = $this->createMock(mysql::class);
+        $providerFactoryMock = $this->createMock(DatabaseProviderFactoryInterface::class);
+        $providerFactoryMock->expects($this->any())
+            ->method('getProvider')
+            ->willReturn($this->dependencies['databaseProvider']);
+
+        $this->testObject = new DBManager(
+            $providerFactoryMock,
+            $params
+        );
         $this->testObject->setConnection($connection);
     }
 
@@ -54,67 +72,20 @@ class DBManagerTest extends TestHelper
         $this->assertEquals($value, $result);
     }
 
-    public function testGetPrimaryKeyForTableReturnNothing()
+    public function testGetPrimaryKeyForTable()
     {
         $database = 'my_app';
+        $schema = 'my_schema';
         $table = 'user';
-        $expectedSql = '
-            SELECT `COLUMN_NAME`
-            FROM `information_schema`.`COLUMNS`
-            WHERE (`TABLE_SCHEMA` = "my_app")
-            AND (`TABLE_NAME` = "user")
-            AND (`COLUMN_KEY` = "PRI")';
 
-        $this->testObject->getConnection()->expects($this->once())
-            ->method('prepare')
-            ->with($expectedSql)
-            ->will($this->returnValue($this->getPdoStatementWithRows(0, [])));
+        $this->dependencies['databaseProvider']->expects($this->any())
+            ->method('getPrimaryKeyForTable')
+            ->with($database, $schema, $table)
+            ->willReturn('my_id');
 
-        $result = $this->testObject->getPrimaryKeyForTable($database, $table);
+        $result = $this->testObject->getPrimaryKeyForTable($database, $schema, $table);
 
-        $this->assertFalse($result);
-    }
-
-    public function testGetPrimaryKeyForTableReturnSomeColumn()
-    {
-        $database = 'my_app';
-        $table = 'user';
-        $expectedSql = '
-            SELECT `COLUMN_NAME`
-            FROM `information_schema`.`COLUMNS`
-            WHERE (`TABLE_SCHEMA` = "my_app")
-            AND (`TABLE_NAME` = "user")
-            AND (`COLUMN_KEY` = "PRI")';
-
-        $this->testObject->getConnection()->expects($this->once())
-            ->method('prepare')
-            ->with($expectedSql)
-            ->will($this->returnValue($this->getPdoStatementWithRows(1, [[0 => 'coid']])));
-
-        $result = $this->testObject->getPrimaryKeyForTable($database, $table);
-
-        $this->assertEquals('coid', $result);
-    }
-
-    public function testGetPrimaryKeyForTableReturnSomething()
-    {
-        $database = 'my_app';
-        $table = 'user';
-        $expectedSql = '
-            SELECT `COLUMN_NAME`
-            FROM `information_schema`.`COLUMNS`
-            WHERE (`TABLE_SCHEMA` = "my_app")
-            AND (`TABLE_NAME` = "user")
-            AND (`COLUMN_KEY` = "PRI")';
-
-        $this->testObject->getConnection()->expects($this->once())
-            ->method('prepare')
-            ->with($expectedSql)
-            ->will($this->returnValue($this->getPdoStatementWithRows(true, [['primary_key_id']])));
-
-        $result = $this->testObject->getPrimaryKeyForTable($database, $table);
-
-        $this->assertEquals('primary_key_id', $result);
+        $this->assertEquals($result, 'my_id');
     }
 
     public function testExecute()
@@ -147,128 +118,27 @@ class DBManagerTest extends TestHelper
         $this->assertEquals(1, $result);
     }
 
-    public function testGetRequiredTableColumnsNoResult()
+    public function testGetRequiredTableColumns()
     {
+        $database = 'mydb';
+        $schema = 'myschema';
         $table = 'user';
-        $expectedSql = "
-            SELECT 
-                `column_name`, `data_type` 
-            FROM 
-                information_schema.columns 
-            WHERE 
-                is_nullable = 'NO'
-            AND 
-                table_name = 'user'
-            AND 
-                table_schema = 'myschema';";
 
-        $this->testObject->getConnection()->expects($this->once())
-            ->method('prepare')
-            ->with($expectedSql)
-            ->will($this->returnValue($this->getPdoStatementWithRows(0, [])));
+        $expectedResult = [
+            'UserId' => [
+                'type' => 'int',
+                'length' => null
+            ]
+        ];
 
-        $result = $this->testObject->getRequiredTableColumns($table);
+        $this->dependencies['databaseProvider']->expects($this->any())
+            ->method('getRequiredTableColumns')
+            ->with($database, $schema, $table)
+            ->willReturn($expectedResult);
 
-        $this->assertTrue([] === $result);
-    }
+        $result = $this->testObject->getRequiredTableColumns($database, $schema, $table);
 
-    public function testGetRequiredTableColumnsNoDBSchemaSet()
-    {
-        $table = 'awsomeschema.awsometable';
-        $expectedSql = "
-            SELECT 
-                `column_name`, `data_type` 
-            FROM 
-                information_schema.columns 
-            WHERE 
-                is_nullable = 'NO'
-            AND 
-                table_name = 'awsometable'
-            AND 
-                table_schema = 'awsomeschema';";
-
-        // Override schema value.
-        $property = $this->accessProperty('params');
-        $value = $property->getValue($this->testObject);
-        $property->setValue(
-            $this->testObject,
-            array_merge($value, ['DBSCHEMA' => null])
-        );
-
-        $this->testObject->getConnection()->expects($this->once())
-            ->method('prepare')
-            ->with($expectedSql)
-            ->will($this->returnValue($this->getPdoStatementWithRows(0, [])));
-
-        $result = $this->testObject->getRequiredTableColumns($table);
-
-        $this->assertTrue([] === $result);
-    }
-
-    public function testGetRequiredTableColumnsResults()
-    {
-        $table = 'user';
-        $expectedSql = "
-            SELECT 
-                `column_name`, `data_type` 
-            FROM 
-                information_schema.columns 
-            WHERE 
-                is_nullable = 'NO'
-            AND 
-                table_name = 'user'
-            AND 
-                table_schema = 'myschema';";
-
-        $this->testObject->getConnection()->expects($this->once())
-            ->method('prepare')
-            ->with($expectedSql)
-            ->will($this->returnValue($this->getPdoStatementWithRows(2, [
-                    ['column_name' => 'id', 'data_type' => 'int'],
-                    ['column_name' => 'name', 'data_type' => 'string'
-                    ]
-                ])));
-
-        $result = $this->testObject->getRequiredTableColumns($table);
-
-        $this->assertTrue(['name' => 'string'] === $result);
-    }
-
-    public function testGetRequiredTableColumnsNoSchemaInparams()
-    {
-        $table = 'myapp.user';
-        $expectedSql = "
-            SELECT 
-                `column_name`, `data_type` 
-            FROM 
-                information_schema.columns 
-            WHERE 
-                is_nullable = 'NO'
-            AND 
-                table_name = 'user'
-            AND 
-                table_schema = 'myapp';";
-
-        // Override the preset schema to be null as params take precedence over defined constants.
-        // This should make then make use of the 'myapp' table schema.
-        $dbParams = ['schema' => ''];
-        $this->accessMethod('setDBParams')->invokeArgs(
-            $this->testObject,
-            [$dbParams]
-        );
-
-        $this->testObject->getConnection()->expects($this->once())
-            ->method('prepare')
-            ->with($expectedSql)
-            ->will($this->returnValue($this->getPdoStatementWithRows(2, [
-                    ['column_name' => 'id', 'data_type' => 'int'],
-                    ['column_name' => 'name', 'data_type' => 'string'
-                    ]
-                ])));
-
-        $result = $this->testObject->getRequiredTableColumns($table);
-
-        $this->assertTrue(['name' => 'string'] === $result);
+        $this->assertTrue($expectedResult === $result);
     }
 
     public function testGetLastInsertId()
@@ -402,12 +272,17 @@ class DBManagerTest extends TestHelper
                 $paramsValue
             );
 
+        $expectedConnectionString = 'banana:dbname=hot;host=cup';
+
+        $this->dependencies['databaseProvider']->expects($this->any())
+            ->method('getPdoDnsString')
+            ->with('hot', 'cup', '')
+            ->willReturn($expectedConnectionString);
+
         // Execute
         $result = $this
             ->accessMethod('getConnectionDetails')
             ->invoke($this->testObject);
-
-        $expectedConnectionString = 'banana:dbname=hot;host=cup';
 
         // Assert Result
         $this->assertInternalType('array', $result);
@@ -440,12 +315,17 @@ class DBManagerTest extends TestHelper
                 $paramsValue
             );
 
+        $expectedConnectionString = 'banana:dbname=hot;host=cup;port=3380';
+
+        $this->dependencies['databaseProvider']->expects($this->any())
+            ->method('getPdoDnsString')
+            ->with('hot', 'cup', 3380)
+            ->willReturn($expectedConnectionString);
+
         // Execute
         $result = $this
             ->accessMethod('getConnectionDetails')
             ->invoke($this->testObject);
-
-        $expectedConnectionString = 'banana:dbname=hot;host=cup;port=3380';
 
         // Assert Result
         $this->assertInternalType('array', $result);

@@ -40,31 +40,6 @@ class SQLHandler implements Context, Interfaces\SQLHandlerInterface
     private $lastId;
 
     /**
-     * Represents a table.
-     */
-    // private $entity;
-
-    /**
-     * The database name.
-     */
-    // private $databaseName;
-
-    /**
-     * The schema name.
-     */
-    // private $schemaName;
-
-    /**
-     * The table name.
-     */
-    // private $tableName;
-
-    /**
-     * The table's primary key.
-     */
-    // protected $primaryKey;
-
-    /**
      * The clause type being executed.
      */
     private $commandType;
@@ -145,10 +120,10 @@ class SQLHandler implements Context, Interfaces\SQLHandlerInterface
      *     'length' => 5 // optional
      * ]
      */
-    public function sampleData(array $type)
-    {
-        return $this->sqlBuilder->sampleData($type);
-    }
+    // public function sampleData(array $type)
+    // {
+    //     return $this->sqlBuilder->sampleData($type);
+    // }
 
     /**
      * Set the clause type.
@@ -537,7 +512,7 @@ class SQLHandler implements Context, Interfaces\SQLHandlerInterface
                 // Assign value back to the column.
                 $columnClause[$delimitedColumn] = $this->quoteOrNot($value);
             } else {
-                $columnClause[$delimitedColumn] = $this->sampleData($type);
+                $columnClause[$delimitedColumn] = $this->sqlBuilder->sampleData($type);
             }
         }
 
@@ -683,6 +658,8 @@ class SQLHandler implements Context, Interfaces\SQLHandlerInterface
 
         return $this->entity;
     }
+
+    public function sampleData(array $type){}
 
     /**
      * Get the entity on which actions are being performed.

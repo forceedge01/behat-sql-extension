@@ -290,7 +290,10 @@ class SQLBuilder implements Interfaces\SQLBuilderInterface
     /**
      * returns sample data for a data type.
      *
-     * @param array $type
+     * @param array $type [
+     *     'type' => '<type>',
+     *     'length' => <length>
+     * ]
      *
      * @return string|bool
      */
@@ -316,7 +319,11 @@ class SQLBuilder implements Interfaces\SQLBuilderInterface
             case 'character varying':
             case 'tinytext':
             case 'longtext':
-                $value = '\'' . substr(sprintf('behat-%s-test-string', time()), 0, $type['length']) . '\'';
+                if ($type['length']) {
+                    $value = '\'' . substr(sprintf('behat-%s-test-string', time()), 0, $type['length']) . '\'';
+                } else {
+                    $value = '\'' . sprintf('behat-%s-test-string', time()) . '\'';
+                }
                 break;
             case 'char':
                 $value = "'f'";
@@ -333,7 +340,11 @@ class SQLBuilder implements Interfaces\SQLBuilderInterface
                 $value = null;
                 break;
             default:
-                $value = '\'' . substr(sprintf('behat-%s-test-string', time()), 0, $type['length']) . '\'';
+                if ($type['length']) {
+                    $value = '\'' . substr(sprintf('behat-%s-test-string', time()), 0, $type['length']) . '\'';
+                } else {
+                    $value = '\'' . sprintf('behat-%s-test-string', time()) . '\'';
+                }
                 break;
         }
         

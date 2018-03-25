@@ -199,8 +199,8 @@ class Entity extends Representation
      */
     public function getEntityName()
     {
-        return ($this->getDatabaseName()) ? $this->getDatabaseName() . '.' : '' .
-            ($this->getSchemaName()) ? $this->getSchemaName() . '.' : '' .
+        return (($this->getDatabaseName()) ? $this->getDatabaseName() . '.' : '') .
+            (($this->getSchemaName()) ? $this->getSchemaName() . '.' : '') .
             $this->getTableName();
     }
 }

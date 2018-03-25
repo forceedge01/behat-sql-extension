@@ -4,12 +4,13 @@ namespace Genesis\SQLExtension\Context\DatabaseProviders;
 
 use Exception;
 use Genesis\SQLExtension\Context\Interfaces\DBManagerInterface;
+use Genesis\SQLExtension\Context\Interfaces\DatabaseProviderFactoryInterface;
 use Genesis\SQLExtension\Context\Interfaces\DatabaseProviderInterface;
 
 /**
  * Factory class.
  */
-class Factory
+class Factory implements DatabaseProviderFactoryInterface
 {
     private $providers;
 

@@ -21,6 +21,7 @@ function time()
 namespace Genesis\SQLExtension\Tests\Unit\Context;
 
 use Behat\Gherkin\Node\TableNode;
+use Genesis\SQLExtension\Context\Interfaces\DatabaseProviderInterface;
 use Genesis\SQLExtension\Context\Representations;
 use Genesis\SQLExtension\Context\SQLBuilder;
 use Genesis\SQLExtension\Tests\TestHelper;
@@ -49,6 +50,17 @@ class SQLBuilderTest extends TestHelper
         $_SESSION['behat']['GenesisSqlExtension']['notQuotableKeywords'] = [];
 
         $this->testObject = new SQLBuilder();
+
+        // Set the database provider.
+        $dbProviderMock = $this->createMock(DatabaseProviderInterface::class);
+        $dbProviderMock->expects($this->any())
+            ->method('getLeftDelimiterForReservedWord')
+            ->willReturn('`');
+        $dbProviderMock->expects($this->any())
+            ->method('getRightDelimiterForReservedWord')
+            ->willReturn('`');
+
+        $this->testObject->setDatabaseProvider($dbProviderMock);
     }
 
     /**
@@ -340,30 +352,126 @@ class SQLBuilderTest extends TestHelper
         $_SESSION['behat']['GenesisSqlExtension']['notQuotableKeywords'] = [];
 
         $types = [
-            'boolean' => 'false',
-            'integer' => self::INT_NUMBER,
-            'double' => self::INT_NUMBER,
-            'int' => self::INT_NUMBER,
-            'tinyint' => self::TINY_INT_NUMBER,
-            'string' => "'behat-test-string-" . self::TYPE_STRING_TIME . "'",
-            'text' => "'behat-test-string-" . self::TYPE_STRING_TIME . "'",
-            'varchar' => "'behat-test-string-" . self::TYPE_STRING_TIME . "'",
-            'character varying' => "'behat-test-string-" . self::TYPE_STRING_TIME . "'",
-            'tinytext' => "'behat-test-string-" . self::TYPE_STRING_TIME . "'",
-            'char' => "'f'",
-            'timestamp' => 'NOW()',
-            'timestamp with time zone' => 'NOW()',
-            'null' => null,
-            'longtext' => "'behat-test-string-" . self::TYPE_STRING_TIME . "'",
-            'randomness' => "'behat-test-string-" . self::TYPE_STRING_TIME . "'"
+            'boolean' => [
+                'params' => [
+                    'type' => 'boolean',
+                    'length' => null
+                ],
+                'result' => 'false'
+            ],
+            'integer' => [
+                'params' => [
+                    'type' => 'integer',
+                    'length' => 5
+                ],
+                'result' => self::INT_NUMBER
+            ],
+            'double' => [
+                'params' => [
+                    'type' => 'double',
+                    'length' => null
+                ],
+                'result' => self::INT_NUMBER,
+            ],
+            'int' => [
+                'params' => [
+                    'type' => 'int',
+                    'length' => null
+                ],
+                'result' => self::INT_NUMBER,
+            ],
+            'tinyint' => [
+                'params' => [
+                    'type' => 'tinyint',
+                    'length' => null
+                ],
+                'result' => self::TINY_INT_NUMBER,
+            ],
+            'string' => [
+                'params' => [
+                    'type' => 'string',
+                    'length' => 10
+                ],
+                'result' => "'behat-2342'",
+            ],
+            'text' => [
+                'params' => [
+                    'type' => 'text',
+                    'length' => null
+                ],
+                'result' => "'behat-" . self::TYPE_STRING_TIME . "-test-string'",
+            ],
+            'varchar' => [
+                'params' => [
+                    'type' => 'varchar',
+                    'length' => 15
+                ],
+                'result' => "'behat-234234234'",
+            ],
+            'character varying' => [
+                'params' => [
+                    'type' => 'character varying',
+                    'length' => null
+                ],
+                'result' => "'behat-" . self::TYPE_STRING_TIME . "-test-string'",
+            ],
+            'tinytext' => [
+                'params' => [
+                    'type' => 'tinytext',
+                    'length' => null
+                ],
+                'result' => "'behat-" . self::TYPE_STRING_TIME . "-test-string'",
+            ],
+            'char' => [
+                'params' => [
+                    'type' => 'char',
+                    'length' => null
+                ],
+                'result' => "'f'",
+            ],
+            'timestamp' => [
+                'params' => [
+                    'type' => 'timestamp',
+                    'length' => null
+                ],
+                'result' => 'NOW()',
+            ],
+            'timestamp with time zone' => [
+                'params' => [
+                    'type' => 'timestamp with time zone',
+                    'length' => null
+                ],
+                'result' => 'NOW()',
+            ],
+            'null' => [
+                'params' => [
+                    'type' => 'null',
+                    'length' => null
+                ],
+                'result' => null,
+            ],
+            'longtext' => [
+                'params' => [
+                    'type' => 'longtext',
+                    'length' => null
+                ],
+                'result' => "'behat-" . self::TYPE_STRING_TIME . "-test-string'",
+            ],
+            'randomness' => [
+                'params' => [
+                    'type' => 'randomness',
+                    'length' => null
+                ],
+                'result' => "'behat-" . self::TYPE_STRING_TIME . "-test-string'"
+            ]
         ];
 
         // Assert
-        foreach ($types as $type => $val) {
+        foreach ($types as $val) {
             // Execute
-            $result = $this->testObject->sampleData($type);
+            $result = $this->testObject->sampleData($val['params']);
 
-            $this->assertEquals($val, $result);
+            $this->assertEquals($val['result'], $result, 'for type' . print_r($val, true));
         }
     }
 
