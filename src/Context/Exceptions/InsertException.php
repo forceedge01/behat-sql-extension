@@ -17,8 +17,8 @@ class InsertException extends BaseException
     {
         $message = "Unable to insert data into table '{$entity->getEntityName()}', Error " .
             $e->getMessage() .
-            ", Required Columns: " .
-            print_r($entity->getRequiredColumns(), true);
+            ", Entity: " .
+            print_r($entity, true);
 
         parent::__construct($message, self::CODE, $e);
     }

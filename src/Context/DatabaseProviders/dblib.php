@@ -90,6 +90,10 @@ class dblib extends BaseProvider
      */
     public function getRequiredTableColumns($database, $schema, $table)
     {
+        $database = $this->normaliseMsSQLPotentialKeyword($database);
+        $schema = $this->normaliseMsSQLPotentialKeyword($schema);
+        $table = $this->normaliseMsSQLPotentialKeyword($table);
+
         $additionalWhereClause = '';
         if ($database) {
             $additionalWhereClause = " AND TABLE_CATALOG = '$database'";
