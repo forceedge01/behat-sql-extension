@@ -1,6 +1,6 @@
 <?php
 
-namespace Genesis\SQLExtension\Context;
+namespace Genesis\SQLExtension\Tests;
 
 // Mock pdo class for testing.
 class PDO

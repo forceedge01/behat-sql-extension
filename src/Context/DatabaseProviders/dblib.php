@@ -15,9 +15,14 @@ class dblib extends BaseProvider
     /**
      * {@inheritDoc}
      */
-    public function getPdoDnsString($dbname, $host, $port)
+    public function getPdoDnsString($dbname, $host, $port = null)
     {
-        return "dblib:host=$host:$port;dbname=$dbname";
+        $portDns = '';
+        if ($port) {
+            $portDns .= ':' . $port;
+        }
+
+        return "dblib:host=$host$portDns;dbname=$dbname";
     }
 
     /**
@@ -67,16 +72,14 @@ class dblib extends BaseProvider
                 INFORMATION_SCHEMA.KEY_COLUMN_USAGE AS KU
                       ON TC.CONSTRAINT_TYPE = 'PRIMARY KEY' AND
                          TC.CONSTRAINT_NAME = KU.CONSTRAINT_NAME AND 
-                         KU.table_name='$table' $additionalWhereClause;
-        ";
+                         KU.table_name='$table' $additionalWhereClause;";
 
         $statement = $this->getExecutor()->execute($sql);
         $result = $statement->fetchAll();
 
+        self::$primaryKeys[$key] = false;
         if (isset($result[0]['PRIMARYKEYCOLUMN'])) {
             self::$primaryKeys[$key] = $result[0]['PRIMARYKEYCOLUMN'];
-        } else {
-            self::$primaryKeys[$key] = '';
         }
 
         return self::$primaryKeys[$key];
@@ -106,22 +109,21 @@ class dblib extends BaseProvider
             AND
                 IS_NULLABLE = 'NO'
             AND
-                Column_DEFAULT IS null {$additionalWhereClause};
-        ";
+                Column_DEFAULT IS null {$additionalWhereClause};";
 
         $statement = $this->getExecutor()->execute($sql);
         $result = $statement->fetchAll();
+        $this->getExecutor()->closeStatement($statement);
 
         $columns = [];
-        foreach ($result as $value) {
-            $columns[$value['COLUMN_NAME']] = [
-                'type' => $value['DATA_TYPE'],
-                'length' => $value['CHARACTER_MAXIMUM_LENGTH']
-            ];
+        if ($result) {
+            foreach ($result as $value) {
+                $columns[$value['COLUMN_NAME']] = [
+                    'type' => $value['DATA_TYPE'],
+                    'length' => $value['CHARACTER_MAXIMUM_LENGTH']
+                ];
+            }
         }
-
-        $primaryKey = $this->getPrimaryKeyForTable($database, $schema, $table);
-        unset($columns[$primaryKey]);
 
         return $columns;
     }

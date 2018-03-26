@@ -2,13 +2,14 @@
 
 use Genesis\SQLExtension\Context\DatabaseProviders\mysql;
 use Genesis\SQLExtension\Context\Interfaces\DBManagerInterface;
+use Genesis\SQLExtension\Tests\TestHelper;
 
-class mysqlTest extends PHPUnit_Framework_TestCase
+class mysqlTest extends TestHelper
 {
     /**
      * @var mysqlInterface The object to be tested.
      */
-    private $testObject;
+    protected $testObject;
 
     /**
      * @var ReflectionClass The reflection class.
@@ -18,7 +19,7 @@ class mysqlTest extends PHPUnit_Framework_TestCase
     /**
      * @var array The test object dependencies.
      */
-    private $dependencies = [];
+    protected $dependencies = [];
 
     /**
      * Set up the testing object.
@@ -33,193 +34,165 @@ class mysqlTest extends PHPUnit_Framework_TestCase
         $this->testObject = $this->reflection->newInstanceArgs($this->dependencies);
     }
 
-    // public function testGetPrimaryKeyForTableReturnNothing()
-    // {
-    //     $database = 'my_app';
-    //     $table = 'user';
-    //     $expectedSql = '
-    //         SELECT `COLUMN_NAME`
-    //         FROM `information_schema`.`COLUMNS`
-    //         WHERE (`TABLE_SCHEMA` = "my_app")
-    //         AND (`TABLE_NAME` = "user")
-    //         AND (`COLUMN_KEY` = "PRI")';
+    /**
+     * testGetPdoDnsStirng Test that getPdoDnsString executes as expected.
+     */
+    public function testGetPdo()
+    {
+        // Execute
+        $result = $this->testObject->getPdoDnsString($dbname = 'testing', $host = 'myhost', $port = 55454);
+    
+        // Assert Result
+        self::assertEquals($result, 'mysql:dbname=testing;host=myhost;port=55454');
+    }
 
-    //     $this->testObject->getConnection()->expects($this->once())
-    //         ->method('prepare')
-    //         ->with($expectedSql)
-    //         ->will($this->returnValue($this->getPdoStatementWithRows(0, [])));
+    /**
+     * testGetPdoDnsStirng Test that getPdoDnsString executes as expected.
+     */
+    public function testGetPdoNoPort()
+    {
+        // Execute
+        $result = $this->testObject->getPdoDnsString($dbname = 'testing', $host = 'myhost');
+    
+        // Assert Result
+        self::assertEquals($result, 'mysql:dbname=testing;host=myhost;port=3306');
+    }
 
-    //     $result = $this->testObject->getPrimaryKeyForTable($database, null, $table);
+    /**
+     * testGetLeftDelimiterForReservedWord Test that getLeftDelimiterForReservedWord executes as expected.
+     */
+    public function testGetLeftDelimiterForReservedWord()
+    {
+        // Execute
+        $result = $this->testObject->getLeftDelimiterForReservedWord();
+    
+        // Assert Result
+        self::assertEquals('`', $result);
+    }
 
-    //     $this->assertFalse($result);
-    // }
+    /**
+     * testGetRightDelimiterForReservedWord Test that getRightDelimiterForReservedWord executes as expected.
+     */
+    public function testGetRightDelimiterForReservedWord()
+    {
+        // Execute
+        $result = $this->testObject->getRightDelimiterForReservedWord();
+    
+        // Assert Result
+        self::assertEquals('`', $result);
+    }
 
-    // public function testGetPrimaryKeyForTableReturnSomeColumn()
-    // {
-    //     $database = 'my_app';
-    //     $table = 'user';
-    //     $expectedSql = '
-    //         SELECT `COLUMN_NAME`
-    //         FROM `information_schema`.`COLUMNS`
-    //         WHERE (`TABLE_SCHEMA` = "my_app")
-    //         AND (`TABLE_NAME` = "user")
-    //         AND (`COLUMN_KEY` = "PRI")';
+    /**
+     * Test that the primary key if null returns false.
+     */
+    public function testGetPrimaryKeyForTableReturnNothing()
+    {
+        $database = 'my_app';
+        $table = 'user';
+        $expectedSql = '
+            SELECT `COLUMN_NAME`
+            FROM `information_schema`.`COLUMNS`
+            WHERE (`TABLE_SCHEMA` = "my_app")
+            AND (`TABLE_NAME` = "user")
+            AND (`COLUMN_KEY` = "PRI")';
 
-    //     $this->testObject->getConnection()->expects($this->once())
-    //         ->method('prepare')
-    //         ->with($expectedSql)
-    //         ->will($this->returnValue($this->getPdoStatementWithRows(1, [[0 => 'coid']])));
+        $this->testObject->getExecutor()->expects($this->once())
+            ->method('execute')
+            ->with($expectedSql)
+            ->will($this->returnValue($this->getPdoStatementWithRows(0, [])));
 
-    //     $result = $this->testObject->getPrimaryKeyForTable($database, null, $table);
+        $result = $this->testObject->getPrimaryKeyForTable($database, null, $table);
 
-    //     $this->assertEquals('coid', $result);
-    // }
+        $this->assertFalse($result);
+    }
 
-    // public function testGetPrimaryKeyForTableReturnSomething()
-    // {
-    //     $database = 'my_app';
-    //     $table = 'user';
-    //     $expectedSql = '
-    //         SELECT `COLUMN_NAME`
-    //         FROM `information_schema`.`COLUMNS`
-    //         WHERE (`TABLE_SCHEMA` = "my_app")
-    //         AND (`TABLE_NAME` = "user")
-    //         AND (`COLUMN_KEY` = "PRI")';
+    /**
+     * Test that the primary key if found returns what was found.
+     */
+    public function testGetPrimaryKeyForTableReturnSomeColumn()
+    {
+        $database = 'my_app';
+        $table = 'user';
+        $expectedSql = '
+            SELECT `COLUMN_NAME`
+            FROM `information_schema`.`COLUMNS`
+            WHERE (`TABLE_SCHEMA` = "my_app")
+            AND (`TABLE_NAME` = "user")
+            AND (`COLUMN_KEY` = "PRI")';
 
-    //     $this->testObject->getConnection()->expects($this->once())
-    //         ->method('prepare')
-    //         ->with($expectedSql)
-    //         ->will($this->returnValue($this->getPdoStatementWithRows(true, [['primary_key_id']])));
+        $this->testObject->getExecutor()->expects($this->once())
+            ->method('execute')
+            ->with($expectedSql)
+            ->will($this->returnValue($this->getPdoStatementWithRows(1, [[0 => 'coid']])));
 
-    //     $result = $this->testObject->getPrimaryKeyForTable($database, null, $table);
+        $result = $this->testObject->getPrimaryKeyForTable($database, null, $table);
 
-    //     $this->assertEquals('primary_key_id', $result);
-    // }
+        $this->assertEquals('coid', $result);
+    }
 
-    // public function testGetRequiredTableColumnsNoResult()
-    // {
-    //     $table = 'user';
-    //     $expectedSql = "
-    //         SELECT 
-    //             `column_name`, `data_type` 
-    //         FROM 
-    //             information_schema.columns 
-    //         WHERE 
-    //             is_nullable = 'NO'
-    //         AND 
-    //             table_name = 'user'
-    //         AND 
-    //             table_schema = 'myschema';";
+    /**
+     * Test when no required columns are found an empty array is returned.
+     */
+    public function testGetRequiredTableColumnsNoResult()
+    {
+        $table = 'user';
+        $schema = 'myschema';
+        $database = 'mydb';
+        $expectedSql = "
+            SELECT 
+                `column_name`, `data_type` 
+            FROM 
+                information_schema.columns 
+            WHERE 
+                is_nullable = 'NO'
+            AND 
+                table_name = 'user'
+            AND 
+                table_schema = 'myschema';";
 
-    //     $this->testObject->getConnection()->expects($this->once())
-    //         ->method('prepare')
-    //         ->with($expectedSql)
-    //         ->will($this->returnValue($this->getPdoStatementWithRows(0, [])));
+        $this->testObject->getExecutor()->expects($this->once())
+            ->method('execute')
+            ->with($expectedSql)
+            ->will($this->returnValue($this->getPdoStatementWithRows(0, [])));
 
-    //     $result = $this->testObject->getRequiredTableColumns(null, null, $table);
+        $result = $this->testObject->getRequiredTableColumns($database, $schema, $table);
 
-    //     $this->assertTrue([] === $result);
-    // }
+        $this->assertTrue([] === $result);
+    }
 
-    // public function testGetRequiredTableColumnsNoDBSchemaSet()
-    // {
-    //     $dbSchema = 'awsomeschema';
-    //     $table = 'awsometable';
-    //     $expectedSql = "
-    //         SELECT 
-    //             `column_name`, `data_type` 
-    //         FROM 
-    //             information_schema.columns 
-    //         WHERE 
-    //             is_nullable = 'NO'
-    //         AND 
-    //             table_name = 'awsometable'
-    //         AND 
-    //             table_schema = 'awsomeschema';";
+    /**
+     * Test when no required columns are found they are returned in the right format.
+     */
+    public function testGetRequiredTableColumnsResults()
+    {
+        $dbSchema = 'myschema';
+        $table = 'user';
+        $expectedSql = "
+            SELECT 
+                `column_name`, `data_type` 
+            FROM 
+                information_schema.columns 
+            WHERE 
+                is_nullable = 'NO'
+            AND 
+                table_name = 'user'
+            AND 
+                table_schema = 'myschema';";
 
-    //     // Override schema value.
-    //     $property = $this->accessProperty('params');
-    //     $value = $property->getValue($this->testObject);
-    //     $property->setValue(
-    //         $this->testObject,
-    //         array_merge($value, ['DBSCHEMA' => null])
-    //     );
+        $this->testObject->getExecutor()->expects($this->once())
+            ->method('execute')
+            ->with($expectedSql)
+            ->will($this->returnValue($this->getPdoStatementWithRows(2, [
+                    ['column_name' => 'id', 'data_type' => 'int'],
+                    ['column_name' => 'name', 'data_type' => 'string']
+            ])));
 
-    //     $this->testObject->getConnection()->expects($this->once())
-    //         ->method('prepare')
-    //         ->with($expectedSql)
-    //         ->will($this->returnValue($this->getPdoStatementWithRows(0, [])));
+        $result = $this->testObject->getRequiredTableColumns(null, $dbSchema, $table);
+        $expectedResult = [
+            'id' => ['type' => 'int', 'length' => 5000],
+            'name' => ['type' => 'string', 'length' => 5000]
+        ];
 
-    //     $result = $this->testObject->getRequiredTableColumns(null, $dbSchema, $table);
-
-    //     $this->assertTrue([] === $result);
-    // }
-
-    // public function testGetRequiredTableColumnsResults()
-    // {
-    //     $dbSchema = 'myschema';
-    //     $table = 'user';
-    //     $expectedSql = "
-    //         SELECT 
-    //             `column_name`, `data_type` 
-    //         FROM 
-    //             information_schema.columns 
-    //         WHERE 
-    //             is_nullable = 'NO'
-    //         AND 
-    //             table_name = 'user'
-    //         AND 
-    //             table_schema = 'myschema';";
-
-    //     $this->testObject->getConnection()->expects($this->once())
-    //         ->method('prepare')
-    //         ->with($expectedSql)
-    //         ->will($this->returnValue($this->getPdoStatementWithRows(2, [
-    //                 ['column_name' => 'id', 'data_type' => 'int'],
-    //                 ['column_name' => 'name', 'data_type' => 'string'
-    //                 ]
-    //             ])));
-
-    //     $result = $this->testObject->getRequiredTableColumns(null, $dbSchema, $table);
-
-    //     $this->assertTrue(['name' => 'string'] === $result);
-    // }
-
-    // public function testGetRequiredTableColumnsNoSchemaInparams()
-    // {
-    //     $dbSchema = 'myapp';
-    //     $table = 'user';
-    //     $expectedSql = "
-    //         SELECT 
-    //             `column_name`, `data_type` 
-    //         FROM 
-    //             information_schema.columns 
-    //         WHERE 
-    //             is_nullable = 'NO'
-    //         AND 
-    //             table_name = 'user'
-    //         AND 
-    //             table_schema = 'myapp';";
-
-    //     // Override the preset schema to be null as params take precedence over defined constants.
-    //     // This should make then make use of the 'myapp' table schema.
-    //     $dbParams = ['schema' => ''];
-    //     $this->accessMethod('setDBParams')->invokeArgs(
-    //         $this->testObject,
-    //         [$dbParams]
-    //     );
-
-    //     $this->testObject->getConnection()->expects($this->once())
-    //         ->method('prepare')
-    //         ->with($expectedSql)
-    //         ->will($this->returnValue($this->getPdoStatementWithRows(2, [
-    //                 ['column_name' => 'id', 'data_type' => 'int'],
-    //                 ['column_name' => 'name', 'data_type' => 'string'
-    //                 ]
-    //             ])));
-
-    //     $result = $this->testObject->getRequiredTableColumns(null, $dbSchema, $table);
-
-    //     $this->assertTrue(['name' => 'string'] === $result);
-    // }
+        $this->assertEquals($expectedResult, $result);
+    }
 }

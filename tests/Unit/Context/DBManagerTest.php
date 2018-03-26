@@ -5,7 +5,7 @@ namespace Genesis\SQLExtension\Tests\Unit\Context;
 use Genesis\SQLExtension\Context\DBManager;
 use Genesis\SQLExtension\Context\DatabaseProviders\mysql;
 use Genesis\SQLExtension\Context\Interfaces\DatabaseProviderFactoryInterface;
-use Genesis\SQLExtension\Context\PDO;
+use Genesis\SQLExtension\Tests\PDO;
 use Genesis\SQLExtension\Tests\TestHelper;
 
 /**
@@ -100,7 +100,7 @@ class DBManagerTest extends TestHelper
 
         $result = $this->testObject->execute($expectedSql);
 
-        $this->assertInstanceOf(get_class($pdoStatement), $result);
+        $this->assertEquals($pdoStatement, $result);
     }
 
     public function testHasFetchedRows()

@@ -114,20 +114,15 @@ class mysql extends BaseProvider
         $result = $statement->fetchAll();
         $this->getExecutor()->closeStatement($statement);
 
-        if (! $result) {
-            return [];
-        }
-
         $cols = [];
-        foreach ($result as $column) {
-            $cols[$column['column_name']] = [
-                'type' => $column['data_type'],
-                'length' => 5000
-            ];
+        if ($result) {
+            foreach ($result as $column) {
+                $cols[$column['column_name']] = [
+                    'type' => $column['data_type'],
+                    'length' => 5000
+                ];
+            }
         }
-
-        // Dont populate primary key, let db handle that
-        unset($cols['id']);
 
         return $cols;
     }

@@ -5,6 +5,7 @@ namespace Genesis\SQLExtension\Tests\Integation;
 use Behat\Gherkin\Node\TableNode;
 use Exception;
 use Genesis\SQLExtension\Context;
+use Genesis\SQLExtension\Tests\PDO;
 use Genesis\SQLExtension\Tests\TestHelper;
 
 /**
@@ -39,7 +40,7 @@ class SQLExtensionTest extends TestHelper
         );
 
         // This PDO object comes from the testHelper class.
-        $connectionMock = $this->getMockBuilder(\Genesis\SQLExtension\Context\PDO::class)
+        $connectionMock = $this->getMockBuilder(PDO::class)
             ->disableOriginalConstructor()
             ->getMock();
 
