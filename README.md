@@ -2,12 +2,16 @@
 Generic library: Provides easy data manipulation with any PDO enabled database for Behat. Core features:
 
 - Out of the box step definitions for simple db interactions.
-- Advanced query internal resolutions for quick setup.
-- Provides easy access to the entire last record manipulated from the keystore.
-- Provides keyword replacement in strings by default, provides clean navigation files.
 - Auto-fills required fields in a table, freeing you from the schackles of required data.
 - Maintain SQL history for all queries executed for clean up later on.
+- Provides an api to replace keywords in strings such as URLs, allowing easy navigation to dynamic URLs.
+- Provides easy access to the entire last record manipulated from the keystore.
 - An API for advanced integration.
+- Advanced query internal resolutions for quick setup.
+
+New Features in version 6:
+--------------------------
+- Database providers - now supports mssql, mysql, postgres.
 
 Installation
 ------------
@@ -24,7 +28,17 @@ Instantiating the sql extension in your FeatureContext class.
 ```php
 use Genesis\SQLExtension\Context;
 
-$databaseParams = [...];
+$databaseParams = [
+    'engine' => 'mssql', // The database engine to use, mysql, mssql, pgsql.
+    'schema' => 'dbo', // The database schema. Optional.
+    'name' => 'MyDB', // The database name.
+    'prefix' => 'dev_', // You can provide a database prefix which could be different based on the environment.
+    'host' => '192.168.0.1', // The database host.
+    'port' => '9876', // The database port.
+    'username' => 'db_username', // The username for the database.
+    'password => 'db_password' // The password for the database.
+];
+
 $this->sqlContext = new Context\SQLContext(
     new Context\DBManager(
       new Context\DatabaseProviders\Factory(),
@@ -99,6 +113,11 @@ $keywords = [
   'DATE\(.*\)',
   '\d+'
 ];
+```
+
+To add a non-quotable word through the use of the API only, use the line below:
+```
+$_SESSION['behat']['GenesisSqlExtension']['notQuotableKeywords'][] = 'YOUR-REGEX-GOES-HERE';
 ```
 
 Note: The `schema` is a very important parameter for the SQLContext, if you are working with multiple databases don't set a fixed schema. To reference a table from another database simply prefix that databases' name as per the sql convention and it will be used as your schema on the fly for that table. If you are just using one database in your application set the schema the same as the database.
@@ -252,7 +271,9 @@ The above syntax i.e `[...]` will be resolved as follows:
 SELECT `table1.columnToUse` FROM `table1` WHERE `whereColumn` = 'Value';
 ```
 
-### Verifying data in the database
+### Verifying data in the database - Depreciated
+
+Only verify the behaviour of your appication by testing your application and not the database with this extension. The following is not recommended except in extraordinary circumstances.
 
 Verify the database records as follows:
 ```gherkin
