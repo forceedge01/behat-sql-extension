@@ -73,4 +73,24 @@ interface APIInterface extends SQLHandlerInterface
      * @return string
      */
     public function assertNotExists($table, array $where);
+
+    /**
+     * Construct an external reference clause for the query.
+     * Note: This will only work with the first result returned.
+     *
+     * @param string $table The table to select from.
+     * @param string $column The column to select within the table.
+     * @param array $where The array to filter the values from.
+     *
+     * @example Example usage: Update postcode where address Id is provided.
+     *
+     * class::update('Address', [
+     *     'postCodeId' => class::subSelect('PostCode', 'id', ['code'=> 'B237QQ'])
+     * ], [
+     *     'id' => $addressId
+     * ]);
+     *
+     * @return string The subSelect external ref query.
+     */
+    public function subSelect($table, $column, array $values);
 }
