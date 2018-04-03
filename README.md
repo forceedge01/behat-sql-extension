@@ -39,7 +39,7 @@ $databaseParams = [
     'password => 'db_password' // The password for the database.
 ];
 
-$this->sqlContext = new Context\SQLContext(
+$this->sqlContext = new Context\API(
     new Context\DBManager(
       new Context\DatabaseProviders\Factory(),
       $databaseParams
