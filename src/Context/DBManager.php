@@ -3,6 +3,9 @@
 namespace Genesis\SQLExtension\Context;
 
 use Exception;
+use Genesis\SQLExtension\Context\DatabaseProviders;
+use Genesis\SQLExtension\Context\Interfaces\DatabaseProviderFactoryInterface;
+use Genesis\SQLExtension\Context\Interfaces\DatabaseProviderInterface;
 use Traversable;
 
 /**
@@ -21,11 +24,41 @@ class DBManager implements Interfaces\DBManagerInterface
     private $params;
 
     /**
+     * @var DatabaseProviderInterface
+     */
+    private $databaseProvider;
+
+    /**
+     * @var array Caches primary key of tables.
+     */
+    private static $primaryKeys;
+
+    /**
+     * @var array Caches any columns we've retrieved for given table.
+     */
+    private static $requiredColumns;
+
+    /**
+     * @param DatabaseProviderFactoryInterface $dbProviderFactory
      * @param array $params
      */
-    public function __construct(array $params = array())
-    {
+    public function __construct(
+        DatabaseProviderFactoryInterface $dbProviderFactory,
+        array $params = array()
+    ) {
         $this->setDBParams($params);
+        $this->databaseProvider = $dbProviderFactory->getProvider(
+            $dbProviderFactory->getClass($this->params['DBENGINE']),
+            $this
+        );
+    }
+
+    /**
+     * @return DatabaseProviderInterface
+     */
+    public function getDatabaseProvider()
+    {
+        return $this->databaseProvider;
     }
 
     /**
@@ -83,33 +116,24 @@ class DBManager implements Interfaces\DBManagerInterface
 
     /**
      * @param string $database
+     * @param string $schema
      * @param string $table
      *
-     * @result string|bool
+     * @return string|bool
      */
-    public function getPrimaryKeyForTable($database, $table)
+    public function getPrimaryKeyForTable($database, $schema, $table)
     {
-        $sql = sprintf(
-            '
-            SELECT `COLUMN_NAME`
-            FROM `information_schema`.`COLUMNS`
-            WHERE (`TABLE_SCHEMA` = "%s")
-            AND (`TABLE_NAME` = "%s")
-            AND (`COLUMN_KEY` = "PRI")',
-            $database,
-            $table
-        );
+        $keyReference = $database . $schema . $table;
 
-        $statement = $this->execute($sql);
-        $this->throwExceptionIfErrors($statement);
-        $result = $statement->fetchAll();
-        $this->closeStatement($statement);
-
-        if (! $result) {
-            return false;
+        if (! isset(self::$primaryKeys[$keyReference])) {
+            self::$primaryKeys[$keyReference] = $this->databaseProvider->getPrimaryKeyForTable(
+                $database,
+                $schema,
+                $table
+            );
         }
 
-        return $result[0][0];
+        return self::$primaryKeys[$keyReference];
     }
 
     /**
@@ -156,70 +180,25 @@ class DBManager implements Interfaces\DBManagerInterface
     /**
      * Gets a column list for a table with their type.
      *
+     * @param string $database
+     * @param string $schema
      * @param string $table
      *
      * @return array
      */
-    public function getRequiredTableColumns($table)
+    public function getRequiredTableColumns($database, $schema, $table)
     {
-        $resetSchema = false;
-        // If the DBSCHEMA is not set, try using the database name if provided with the table.
-        // If this happens the schema generation is dynamic so keep resetting the stored schema.
-        if (! $this->params['DBSCHEMA']) {
-            $resetSchema = true;
-            preg_match('/(.*)\./', $table, $db);
+        $requiredColumnReference = $database . $schema . $table;
 
-            if (isset($db[1])) {
-                $this->params['DBSCHEMA'] = $db[1];
-            }
+        if (! isset(self::$requiredColumns[$requiredColumnReference])) {
+            self::$requiredColumns[$requiredColumnReference] = $this->databaseProvider->getRequiredTableColumns(
+                $database,
+                $schema,
+                $table
+            );
         }
 
-        // Parse out the table name.
-        $table = preg_replace('/(.*\.)/', '', $table);
-        $table = trim($table, '`');
-
-        // Statement to extract all required columns for a table.
-        $sqlStatement = "
-            SELECT 
-                `column_name`, `data_type` 
-            FROM 
-                information_schema.columns 
-            WHERE 
-                is_nullable = 'NO'
-            AND 
-                table_name = '%s'
-            AND 
-                table_schema = '%s';";
-
-        // Get not null columns
-        $sql = sprintf(
-            $sqlStatement,
-            $table,
-            $this->params['DBSCHEMA']
-        );
-
-        // Reset schema after the fields have been extracted.
-        if ($resetSchema) {
-            $this->params['DBSCHEMA'] = null;
-        }
-
-        $statement = $this->execute($sql);
-        $result = $statement->fetchAll();
-        $this->closeStatement($statement);
-
-        if (! $result) {
-            return [];
-        }
-
-        $cols = [];
-        foreach ($result as $column) {
-            $cols[$column['column_name']] = $column['data_type'];
-        }
-
-        // Dont populate primary key, let db handle that
-        unset($cols['id']);
-
-        return $cols;
+        return self::$requiredColumns[$requiredColumnReference];
     }
 
     /**
@@ -241,19 +220,11 @@ class DBManager implements Interfaces\DBManagerInterface
      */
     private function getConnectionDetails()
     {
-        // Check if port is provided, if not leave empty to use default.
-        $port = '';
-        if ($this->params['DBPORT']) {
-            $port = ';port=' . $this->params['DBPORT'];
-        }
-
         return [
-            sprintf(
-                '%s:dbname=%s;host=%s%s',
-                $this->params['DBENGINE'],
+            $this->databaseProvider->getPdoDnsString(
                 $this->params['DBNAME'],
                 $this->params['DBHOST'],
-                $port
+                $this->params['DBPORT']
             ),
             $this->params['DBUSER'],
             $this->params['DBPASSWORD'],
@@ -287,21 +258,37 @@ class DBManager implements Interfaces\DBManagerInterface
      */
     private function setDBParams(array $dbParams = array())
     {
-        if (defined('SQLDBENGINE') || $dbParams) {
+        if (isset($dbParams['engine'])) {
             $options = [];
             if (isset($_SESSION['behat']['GenesisSqlExtension']['connection_details']['connection_options'])) {
                 $options = $_SESSION['behat']['GenesisSqlExtension']['connection_details']['connection_options'];
             }
 
             // Allow params to be over-ridable.
-            $this->params['DBSCHEMA'] = $this->arrayIfElse($dbParams, 'schema', SQLDBSCHEMA);
-            $this->params['DBNAME'] = $this->arrayIfElse($dbParams, 'name', SQLDBNAME);
-            $this->params['DBPREFIX'] = $this->arrayIfElse($dbParams, 'prefix', SQLDBPREFIX);
-            $this->params['DBHOST'] = $this->arrayIfElse($dbParams, 'host', SQLDBHOST);
-            $this->params['DBPORT'] = $this->arrayIfElse($dbParams, 'port', SQLDBPORT);
-            $this->params['DBUSER'] = $this->arrayIfElse($dbParams, 'username', SQLDBUSERNAME);
-            $this->params['DBPASSWORD'] = $this->arrayIfElse($dbParams, 'password', SQLDBPASSWORD);
-            $this->params['DBENGINE'] = $this->arrayIfElse($dbParams, 'engine', SQLDBENGINE);
+            $this->params['DBSCHEMA'] = $this->arrayIfElse($dbParams, 'schema', null);
+            $this->params['DBNAME'] = $this->arrayIfElse($dbParams, 'name', null);
+            $this->params['DBPREFIX'] = $this->arrayIfElse($dbParams, 'prefix', null);
+            $this->params['DBHOST'] = $this->arrayIfElse($dbParams, 'host', null);
+            $this->params['DBPORT'] = $this->arrayIfElse($dbParams, 'port', null);
+            $this->params['DBUSER'] = $this->arrayIfElse($dbParams, 'username', null);
+            $this->params['DBPASSWORD'] = $this->arrayIfElse($dbParams, 'password', null);
+            $this->params['DBENGINE'] = $this->arrayIfElse($dbParams, 'engine', null);
+            $this->params['DBOPTIONS'] = $options;
+        } elseif (defined('SQLDBENGINE')) {
+            $options = [];
+            if (isset($_SESSION['behat']['GenesisSqlExtension']['connection_details']['connection_options'])) {
+                $options = $_SESSION['behat']['GenesisSqlExtension']['connection_details']['connection_options'];
+            }
+
+            // Allow params to be over-ridable.
+            $this->params['DBSCHEMA'] = SQLDBSCHEMA;
+            $this->params['DBNAME'] = SQLDBNAME;
+            $this->params['DBPREFIX'] = SQLDBPREFIX;
+            $this->params['DBHOST'] = SQLDBHOST;
+            $this->params['DBPORT'] = SQLDBPORT;
+            $this->params['DBUSER'] = SQLDBUSERNAME;
+            $this->params['DBPASSWORD'] = SQLDBPASSWORD;
+            $this->params['DBENGINE'] = SQLDBENGINE;
             $this->params['DBOPTIONS'] = $options;
         } else {
             $params = getenv('BEHAT_ENV_PARAMS');
@@ -390,5 +377,21 @@ class DBManager implements Interfaces\DBManagerInterface
         $statement = null;
 
         return $this;
+    }
+
+    /**
+     * @return string
+     */
+    public function getLeftDelimiterForReservedWord()
+    {
+        return $this->databaseProvider->getLeftDelimiterForReservedWord();
+    }
+
+    /**
+     * @return string
+     */
+    public function getRightDelimiterForReservedWord()
+    {
+        return $this->databaseProvider->getRightDelimiterForReservedWord();
     }
 }

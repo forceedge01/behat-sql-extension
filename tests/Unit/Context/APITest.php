@@ -3,12 +3,13 @@
 namespace Genesis\SQLExtension\Tests\Unit\Context;
 
 use Behat\Gherkin\Node\TableNode;
+use Exception;
+use Genesis\SQLExtension\Context\API;
 use Genesis\SQLExtension\Context\Interfaces\DBManagerInterface;
+use Genesis\SQLExtension\Context\Interfaces\DatabaseProviderInterface;
 use Genesis\SQLExtension\Context\Interfaces\KeyStoreInterface;
 use Genesis\SQLExtension\Context\Interfaces\SQLBuilderInterface;
 use Genesis\SQLExtension\Context\Interfaces\SQLHistoryInterface;
-use Genesis\SQLExtension\Context\API;
-use Exception;
 use Genesis\SQLExtension\Tests\TestHelper;
 
 /**
@@ -50,9 +51,22 @@ class APITest extends TestHelper
             ->will($this->returnValue([]));
 
         $this->dependencies['dbHelperMock']->expects($this->any())
+            ->method('getLeftDelimiterForReservedWord')
+            ->willReturn('`');
+
+        $this->dependencies['dbHelperMock']->expects($this->any())
+            ->method('getRightDelimiterForReservedWord')
+            ->willReturn('`');
+
+        $this->dependencies['dbHelperMock']->expects($this->any())
             ->method('getParams')
             ->will($this->returnValue(
                 ['DBPREFIX' => 'dev_', 'DBNAME' => 'mydb', 'DBSCHEMA' => 'myschema']
+            ));
+        $this->dependencies['dbHelperMock']->expects($this->any())
+            ->method('getDatabaseProvider')
+            ->will($this->returnValue(
+                $this->createMock(DatabaseProviderInterface::class)
             ));
 
         $this->dependencies['sqlBuilder'] = $this->getMockBuilder(SQLBuilderInterface::class)

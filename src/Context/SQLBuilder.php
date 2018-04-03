@@ -4,6 +4,8 @@ namespace Genesis\SQLExtension\Context;
 
 use Behat\Gherkin\Node\TableNode;
 use Exception;
+use Genesis\SQLExtension\Context\Interfaces\DatabaseProviderInterface;
+use Genesis\SQLExtension\Context\Representations\Entity;
 
 class SQLBuilder implements Interfaces\SQLBuilderInterface
 {
@@ -11,6 +13,21 @@ class SQLBuilder implements Interfaces\SQLBuilderInterface
      * External references, format of an external ref [...|...:...].
      */
     private $refs = [];
+
+    /**
+     * @var DatabaseProviderInterface
+     */
+    private $databaseProvider;
+
+    /**
+     * @param DatabaseProviderInterface $databaseProvider
+     *
+     * @return this
+     */
+    public function setDatabaseProvider(DatabaseProviderInterface $databaseProvider)
+    {
+        $this->databaseProvider = $databaseProvider;
+    }
 
     /**
      * Constructs a clause based on the glue, to be used for where and update clause.
@@ -24,6 +41,8 @@ class SQLBuilder implements Interfaces\SQLBuilderInterface
     public function constructSQLClause($commandType, $glue, array $columns)
     {
         $whereClause = [];
+        $leftDelimiter = $this->databaseProvider->getLeftDelimiterForReservedWord();
+        $rightDelimiter = $this->databaseProvider->getRightDelimiterForReservedWord();
 
         foreach ($columns as $column => $value) {
             $newValue = ltrim($value, '!');
@@ -36,8 +55,10 @@ class SQLBuilder implements Interfaces\SQLBuilderInterface
 
             // Make up the sql.
             $clause = sprintf(
-                '`%s` %s %s',
+                '%s%s%s %s %s',
+                $leftDelimiter,
                 $column,
+                $rightDelimiter,
                 $comparator,
                 $quotedValue
             );
@@ -148,6 +169,16 @@ class SQLBuilder implements Interfaces\SQLBuilderInterface
     }
 
     /**
+     * @param string $keyword
+     */
+    public function addNotQuotableKeyword($keyword)
+    {
+        $_SESSION['behat']['GenesisSqlExtension']['notQuotableKeywords'][] = $keyword;
+
+        return $this;
+    }
+
+    /**
      * Checks if the value isn't a keyword.
      *
      * @param string $val
@@ -166,6 +197,10 @@ class SQLBuilder implements Interfaces\SQLBuilderInterface
             'DATE\(.*\)',
             '\d+'
         ];
+
+        if (! isset($_SESSION['behat']['GenesisSqlExtension']['notQuotableKeywords'])) {
+            $_SESSION['behat']['GenesisSqlExtension']['notQuotableKeywords'] = [];
+        }
 
         $keywords = array_merge($keywords, $_SESSION['behat']['GenesisSqlExtension']['notQuotableKeywords']);
 
@@ -238,40 +273,82 @@ class SQLBuilder implements Interfaces\SQLBuilderInterface
     }
 
     /**
+     * @param array $values
+     *
+     * @return string
+     */
+    public function convertArrayToContextQueryFormat(array $values)
+    {
+        $query = '';
+        foreach ($values as $column => $value) {
+            $query .= $column . ':' . $value . ',';
+        }
+
+        return trim($query, ',');
+    }
+
+    /**
      * returns sample data for a data type.
      *
-     * @param string $type
+     * @param array $type [
+     *     'type' => '<type>',
+     *     'length' => <length>
+     * ]
      *
      * @return string|bool
      */
-    public function sampleData($type)
+    public function sampleData(array $type)
     {
-        switch (strtolower($type)) {
+        $value = '';
+        switch (strtolower($type['type'])) {
             case 'boolean':
-                return 'false';
+                $value = 'false';
+                break;
             case 'integer':
             case 'double':
             case 'int':
-                return rand();
+                $value = rand();
+                break;
             case 'tinyint':
-                return rand(0, 9);
+            case 'smallint':
+                $value = rand(0, 9);
+                break;
             case 'string':
             case 'text':
             case 'varchar':
             case 'character varying':
             case 'tinytext':
             case 'longtext':
-                return $this->quoteOrNot(sprintf('behat-test-string-%s', time()));
+                if ($type['length']) {
+                    $value = '\'' . substr(sprintf('behat-%s-test-string', time()), 0, $type['length']) . '\'';
+                } else {
+                    $value = '\'' . sprintf('behat-%s-test-string', time()) . '\'';
+                }
+                break;
             case 'char':
-                return "'f'";
+                $value = "'f'";
+                break;
             case 'timestamp':
             case 'timestamp with time zone':
-                return 'NOW()';
+                $value = 'NOW()';
+                break;
+            case 'datetime':
+            case 'date':
+                $value = 'CURRENT_TIMESTAMP';
+                break;
             case 'null':
-                return null;
+                $value = null;
+                break;
             default:
-                return $this->quoteOrNot(sprintf('behat-test-string-%s', time()));
+                if ($type['length']) {
+                    $value = '\'' . substr(sprintf('behat-%s-test-string', time()), 0, $type['length']) . '\'';
+                } else {
+                    $value = '\'' . sprintf('behat-%s-test-string', time()) . '\'';
+                }
+                break;
         }
+        
+        return $value;
     }
 
     /**
@@ -350,9 +427,10 @@ class SQLBuilder implements Interfaces\SQLBuilderInterface
         list($columnAndTable, $where) = explode('|', trim($externalRef, '[]'), 2);
 
         // Get the table name.
-        $table = null;
-        preg_match('#.+(?=\.)#', $columnAndTable, $table);
-        $qualifiedTableName = $this->getQualifiedTableName($prefix, $table[0]);
+        $match = [];
+        // This regex matches on all characters except the last fullstop and following chars.
+        preg_match('#.+(?=\.)#', $columnAndTable, $match);
+        $entity = $this->getEntityFromTableName($match[0], $prefix);
 
         // Get the column name to fetch.
         $array = explode('.', $columnAndTable);
@@ -362,7 +440,7 @@ class SQLBuilder implements Interfaces\SQLBuilderInterface
         $searchConditionOperator = $this->getSearchConditionOperatorForColumns($where);
         $whereClause = $this->constructSQLClause('SELECT', $searchConditionOperator, $this->convertToArray($where));
 
-        $queryParams = new Representations\QueryParams($qualifiedTableName, $this->convertToArray($where));
+        $queryParams = new Representations\QueryParams($entity, $this->convertToArray($where));
         $queryBuilder = new Builder\SelectQueryBuilder($queryParams);
         $queryBuilder
             ->setWhereClause($whereClause)
@@ -372,6 +450,38 @@ class SQLBuilder implements Interfaces\SQLBuilderInterface
         Debugger::log(sprintf('Built query "%s" for external ref "%s"', $query->getSql(), $externalRef));
 
         return $query;
+    }
+
+    /**
+     * @param string $table
+     * @param string|null $prefix
+     *
+     * @return Entity
+     */
+    private function getEntityFromTableName($table, $prefix = null)
+    {
+        // An entity references a table, with or without the database and the schema information.
+        // Check accordingly.
+        $result = explode('.', $table);
+
+        switch (count($result)) {
+            // Just the table name.
+            case 1:
+                $entity = new Entity($table, $result[0]);
+                break;
+            // Database and table name;
+            case 2:
+                $entity = new Entity($table, $result[1], $prefix . $result[0]);
+                break;
+            // Scheme provided as well.
+            case 3:
+                $entity = new Entity($table, $result[2], $prefix . $result[0], $result[1]);
+                break;
+            default:
+                throw new Exception('Explode produced too many chunks of the entity to handle.');
+        }
+
+        return $entity;
     }
 
     /**

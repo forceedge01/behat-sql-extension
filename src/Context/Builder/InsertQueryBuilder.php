@@ -36,7 +36,7 @@ class InsertQueryBuilder extends QueryBuilder
      */
     public function buildQuery()
     {
-        $table = $this->query->getQueryParams()->getTable();
+        $table = $this->query->getQueryParams()->getEntity()->getEntityName();
 
         $sql = "INSERT INTO {$table} ({$this->stringColumnNames}) VALUES ({$this->stringColumnValues})";
         $this->query->setSql($sql);

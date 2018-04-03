@@ -23,5 +23,8 @@
             "Genesis\\SQLExtension\\": "src/",
             "Genesis\\SQLExtension\\Tests\\": "tests/"
          }
+    },
+    "suggests": {
+        "genesis/sql-api-wrapper": "Extends behat-sql-extension to provide a powerful and simple framework to manage your data modules."
     }
 }

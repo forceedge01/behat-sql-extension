@@ -44,7 +44,7 @@ class UpdateQueryBuilder extends QueryBuilder
      */
     public function buildQuery()
     {
-        $table = $this->query->getQueryParams()->getTable();
+        $table = $this->query->getQueryParams()->getEntity()->getEntityName();
 
         $sql = "UPDATE {$table} SET {$this->updateClause} WHERE {$this->whereClause}";
         $this->query->setSql($sql);

@@ -4,6 +4,8 @@ namespace Genesis\SQLExtension\Context;
 
 use Exception;
 
+// session_start();
+
 /*
  * This file is part of the Behat\SQLExtension
  *
@@ -27,13 +29,12 @@ class API extends SQLHandler implements Interfaces\APIInterface
     {
         $this->debugLog('------- SELECT -------');
 
-        $this->setEntity($table);
+        $this->resolveEntity($table);
         $this->setCommandType('select');
 
         $resolvedValues = $this->resolveQuery($columns);
         $this->queryParams = new Representations\QueryParams($this->getEntity(), $columns, $resolvedValues);
 
-        // $searchConditionOperator = $this->get('sqlBuilder')->getSearchConditionOperatorForColumns($query);
         $searchConditionOperator = ' AND ';
         $selectWhereClause = $this->constructSQLClause(
             $this->getCommandType(),
@@ -58,17 +59,28 @@ class API extends SQLHandler implements Interfaces\APIInterface
     /**
      * {@inheritDoc}
      */
+    public function subSelect($table, $column, array $values)
+    {
+        $where = $this->get('sqlBuilder')->convertArrayToContextQueryFormat($values);
+
+        // Use existing external ref resolution mechanism.
+        return "[$table.$column|$where]";
+    }
+
+    /**
+     * {@inheritDoc}
+     */
     public function insert($table, array $values)
     {
         $this->debugLog('------- INSERT -------');
 
         // Normalize data.
-        $this->setEntity($table);
+        $entity = $this->resolveEntity($table);
         $resolvedValues = $this->resolveQuery($values);
 
-        $this->queryParams = new Representations\QueryParams($this->getEntity(), $values, $resolvedValues);
+        $this->queryParams = new Representations\QueryParams($entity, $values, $resolvedValues);
         list($columnNames, $columnValues) = $this->getTableColumns(
-            $this->queryParams->getTable(),
+            $this->queryParams->getEntity(),
             $this->queryParams->getResolvedValues()
         );
 
@@ -85,15 +97,15 @@ class API extends SQLHandler implements Interfaces\APIInterface
             // If an ID was generated for us, use that to store results in keystore,
             // else use criteria.
             $lastId = $this->getLastId();
-            if (! $lastId && isset($resolvedValues[$this->primaryKey])) {
-                $lastId = $resolvedValues[$this->primaryKey];
+            if (! $lastId && isset($resolvedValues[$entity->getPrimaryKey()])) {
+                $lastId = $resolvedValues[$entity->getPrimaryKey()];
             }
         } catch (Exception $e) {
-            throw new Exceptions\InsertException($this->getEntity(), $e);
+            throw new Exceptions\InsertException($entity, $e);
         }
 
         $queryBuilder = new Builder\SelectQueryBuilder($this->queryParams);
-        $queryBuilder->setWhereClause("{$this->primaryKey} = {$this->quoteOrNot($lastId)}");
+        $queryBuilder->setWhereClause("{$entity->getPrimaryKey()} = {$this->quoteOrNot($lastId)}");
         $selectQuery = Builder\QueryDirector::build($queryBuilder);
 
         $this->setKeywordsFromQuery($selectQuery);
@@ -113,7 +125,7 @@ class API extends SQLHandler implements Interfaces\APIInterface
             throw new Exception('You must provide a where clause!');
         }
 
-        $this->setEntity($table);
+        $entity = $this->resolveEntity($table);
         $this->setCommandType('update');
 
         // Build up the update clause.
@@ -123,7 +135,7 @@ class API extends SQLHandler implements Interfaces\APIInterface
         // $query = $this->convertToQuery($columns);
         $resolvedValues = $this->resolveQuery($where);
 
-        $this->queryParams = new Representations\QueryParams($this->getEntity(), $where, $resolvedValues);
+        $this->queryParams = new Representations\QueryParams($entity, $where, $resolvedValues);
 
         // $searchConditionOperator = $this->get('sqlBuilder')->getSearchConditionOperatorForColumns($query);
         $whereClause = $this->constructSQLClause(
@@ -168,11 +180,11 @@ class API extends SQLHandler implements Interfaces\APIInterface
             throw new Exception('You must provide a where clause!');
         }
 
-        $this->setEntity($table);
+        $entity = $this->resolveEntity($table);
         $this->setCommandType('delete');
         $resolvedValues = $this->resolveQuery($where);
 
-        $this->queryParams = new Representations\QueryParams($this->getEntity(), $where, $resolvedValues);
+        $this->queryParams = new Representations\QueryParams($entity, $where, $resolvedValues);
 
         // $searchConditionOperator = $this->get('sqlBuilder')->getSearchConditionOperatorForColumns($query);
         $whereClause = $this->constructSQLClause(
@@ -206,10 +218,10 @@ class API extends SQLHandler implements Interfaces\APIInterface
     public function assertExists($table, array $where)
     {
         $this->debugLog('------- EXISTS -------');
-        $this->setEntity($table);
+        $entity = $this->resolveEntity($table);
         $this->setCommandType('select');
 
-        $this->queryParams = new Representations\QueryParams($this->getEntity(), $where);
+        $this->queryParams = new Representations\QueryParams($entity, $where);
         $selectWhereClause = $this->resolveQueryToSQLClause($this->getCommandType(), $where);
 
         $selectQueryBuilder = new Builder\SelectQueryBuilder($this->queryParams);
@@ -238,10 +250,10 @@ class API extends SQLHandler implements Interfaces\APIInterface
     {
         $this->debugLog('------- NOT-EXISTS -------');
 
-        $this->setEntity($table);
+        $entity = $this->resolveEntity($table);
         $this->setCommandType('select');
 
-        $this->queryParams = new Representations\QueryParams($this->getEntity(), $with);
+        $this->queryParams = new Representations\QueryParams($entity, $with);
         $selectWhereClause = $this->resolveQueryToSQLClause($this->getCommandType(), $with);
 
         $selectQueryBuilder = new Builder\SelectQueryBuilder($this->queryParams);
@@ -255,7 +267,7 @@ class API extends SQLHandler implements Interfaces\APIInterface
         if ($this->hasFetchedRows($statement)) {
             throw new Exceptions\RecordFoundException(
                 $selectWhereClause,
-                $this->getEntity()
+                $this->getEntity()->getRawInput()
             );
         }
 

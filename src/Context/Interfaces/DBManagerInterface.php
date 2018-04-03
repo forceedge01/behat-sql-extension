@@ -2,6 +2,7 @@
 
 namespace Genesis\SQLExtension\Context\Interfaces;
 
+use Genesis\SQLExtension\Context\Interfaces\DatabaseProviderInterface;
 use Traversable;
 
 interface DBManagerInterface
@@ -19,11 +20,13 @@ interface DBManagerInterface
     public function getConnection();
 
     /**
-     * @param string $entity
+     * @param string $database
+     * @param string $schema
+     * @param string $table
      *
-     * @result string|bool
+     * @return string|bool
      */
-    public function getPrimaryKeyForTable($database, $table);
+    public function getPrimaryKeyForTable($database, $schema, $table);
 
     /**
      * @param string $sql
@@ -40,9 +43,11 @@ interface DBManagerInterface
     /**
      * Gets a column list for a table with their type.
      *
+     * @param string $database
+     * @param string $schema
      * @param string $table
      */
-    public function getRequiredTableColumns($table);
+    public function getRequiredTableColumns($database, $schema, $table);
 
     /**
      * Get the last insert id.
@@ -93,4 +98,19 @@ interface DBManagerInterface
      * @return $this self.
      */
     public function closeStatement(Traversable $statement);
+
+    /**
+     * @return DatabaseProviderInterface
+     */
+    public function getDatabaseProvider();
+
+    /**
+     * @return string
+     */
+    public function getLeftDelimiterForReservedWord();
+
+    /**
+     * @return string
+     */
+    public function getRightDelimiterForReservedWord();
 }

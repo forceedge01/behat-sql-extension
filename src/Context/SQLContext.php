@@ -4,6 +4,7 @@ namespace Genesis\SQLExtension\Context;
 
 use Behat\Behat\Context\Step\Given;
 use Behat\Gherkin\Node\TableNode;
+use Genesis\SQLExtension\Context\DatabaseProviders;
 
 /*
  * This file is part of the Behat\SQLExtension
@@ -45,7 +46,7 @@ class SQLContext extends API implements Interfaces\SQLContextInterface
         ];
 
         parent::__construct(
-            new DBManager($dbConnectionDetails),
+            new DBManager(new DatabaseProviders\Factory(), $dbConnectionDetails),
             new SQLBuilder(),
             new LocalKeyStore(),
             new SQLHistory()
@@ -91,6 +92,7 @@ class SQLContext extends API implements Interfaces\SQLContextInterface
      */
     public function iHaveAWhere($entity, $columns)
     {
+        $columns = $this->get('sqlBuilder')->parseExternalQueryReferences($columns);
         $columns = $this->get('sqlBuilder')->convertToArray($columns);
 
         return $this->insert($entity, $columns);
@@ -103,6 +105,7 @@ class SQLContext extends API implements Interfaces\SQLContextInterface
      */
     public function iDontHaveAWhere($entity, $columns)
     {
+        $columns = $this->get('sqlBuilder')->parseExternalQueryReferences($columns);
         $columns = $this->get('sqlBuilder')->convertToArray($columns);
 
         return $this->delete($entity, $columns);
@@ -151,7 +154,10 @@ class SQLContext extends API implements Interfaces\SQLContextInterface
      */
     public function iHaveAnExistingWithWhere($entity, $with, $columns)
     {
+        $with = $this->get('sqlBuilder')->parseExternalQueryReferences($with);
         $with = $this->get('sqlBuilder')->convertToArray($with);
+
+        $columns = $this->get('sqlBuilder')->parseExternalQueryReferences($columns);
         $columns = $this->get('sqlBuilder')->convertToArray($columns);
 
         return $this->update($entity, $with, $columns);
@@ -162,6 +168,7 @@ class SQLContext extends API implements Interfaces\SQLContextInterface
      */
     public function iHaveAnExistingWhere($entity, $where)
     {
+        $where = $this->get('sqlBuilder')->parseExternalQueryReferences($where);
         $where = $this->get('sqlBuilder')->convertToArray($where);
 
         return $this->select($entity, $where);
@@ -186,6 +193,7 @@ class SQLContext extends API implements Interfaces\SQLContextInterface
      */
     public function iShouldHaveAWith($entity, $with)
     {
+        $with = $this->get('sqlBuilder')->parseExternalQueryReferences($with);
         $with = $this->get('sqlBuilder')->convertToArray($with);
 
         return $this->assertExists($entity, $with);
@@ -196,6 +204,7 @@ class SQLContext extends API implements Interfaces\SQLContextInterface
      */
     public function iShouldNotHaveAWith($entity, $with)
     {
+        $with = $this->get('sqlBuilder')->parseExternalQueryReferences($with);
         $with = $this->get('sqlBuilder')->convertToArray($with);
 
         return $this->assertNotExists($entity, $with);

@@ -51,7 +51,7 @@ class Query extends Representation
     }
 
     /**
-     * Get the table.
+     * Get the Query params.
      *
      * @return string
      */
