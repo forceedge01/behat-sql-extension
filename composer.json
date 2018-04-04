@@ -24,7 +24,8 @@
             "Genesis\\SQLExtension\\Tests\\": "tests/"
          }
     },
-    "suggests": {
-        "genesis/sql-api-wrapper": "Extends behat-sql-extension to provide a powerful and simple framework to manage your data modules."
+    "suggest": {
+        "genesis/sql-api-wrapper": "Extends behat-sql-extension to provide a powerful and simple framework to manage your data modules.",
+        "genesis/test-routing": "Simplistic routing that can extend main app routing for testing purposes."
     }
 }
