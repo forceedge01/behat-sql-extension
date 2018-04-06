@@ -142,10 +142,6 @@ DBPASSWORD
 
 The fields needs to be preset but may be left empty.
 
-DB Support
-----------
-Tested with MySQL.
-
 Calls provided by this extension
 --------------------------------
 
@@ -229,12 +225,11 @@ After creating or updating data you can assign the record's values to a keyword 
 
 # Create a new user.
 Given I have a "user" where "email:its.inevitable@hotmail.com"
-# The table needs to have the column 'id' for this to work
-And I save the id as "user_id"
 
-# With the above command you can use "some_id" as follows
-# Note the use of "some_id" keyword in the following statement
-Given I have an "account" where "title:my account, user_id:{user_id}"
+# The above command will create the record and also be aware of the data created. You can re-use this data in the following
+# commands. To re-use, just use it like so "user.<column>". Remember any required fields that you may have not passed in data for
+# explicitly will still be filled by the extension for you.
+Given I have an "account" where "title:my account, user_id:{user.id}"
 ```
 
 The `Given I have ...` command will do two things for you:
