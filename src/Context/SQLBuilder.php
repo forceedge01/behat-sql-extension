@@ -385,7 +385,7 @@ class SQLBuilder implements Interfaces\SQLBuilderInterface
     {
         // [user.id|user.email: its.inevitable@hotmail.com]
         // [woody_crm.users.id|email:its.inevitable@hotmail.com,status:1]
-        $externalRefPattern = '#^(\[[^\]]+\|(.+\:.+)+\])$#';
+        $externalRefPattern = '#^(\[.+\|(.+\:.+)+\])$#';
         if (preg_match($externalRefPattern, $value)) {
             return true;
         }
