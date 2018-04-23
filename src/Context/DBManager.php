@@ -6,6 +6,7 @@ use Exception;
 use Genesis\SQLExtension\Context\DatabaseProviders;
 use Genesis\SQLExtension\Context\Interfaces\DatabaseProviderFactoryInterface;
 use Genesis\SQLExtension\Context\Interfaces\DatabaseProviderInterface;
+use PDO;
 use Traversable;
 
 /**
@@ -158,13 +159,13 @@ class DBManager implements Interfaces\DBManagerInterface
      */
     public function getFirstValueFromStatement(Traversable $statement)
     {
-        $result = $statement->fetchAll();
+        $result = $statement->fetch(PDO::FETCH_BOTH);
 
         if (! $result) {
             return null;
         }
 
-        return $result[0];
+        return $result;
     }
 
     /**

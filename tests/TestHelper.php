@@ -76,6 +76,10 @@ class TestHelper extends PHPUnit_Framework_TestCase
             $statementMock->expects($this->any())
                 ->method('fetchAll')
                 ->willReturn($fetchAll);
+
+            $statementMock->expects($this->any())
+                ->method('fetch')
+                ->willReturn($fetchAll[0]);
         }
 
         $statementMock->expects($this->any())
