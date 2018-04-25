@@ -155,7 +155,7 @@ class DBManager implements Interfaces\DBManagerInterface
      *
      * @param Traversable $statement The statement to work with.
      *
-     * @return mixed.
+     * @return array|null.
      */
     public function getFirstValueFromStatement(Traversable $statement)
     {
