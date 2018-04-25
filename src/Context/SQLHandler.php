@@ -422,13 +422,22 @@ class SQLHandler implements Context, Interfaces\SQLHandlerInterface
      */
     public function setKeywordsFromQuery(Representations\Query $query)
     {
-        $result = $this->fetchByQuery(
-            $query
-        );
+        $this->setCommandType($query->getType());
+        $statement = $this->execute($query->getSql());
+        $result = $this->get('dbManager')->getFirstValueFromStatement($statement);
+
+        if (! $result) {
+            throw new Exceptions\RecordNotFoundException(
+                $query->getSql(),
+                $query->getQueryParams()->getEntity()->getEntityName()
+            );
+        }
+
+        $this->get('dbManager')->closeStatement($statement);
 
         return $this->setKeywordsFromRecord(
             $query->getQueryParams()->getEntity()->getRawInput(),
-            $result[0]
+            $result
         );
     }
 

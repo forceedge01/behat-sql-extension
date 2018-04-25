@@ -11,6 +11,7 @@ use Genesis\SQLExtension\Context\Interfaces\KeyStoreInterface;
 use Genesis\SQLExtension\Context\Interfaces\SQLBuilderInterface;
 use Genesis\SQLExtension\Context\Interfaces\SQLHistoryInterface;
 use Genesis\SQLExtension\Tests\TestHelper;
+use PDO;
 
 /**
  * @group sqlContext
@@ -136,6 +137,12 @@ class APITest extends TestHelper
                 $this->getPdoStatementWithRows(1, [['id' => 237463]])
             ));
 
+        $this->dependencies['dbHelperMock']->expects($this->any())
+            ->method('getFirstValueFromStatement')
+            ->will($this->returnCallback(function ($statement) {
+                return $statement->fetch(PDO::FETCH_BOTH);
+            }));
+
         $convertedQuery1 = [
             'column1' => 'abc'
         ];
@@ -203,6 +210,12 @@ class APITest extends TestHelper
                 $this->getPdoStatementWithRows(1, [['id' => 237463]]),
                 $this->getPdoStatementWithRows(1, [['id' => 237463]])
             ));
+
+        $this->dependencies['dbHelperMock']->expects($this->any())
+            ->method('getFirstValueFromStatement')
+            ->will($this->returnCallback(function ($statement) {
+                return $statement->fetch(PDO::FETCH_BOTH);
+            }));
 
         $convertedQuery1 = [
             'column1' => 'abc'
@@ -365,6 +378,12 @@ class APITest extends TestHelper
         $this->mockDependency('sqlBuilder', 'getTableName', null, 'someTable2');
         $this->mockDependency('sqlBuilder', 'getSearchConditionOperatorForColumns', null, ' AND ');
 
+        $this->dependencies['dbHelperMock']->expects($this->any())
+            ->method('getFirstValueFromStatement')
+            ->will($this->returnCallback(function ($statement) {
+                return $statement->fetch(PDO::FETCH_BOTH);
+            }));
+
         $result = $this->testObject->update($entity, $with, $columns);
 
         // Expected SQL.
@@ -409,8 +428,8 @@ class APITest extends TestHelper
         $expectedResult = [['id' => 5, 'name' => 'Abdul']];
         $statement = $this->getPdoStatementWithRows();
         $statement->expects($this->once())
-            ->method('fetchAll')
-            ->will($this->returnValue($expectedResult));
+            ->method('fetch')
+            ->will($this->returnValue($expectedResult[0]));
 
         $this->mockDependency('dbHelperMock', 'execute', ["SELECT * FROM dev_database.someTable2 WHERE `column1` = 'abc' AND `column2` = 'xyz' AND `column3` is NULL AND `column4` = 'what\'s up doc'"], $statement);
 
@@ -418,6 +437,12 @@ class APITest extends TestHelper
         $this->mockDependency('sqlBuilder', 'getSearchConditionOperatorForColumns', null, ' AND ');
         $this->mockDependency('sqlBuilder', 'getPrefixedDatabaseName', null, 'dev_database');
         $this->mockDependency('sqlBuilder', 'getTableName', null, 'someTable2');
+
+        $this->dependencies['dbHelperMock']->expects($this->any())
+            ->method('getFirstValueFromStatement')
+            ->will($this->returnCallback(function ($statement) {
+                return $statement->fetch(PDO::FETCH_BOTH);
+            }));
 
         $result = $this->testObject->select($entity, $where);
 
