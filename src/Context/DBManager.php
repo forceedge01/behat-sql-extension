@@ -169,6 +169,8 @@ class DBManager implements Interfaces\DBManagerInterface
     }
 
     /**
+     * Use only with select statements.
+     *
      * @param Traversable $statement
      *
      * @return bool
@@ -311,7 +313,7 @@ class DBManager implements Interfaces\DBManagerInterface
     }
 
     /**
-     * Check for any mysql errors.
+     * Check for any db errors. Use only with select statements.
      *
      * @param Traversable $sqlStatement
      * @param bool $ignoreDuplicate
