@@ -21,6 +21,7 @@ Patch fix:
 ------------
 - 3: Swapped usage of fetchAll with fetch so PDO does not load in all records from the database when not needed.
 - 4: Bugfix, pass string instead of object to exception.
+- 5: Removed usage of PDOStatement::rowCount() call as it isn't reliable.
 
 Installation
 ------------
