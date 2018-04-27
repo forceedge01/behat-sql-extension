@@ -274,7 +274,7 @@ class SQLExtensionTest extends TestHelper
         $this->testObject->get('dbManager')->getConnection()->expects($this->any())
             ->method('prepare')
             ->with($this->isType('string'))
-            ->willReturn($this->getPdoStatementWithRows(0, [[0 => 'id']]));
+            ->willReturn($this->getPdoStatementWithRows(0, []));
 
         $result = $this->testObject->iShouldNotHaveAWith($entity, $with);
 
@@ -338,7 +338,7 @@ class SQLExtensionTest extends TestHelper
         $this->testObject->get('dbManager')->getConnection()->expects($this->any())
             ->method('prepare')
             ->with($this->isType('string'))
-            ->willReturn($this->getPdoStatementWithRows(0, [[0 => 'id']]));
+            ->willReturn($this->getPdoStatementWithRows(0, []));
 
         $result = $this->testObject->iShouldNotHaveAWithTable($entity, $with);
         // Expected SQL.
