@@ -159,7 +159,7 @@ class DBManager implements Interfaces\DBManagerInterface
      */
     public function getFirstValueFromStatement(Traversable $statement)
     {
-        $result = $statement->fetch(PDO::FETCH_BOTH);
+        $result = $statement->fetch(PDO::FETCH_BOTH, PDO::FETCH_ORI_FIRST);
 
         if (! $result) {
             return null;
@@ -175,7 +175,8 @@ class DBManager implements Interfaces\DBManagerInterface
      */
     public function hasFetchedRows(Traversable $statement)
     {
-        return (bool) ($statement->rowCount());
+        // PDOStatement::rowCount() not reliable, use alternative means.
+        return ($statement->fetch(PDO::FETCH_BOTH, PDO::FETCH_ORI_FIRST));
     }
 
     /**
