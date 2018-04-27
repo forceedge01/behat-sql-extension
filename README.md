@@ -13,9 +13,14 @@ New Features in version 6:
 --------------------------
 - Database providers - now supports mssql, mysql, postgres.
 
-- Minor: ODBC support added.
+New Feature in Minor:
+-----------------------
+- 1: OBDC Support added.
 
-- Patch: Bugfix, pass string instead of object to exception.
+Patch fix:
+------------
+- 3: Swapped usage of fetchAll with fetch so PDO does not load in all records from the database when not needed.
+- 4: Bugfix, pass string instead of object to exception.
 
 Installation
 ------------
