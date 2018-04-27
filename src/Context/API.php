@@ -234,7 +234,7 @@ class API extends SQLHandler implements Interfaces\APIInterface
         if (! $this->hasFetchedRows($statement)) {
             throw new Exceptions\RecordNotFoundException(
                 $selectWhereClause,
-                $this->getEntity()
+                $this->getEntity()->getRawInput()
             );
         }
 
