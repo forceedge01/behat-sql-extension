@@ -176,7 +176,7 @@ class DBManager implements Interfaces\DBManagerInterface
     public function hasFetchedRows(Traversable $statement)
     {
         // PDOStatement::rowCount() not reliable, use alternative means.
-        return ($statement->fetch(PDO::FETCH_BOTH, PDO::FETCH_ORI_FIRST));
+        return ($statement->fetch(PDO::FETCH_NUM, PDO::FETCH_ORI_FIRST));
     }
 
     /**
