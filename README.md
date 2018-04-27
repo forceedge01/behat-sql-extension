@@ -13,6 +13,10 @@ New Features in version 6:
 --------------------------
 - Database providers - now supports mssql, mysql, postgres.
 
+- Minor: ODBC support added.
+
+- Patch: Bugfix, pass string instead of object to exception.
+
 Installation
 ------------
 require with composer
