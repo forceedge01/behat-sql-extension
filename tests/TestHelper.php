@@ -5,6 +5,9 @@ namespace Genesis\SQLExtension\Tests;
 // Mock pdo class for testing.
 class PDO
 {
+    const FETCH_NUM = 3;
+    const FETCH_ORI_FIRST = 2;
+
     private $dns;
     private $username;
     private $password;

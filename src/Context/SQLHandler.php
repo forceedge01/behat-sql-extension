@@ -212,12 +212,13 @@ class SQLHandler implements Context, Interfaces\SQLHandlerInterface
                 $this->getParams()['DBPREFIX']
             );
 
-        $this->setCommandType('select');
+        $this->setCommandType($query->getType());
         $statement = $this->execute($query->getSql());
         $this->throwExceptionIfErrors($statement);
         $this->throwErrorIfNoRowsAffected($statement);
 
         $placeholderValue = $this->get('dbManager')->getFirstValueFromStatement($statement)[0];
+        $this->get('dbManager')->closeStatement($statement);
 
         Debugger::log(sprintf('Resolved external ref placeholder: "%s"', $placeholderValue));
 
