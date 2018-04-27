@@ -165,7 +165,8 @@ class DBManagerTest extends TestHelper
             ->getMock();
 
         $sqlStatementMock->expects($this->once())
-            ->method('rowCount')
+            ->method('fetch')
+            ->with(PDO::FETCH_NUM, PDO::FETCH_ORI_FIRST)
             ->will($this->returnValue(false));
 
         $this->testObject->throwErrorIfNoRowsAffected($sqlStatementMock);
@@ -181,7 +182,8 @@ class DBManagerTest extends TestHelper
             ->getMock();
 
         $sqlStatementMock->expects($this->once())
-            ->method('rowCount')
+            ->method('fetch')
+            ->with(PDO::FETCH_NUM, PDO::FETCH_ORI_FIRST)
             ->will($this->returnValue(false));
 
         $sqlStatementMock->expects($this->exactly(2))
@@ -206,7 +208,8 @@ class DBManagerTest extends TestHelper
             ->getMock();
 
         $sqlStatementMock->expects($this->once())
-            ->method('rowCount')
+            ->method('fetch')
+            ->with(PDO::FETCH_NUM, PDO::FETCH_ORI_FIRST)
             ->will($this->returnValue(true));
 
         $result = $this->testObject->throwErrorIfNoRowsAffected($sqlStatementMock);

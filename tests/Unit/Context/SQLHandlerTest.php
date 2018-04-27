@@ -185,6 +185,10 @@ class SQLHandlerTest extends TestHelper
             ->method('getSql')
             ->willReturn('SELECT user.abc_id FROM user WHERE `email` = "abdul@email.com"');
 
+        $externalRefQuery->expects($this->any())
+            ->method('getType')
+            ->willReturn('select');
+
         $this->mockDependency('sqlBuilderMock', 'parseExternalQueryReferences', ['abc:[user.abc_id|email:abdul@email.com]'], $expectedExtRefPlaceholder);
         $this->mockDependency('sqlBuilderMock', 'convertToArray', [$expectedExtRefPlaceholder], $expectedConvertArray);
         $this->mockDependency('sqlBuilderMock', 'isExternalReferencePlaceholder', [$expectedConvertArray['abc']], true);

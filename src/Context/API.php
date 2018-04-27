@@ -3,6 +3,7 @@
 namespace Genesis\SQLExtension\Context;
 
 use Exception;
+use Genesis\SQLExtension\Context\Interfaces\SQLHandlerInterface;
 
 // session_start();
 
@@ -30,8 +31,7 @@ class API extends SQLHandler implements Interfaces\APIInterface
         $this->debugLog('------- SELECT -------');
 
         $this->resolveEntity($table);
-        $this->setCommandType('select');
-
+        $this->setCommandType(SQLHandlerInterface::COMMAND_TYPE_SELECT);
         $resolvedValues = $this->resolveQuery($columns);
         $this->queryParams = new Representations\QueryParams($this->getEntity(), $columns, $resolvedValues);
 
@@ -88,11 +88,8 @@ class API extends SQLHandler implements Interfaces\APIInterface
         $query = Builder\QueryDirector::build($insertQueryBuilder);
 
         try {
-            $this->setCommandType('insert');
+            $this->setCommandType($query->getType());
             $statement = $this->execute($query->getSql());
-
-            // Throw exception if no rows were effected.
-            $this->throwErrorIfNoRowsAffected($statement, Interfaces\SQLHandlerInterface::IGNORE_DUPLICATE);
 
             // If an ID was generated for us, use that to store results in keystore,
             // else use criteria.
@@ -126,7 +123,7 @@ class API extends SQLHandler implements Interfaces\APIInterface
         }
 
         $entity = $this->resolveEntity($table);
-        $this->setCommandType('update');
+        $this->setCommandType(SQLHandlerInterface::COMMAND_TYPE_UPDATE);
 
         // Build up the update clause.
         $with = $this->resolveQuery($with);
@@ -181,12 +178,11 @@ class API extends SQLHandler implements Interfaces\APIInterface
         }
 
         $entity = $this->resolveEntity($table);
-        $this->setCommandType('delete');
+        $this->setCommandType(SQLHandlerInterface::COMMAND_TYPE_DELETE);
         $resolvedValues = $this->resolveQuery($where);
 
         $this->queryParams = new Representations\QueryParams($entity, $where, $resolvedValues);
 
-        // $searchConditionOperator = $this->get('sqlBuilder')->getSearchConditionOperatorForColumns($query);
         $whereClause = $this->constructSQLClause(
             $this->getCommandType(),
             ' AND ',
@@ -219,7 +215,7 @@ class API extends SQLHandler implements Interfaces\APIInterface
     {
         $this->debugLog('------- EXISTS -------');
         $entity = $this->resolveEntity($table);
-        $this->setCommandType('select');
+        $this->setCommandType(SQLHandlerInterface::COMMAND_TYPE_SELECT);
 
         $this->queryParams = new Representations\QueryParams($entity, $where);
         $selectWhereClause = $this->resolveQueryToSQLClause($this->getCommandType(), $where);
@@ -231,6 +227,7 @@ class API extends SQLHandler implements Interfaces\APIInterface
         // Execute the sql query, if the query throws a generic not found error,
         // catch it and give it some context.
         $statement = $this->execute($query->getSql());
+
         if (! $this->hasFetchedRows($statement)) {
             throw new Exceptions\RecordNotFoundException(
                 $selectWhereClause,
@@ -251,7 +248,7 @@ class API extends SQLHandler implements Interfaces\APIInterface
         $this->debugLog('------- NOT-EXISTS -------');
 
         $entity = $this->resolveEntity($table);
-        $this->setCommandType('select');
+        $this->setCommandType(SQLHandlerInterface::COMMAND_TYPE_SELECT);
 
         $this->queryParams = new Representations\QueryParams($entity, $with);
         $selectWhereClause = $this->resolveQueryToSQLClause($this->getCommandType(), $with);

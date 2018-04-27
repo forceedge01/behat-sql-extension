@@ -76,6 +76,7 @@ class dblib extends BaseProvider
 
         $statement = $this->getExecutor()->execute($sql);
         $result = $statement->fetchAll();
+        $this->getExecutor()->closeStatement($statement);
 
         self::$primaryKeys[$key] = false;
         if (isset($result[0]['PRIMARYKEYCOLUMN'])) {
