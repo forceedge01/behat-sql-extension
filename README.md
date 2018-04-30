@@ -16,6 +16,7 @@ New Features in version 6:
 New Feature in Minor:
 -----------------------
 - 1: OBDC Support added.
+- 2: Debug mode options provided.
 
 Patch fix:
 ------------
