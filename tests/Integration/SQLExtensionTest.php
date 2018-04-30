@@ -5,8 +5,10 @@ namespace Genesis\SQLExtension\Tests\Integation;
 use Behat\Gherkin\Node\TableNode;
 use Exception;
 use Genesis\SQLExtension\Context;
+use Genesis\SQLExtension\Context\Debugger;
 use Genesis\SQLExtension\Tests\PDO;
 use Genesis\SQLExtension\Tests\TestHelper;
+use ReflectionClass;
 
 /**
  * @group sqlExtension
@@ -534,12 +536,14 @@ class SQLExtensionTest extends TestHelper
      */
     public function testiAmInDebugMode()
     {
-        ob_start();
         $this->testObject->iAmInDebugMode();
-        $string = ob_get_clean();
 
-        $this->assertInternalType('string', $string);
-        $this->assertTrue(defined('DEBUG_MODE'));
+        $reflection = new ReflectionClass(Debugger::class);
+        $propertyReflection = $reflection->getProperty('debugMode');
+        $propertyReflection->setAccessible(true);
+        $value = $propertyReflection->getValue(Debugger::class);
+
+        $this->assertEquals($value, Debugger::MODE_ALL);
     }
 
     /**

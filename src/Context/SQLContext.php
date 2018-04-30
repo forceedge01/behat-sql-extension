@@ -5,6 +5,7 @@ namespace Genesis\SQLExtension\Context;
 use Behat\Behat\Context\Step\Given;
 use Behat\Gherkin\Node\TableNode;
 use Genesis\SQLExtension\Context\DatabaseProviders;
+use Genesis\SQLExtension\Context\Debugger;
 
 /*
  * This file is part of the Behat\SQLExtension
@@ -242,8 +243,6 @@ class SQLContext extends API implements Interfaces\SQLContextInterface
     {
         $this->debugLog('------- I AM IN DEBUG MODE -------');
 
-        if (! defined('DEBUG_MODE')) {
-            define('DEBUG_MODE', 1);
-        }
+        Debugger::enable(Debugger::MODE_ALL);
     }
 }
