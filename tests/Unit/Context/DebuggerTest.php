@@ -14,9 +14,9 @@ class DebuggerTest extends TestHelper
     /**
      * Test that the log.
      */
-    public function testLog()
+    public function testLogModeAll()
     {
-        define('DEBUG_MODE', 1);
+        Debugger::enable(Debugger::MODE_ALL);
 
         $message = 'This is just a test';
 
@@ -25,6 +25,27 @@ class DebuggerTest extends TestHelper
         $result = ob_get_clean();
 
         $expectedMessage = 'DEBUG >>> ' . $message . PHP_EOL;
+
+        $this->assertInternalType('string', $result);
+        $this->assertEquals($expectedMessage, $result);
+    }
+
+    /**
+     * Test that the log.
+     */
+    public function testLogModeSqlOnly()
+    {
+        Debugger::enable(Debugger::MODE_SQL_ONLY);
+
+        $message = 'This is just a test';
+        $message2 = 'SQL execution';
+
+        ob_start();
+        Debugger::log($message);
+        Debugger::log($message2);
+        $result = ob_get_clean();
+
+        $expectedMessage = 'DEBUG >>> ' . $message2 . PHP_EOL;
 
         $this->assertInternalType('string', $result);
         $this->assertEquals($expectedMessage, $result);

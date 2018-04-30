@@ -4,6 +4,7 @@ namespace Genesis\SQLExtension;
 
 use Behat\Testwork\ServiceContainer\Extension as ExtensionInterface;
 use Behat\Testwork\ServiceContainer\ExtensionManager;
+use Genesis\SQLExtension\Context\Debugger;
 use Symfony\Component\Config\Definition\Builder\ArrayNodeDefinition;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 
@@ -55,7 +56,7 @@ class Extension implements ExtensionInterface
             if (isset($config['connection_details']['connection_options'])) {
                 $options = [];
 
-                foreach($config['connection_details']['connection_options'] as $option=>$value) {
+                foreach ($config['connection_details']['connection_options'] as $option => $value) {
                     $options[constant('\PDO::' . $option)] = $value;
                 }
 
@@ -68,7 +69,7 @@ class Extension implements ExtensionInterface
         // Check if we need to enable debug mode. This is not controllable from the config file.
         if (isset($config['debug']) and $config['debug']) {
             echo 'Genesis debug mode enabled, to see debugging please use the pretty formatter.' . PHP_EOL . PHP_EOL;
-            define('DEBUG_MODE', 1);
+            Debugger::enable($config['debug']);
         }
     }
 

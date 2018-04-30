@@ -4,6 +4,7 @@ namespace Genesis\SQLExtension\Tests\Unit\Context;
 
 use Exception;
 use Genesis\SQLExtension\Context\DatabaseProviders\mysql;
+use Genesis\SQLExtension\Context\Debugger;
 use Genesis\SQLExtension\Context\Interfaces\DBManagerInterface;
 use Genesis\SQLExtension\Context\Interfaces\KeyStoreInterface;
 use Genesis\SQLExtension\Context\Interfaces\SQLBuilderInterface;
@@ -216,9 +217,7 @@ class SQLHandlerTest extends TestHelper
      */
     public function testDebugLog()
     {
-        if (! defined('DEBUG_MODE')) {
-            define('DEBUG_MODE', 1);
-        }
+        Debugger::enable(Debugger::MODE_ALL);
 
         // Start capturing the output to the screen.
         ob_start();
