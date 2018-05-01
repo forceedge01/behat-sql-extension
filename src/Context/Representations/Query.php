@@ -53,7 +53,7 @@ class Query extends Representation
     /**
      * Get the Query params.
      *
-     * @return string
+     * @return QueryParams
      */
     public function getQueryParams()
     {

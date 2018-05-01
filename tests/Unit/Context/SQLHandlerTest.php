@@ -94,21 +94,6 @@ class SQLHandlerTest extends TestHelper
     }
 
     /**
-     * testSampleData Test that sampleData executes as expected.
-     */
-    // public function testSampleData()
-    // {
-    //     $type = 'a type';
-    //     $return = 'something';
-
-    //     $this->mockDependency('sqlBuilderMock', 'sampleData', [$type], $return);
-
-    //     $result = $this->testObject->sampleData($type);
-
-    //     $this->assertEquals($return, $result);
-    // }
-
-    /**
      * Test that the setCommandType works as expected.
      *
      * @expectedException Exception
@@ -179,16 +164,29 @@ class SQLHandlerTest extends TestHelper
         $expected = ['abc' => 123];
         $expectedExtRefPlaceholder = 'abc:ext-ref-placeholder_0';
         $expectedConvertArray = ['abc' => 'ext-ref-placeholder_0'];
+
+        $entityMock = $this->createMock(Representations\Entity::class);
+        $entityMock->expects($this->any())
+            ->method('getEntityName')
+            ->willReturn('user');
+
+        $queryParamsMock = $this->createMock(Representations\QueryParams::class);
+        $queryParamsMock->expects($this->any())
+            ->method('getEntity')
+            ->willReturn($entityMock);
+
         $externalRefQuery = $this->getMockBuilder(Representations\Query::class)
             ->disableOriginalConstructor()
             ->getMock();
         $externalRefQuery->expects($this->any())
             ->method('getSql')
             ->willReturn('SELECT user.abc_id FROM user WHERE `email` = "abdul@email.com"');
-
         $externalRefQuery->expects($this->any())
             ->method('getType')
             ->willReturn('select');
+        $externalRefQuery->expects($this->any())
+            ->method('getQueryParams')
+            ->willReturn($queryParamsMock);
 
         $this->mockDependency('sqlBuilderMock', 'parseExternalQueryReferences', ['abc:[user.abc_id|email:abdul@email.com]'], $expectedExtRefPlaceholder);
         $this->mockDependency('sqlBuilderMock', 'convertToArray', [$expectedExtRefPlaceholder], $expectedConvertArray);
@@ -293,30 +291,6 @@ class SQLHandlerTest extends TestHelper
     }
 
     /**
-     * Test that this method works as expected.
-     */
-    // public function testMakeSQLSafe()
-    // {
-    //     $string = 'databaseName.tableName.more';
-
-    //     $result = $this->testObject->makeSQLSafe($string);
-
-    //     $this->assertEquals('databaseName.tableName.more', $result);
-    // }
-
-    /**
-     * Test that this method works as expected.
-     */
-    // public function testMakeSQLUnsafe()
-    // {
-    //     $string = '`databaseName`.`tableName`.`more`';
-
-    //     $result = $this->testObject->makeSQLUnsafe($string);
-
-    //     $this->assertEquals('databaseName.tableName.more', $result);
-    // }
-
-    /**
      * Test that the entity can be set using the setter.
      */
     public function testResolveEntity()
@@ -331,28 +305,6 @@ class SQLHandlerTest extends TestHelper
         $this->assertEquals('abc', $entity->getTableName());
         $this->assertEquals('id', $entity->getPrimaryKey());
     }
-
-    /**
-     * Test that this method works as expected.
-     */
-    // public function testSetEntityWithDatabasePrependend()
-    // {
-    //     $this->dependencies['sqlBuilderMock']->expects($this->any())
-    //         ->method('getPrefixedDatabaseName')
-    //         ->with($this->isType('string'), $this->isType('string'))
-    //         ->will($this->returnValue('dev_abc'));
-
-    //     $this->dependencies['sqlBuilderMock']->expects($this->any())
-    //         ->method('getTableName')
-    //         ->with($this->isType('string'))
-    //         ->will($this->returnValue('user'));
-
-    //     $this->accessProperty('entity')->setValue('abc');
-
-    //     $this->assertEquals('dev_abc.user', $this->testObject->getEntity());
-    //     $this->assertEquals('dev_abc', $this->testObject->getDatabaseName());
-    //     $this->assertEquals('user', $this->testObject->getTableName());
-    // }
 
     /**
      * Test that convertTableNodeToSingleContextClause works as expected.
@@ -707,12 +659,26 @@ class SQLHandlerTest extends TestHelper
     {
         // Prepare / Mock
         $entityMock = $this->createMock(Entity::class);
+
+        $entityMock = $this->createMock(Representations\Entity::class);
+        $entityMock->expects($this->any())
+            ->method('getEntityName')
+            ->willReturn('user');
+
+        $queryParamsMock = $this->createMock(Representations\QueryParams::class);
+        $queryParamsMock->expects($this->any())
+            ->method('getEntity')
+            ->willReturn($entityMock);
+
         $query = $this->getMockBuilder(Representations\Query::class)
             ->disableOriginalConstructor()
             ->getMock();
         $query->expects($this->any())
             ->method('getType')
             ->willReturn('select');
+        $query->expects($this->any())
+            ->method('getQueryParams')
+            ->willReturn($queryParamsMock);
 
         $expectedRecord = [['id' => 123]];
         $this->dependencies['dbHelperMock']
