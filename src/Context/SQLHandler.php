@@ -213,9 +213,16 @@ class SQLHandler implements Context, Interfaces\SQLHandlerInterface
             );
 
         $this->setCommandType($query->getType());
-        $statement = $this->execute($query->getSql());
+        $statement = $this->get('dbManager')->execute($query->getSql());
         $this->throwExceptionIfErrors($statement);
         $this->throwErrorIfNoRowsAffected($statement);
+
+        $this->recordHistory(
+            $query->getType(),
+            $query->getQueryParams()->getEntity()->getEntityName(),
+            $query->getSql(),
+            null
+        );
 
         $placeholderValue = $this->get('dbManager')->getFirstValueFromStatement($statement)[0];
         $this->get('dbManager')->closeStatement($statement);
@@ -310,21 +317,19 @@ class SQLHandler implements Context, Interfaces\SQLHandlerInterface
         $this->lastId = $this->dbManager->getLastInsertId($this->getEntity()->getTableName());
         $primaryKey = $this->getEntity()->getPrimaryKey();
 
-        // If last id is not provided, check if it was supplied in the sql for an insert statement.
-        if (! $this->lastId and
-            $this->getCommandType() === Interfaces\SQLHandlerInterface::COMMAND_TYPE_INSERT and
-            isset($this->queryParams->getRawValues()[$primaryKey])) {
+        // Check if the value for the primary key was supplied and use that, if not use whatever is fetched.
+        // Works better with tables that have no auto generation on the primary key column.
+        if (isset($this->queryParams->getRawValues()[$primaryKey]) &&
+            $this->getCommandType() === Interfaces\SQLHandlerInterface::COMMAND_TYPE_INSERT) {
             $this->lastId = $this->queryParams->getRawValues()[$primaryKey];
         }
 
-        if ($this->get('sqlHistory') instanceof Interfaces\SQLHistoryInterface) {
-            $this->get('sqlHistory')->addToHistory(
-                $this->getCommandType(),
-                $this->getEntity()->getEntityName(),
-                $sql,
-                $this->lastId
-            );
-        }
+        $this->recordHistory(
+            $this->getCommandType(),
+            $this->getEntity()->getEntityName(),
+            $sql,
+            $this->lastId
+        );
 
         // If their is an id, save it!
         if ($this->lastId) {
@@ -332,6 +337,28 @@ class SQLHandler implements Context, Interfaces\SQLHandlerInterface
         }
 
         return $statement;
+    }
+
+    /**
+     * @param string $commandType
+     * @param string $entityName
+     * @param string $sql
+     * @param int $lastId
+     *
+     * @return this
+     */
+    private function recordHistory($commandType, $entityName, $sql, $lastId)
+    {
+        if ($this->get('sqlHistory') instanceof Interfaces\SQLHistoryInterface) {
+            $this->get('sqlHistory')->addToHistory(
+                $commandType,
+                $entityName,
+                $sql,
+                $lastId
+            );
+        }
+
+        return $this;
     }
 
     /**
@@ -709,7 +736,7 @@ class SQLHandler implements Context, Interfaces\SQLHandlerInterface
     public function fetchByQuery(Representations\Query $query)
     {
         $this->setCommandType($query->getType());
-        $statement = $this->execute($query->getSql());
+        $statement = $this->get('dbManager')->execute($query->getSql());
         $result = $statement->fetchAll();
 
         if (! $result) {
@@ -718,6 +745,13 @@ class SQLHandler implements Context, Interfaces\SQLHandlerInterface
                 $query->getQueryParams()->getEntity()->getEntityName()
             );
         }
+
+        $this->recordHistory(
+            $query->getType(),
+            $query->getQueryParams()->getEntity()->getEntityName(),
+            $query->getSql(),
+            null
+        );
 
         $this->get('dbManager')->closeStatement($statement);
 
