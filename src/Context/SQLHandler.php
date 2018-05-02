@@ -214,6 +214,8 @@ class SQLHandler implements Context, Interfaces\SQLHandlerInterface
             );
 
         $this->setCommandType($query->getType());
+        Debugger::log('Executing External Ref SQL: ' . $query->getSql());
+
         $statement = $this->get('dbManager')->execute($query->getSql());
         $this->throwExceptionIfErrors($statement);
 
@@ -317,7 +319,7 @@ class SQLHandler implements Context, Interfaces\SQLHandlerInterface
      */
     public function execute($sql)
     {
-        $this->debugLog(sprintf('Executing SQL: %s', $sql));
+        $this->debugLog('Executing SQL: ' . $sql);
         $this->lastQuery = $sql;
         $statement = $this->dbManager->execute($sql);
         $this->lastId = $this->dbManager->getLastInsertId($this->getEntity()->getTableName());
