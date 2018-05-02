@@ -330,6 +330,7 @@ class SQLHandler implements Context, Interfaces\SQLHandlerInterface
         if (isset($this->queryParams->getRawValues()[$primaryKey]) &&
             $this->getCommandType() === Interfaces\SQLHandlerInterface::COMMAND_TYPE_INSERT) {
             $this->lastId = $this->queryParams->getRawValues()[$primaryKey];
+            Debugger::log('Last Id: ' . $this->lastId);
         }
 
         $this->recordHistory(
