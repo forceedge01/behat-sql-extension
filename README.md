@@ -22,6 +22,7 @@ Patch fix:
 ------------
 - 1: Use primary key value if provided in data set without checking lastId, this helps with tables that do not have auto increment and don't return the lastId.
 - 2: Don't iterate over statement to check if values fetched as that moves the PDO iterator forward.
+- 3: Debugging message to filter in for external ref resolution when enabling sql only debug.
 
 Installation
 ------------
