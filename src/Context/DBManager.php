@@ -349,6 +349,8 @@ class DBManager implements Interfaces\DBManagerInterface
      */
     public function throwExceptionIfErrors(Traversable $sqlStatement)
     {
+        Debugger::log('Statement error info: ' . print_r($sqlStatement->errorInfo(), true));
+
         if ((int) $sqlStatement->errorCode()) {
             throw new Exception(
                 print_r($sqlStatement->errorInfo(), true)
