@@ -90,6 +90,7 @@ class API extends SQLHandler implements Interfaces\APIInterface
         try {
             $this->setCommandType($query->getType());
             $statement = $this->execute($query->getSql());
+            $this->throwExceptionIfErrors($statement);
 
             // If an ID was generated for us, use that to store results in keystore,
             // else use criteria.
@@ -101,12 +102,16 @@ class API extends SQLHandler implements Interfaces\APIInterface
             throw new Exceptions\InsertException($entity, $e);
         }
 
-        $queryBuilder = new Builder\SelectQueryBuilder($this->queryParams);
-        $queryBuilder->setWhereClause("{$entity->getPrimaryKey()} = {$this->quoteOrNot($lastId)}");
-        $selectQuery = Builder\QueryDirector::build($queryBuilder);
+        if ($lastId) {
+            $queryBuilder = new Builder\SelectQueryBuilder($this->queryParams);
+            $queryBuilder->setWhereClause("{$entity->getPrimaryKey()} = {$this->quoteOrNot($lastId)}");
+            $selectQuery = Builder\QueryDirector::build($queryBuilder);
 
-        $this->setKeywordsFromQuery($selectQuery);
-        $this->get('dbManager')->closeStatement($statement);
+            $this->setKeywordsFromQuery($selectQuery);
+            $this->get('dbManager')->closeStatement($statement);
+        } else {
+            Debugger::log('-- NO LAST ID RETURNED, NOT CREATING ANY KEYS IN KEYSTORE. --');
+        }
 
         return $query->getSql();
     }
