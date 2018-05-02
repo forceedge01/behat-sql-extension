@@ -5,6 +5,7 @@ namespace Genesis\SQLExtension\Context;
 use Behat\Behat\Context\Context;
 use Behat\Gherkin\Node\TableNode;
 use Exception;
+use Genesis\SQLExtension\Context\Exceptions\ExternalRefResolutionException;
 use Genesis\SQLExtension\Context\Representations\Entity;
 use Traversable;
 
@@ -215,7 +216,6 @@ class SQLHandler implements Context, Interfaces\SQLHandlerInterface
         $this->setCommandType($query->getType());
         $statement = $this->get('dbManager')->execute($query->getSql());
         $this->throwExceptionIfErrors($statement);
-        $this->throwErrorIfNoRowsAffected($statement);
 
         $this->recordHistory(
             $query->getType(),
@@ -224,7 +224,13 @@ class SQLHandler implements Context, Interfaces\SQLHandlerInterface
             null
         );
 
-        $placeholderValue = $this->get('dbManager')->getFirstValueFromStatement($statement)[0];
+        $value = $this->get('dbManager')->getFirstValueFromStatement($statement);
+
+        if (! isset($value[0])) {
+            throw new ExternalRefResolutionException($externalRef, $query->getSql());
+        }
+
+        $placeholderValue = $value[0];
         $this->get('dbManager')->closeStatement($statement);
 
         Debugger::log(sprintf('Resolved external ref placeholder: "%s"', $placeholderValue));
