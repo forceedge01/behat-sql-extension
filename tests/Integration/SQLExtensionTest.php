@@ -390,10 +390,8 @@ class SQLExtensionTest extends TestHelper
 
     /**
      * @expectedException Exception
-     *
-     * @group test
      */
-    public function testiShouldHaveAWith()
+    public function testiShouldHaveAWithabc()
     {
         $entity = '';
         $with = '';
@@ -410,8 +408,6 @@ class SQLExtensionTest extends TestHelper
 
     /**
      * Test that this method works with values provided.
-     *
-     * @group test
      */
     public function testiShouldHaveAWithTableNode()
     {

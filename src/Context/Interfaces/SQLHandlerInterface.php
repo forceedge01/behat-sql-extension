@@ -114,11 +114,6 @@ interface SQLHandlerInterface
     public function throwErrorIfNoRowsAffected(Traversable $sqlStatement, $ignoreDuplicate = false);
 
     /**
-     * Errors found then throw exception.
-     */
-    public function throwExceptionIfErrors(Traversable $sqlStatement);
-
-    /**
      * Gets the last insert id.
      */
     public function getLastId();

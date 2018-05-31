@@ -53,7 +53,6 @@ class mysql extends BaseProvider
         );
 
         $statement = $this->getExecutor()->execute($sql);
-        $this->getExecutor()->throwExceptionIfErrors($statement);
         $result = $statement->fetchAll();
         $this->getExecutor()->closeStatement($statement);
 

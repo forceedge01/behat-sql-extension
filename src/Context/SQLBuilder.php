@@ -121,6 +121,10 @@ class SQLBuilder implements Interfaces\SQLBuilderInterface
      */
     public function convertToArray($query)
     {
+        if (! $query) {
+            return [];
+        }
+
         // Temporary placeholder to protect escaped commas.
         $commaEscapeCode = '%|-|';
         $columnValuePair = [];

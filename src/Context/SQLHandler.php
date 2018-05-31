@@ -7,6 +7,7 @@ use Behat\Gherkin\Node\TableNode;
 use Exception;
 use Genesis\SQLExtension\Context\Exceptions\ExternalRefResolutionException;
 use Genesis\SQLExtension\Context\Representations\Entity;
+use PDOException;
 use Traversable;
 
 /*
@@ -217,7 +218,6 @@ class SQLHandler implements Context, Interfaces\SQLHandlerInterface
         Debugger::log('Executing External Ref SQL: ' . $query->getSql());
 
         $statement = $this->get('dbManager')->execute($query->getSql());
-        $this->throwExceptionIfErrors($statement);
 
         $this->recordHistory(
             $query->getType(),
@@ -321,6 +321,7 @@ class SQLHandler implements Context, Interfaces\SQLHandlerInterface
     {
         $this->debugLog('Executing SQL: ' . $sql);
         $this->lastQuery = $sql;
+
         $statement = $this->dbManager->execute($sql);
         $this->lastId = $this->dbManager->getLastInsertId($this->getEntity()->getTableName());
         $primaryKey = $this->getEntity()->getPrimaryKey();
@@ -391,14 +392,6 @@ class SQLHandler implements Context, Interfaces\SQLHandlerInterface
     public function throwErrorIfNoRowsAffected(Traversable $sqlStatement, $ignoreDuplicate = false)
     {
         return $this->dbManager->throwErrorIfNoRowsAffected($sqlStatement, $ignoreDuplicate);
-    }
-
-    /**
-     * Errors found then throw exception.
-     */
-    public function throwExceptionIfErrors(Traversable $sqlStatement)
-    {
-        return $this->dbManager->throwExceptionIfErrors($sqlStatement);
     }
 
     /**
@@ -592,6 +585,10 @@ class SQLHandler implements Context, Interfaces\SQLHandlerInterface
      */
     public function resolveEntity($inputEntity)
     {
+        if (! $inputEntity) {
+            throw new Exception('Blank entity/table provided!');
+        }
+
         $this->debugLog(sprintf('ENTITY: %s', $inputEntity));
 
         if (isset(self::$entityCollection[$inputEntity]) && self::$entityCollection[$inputEntity] instanceof Entity) {
@@ -765,6 +762,14 @@ class SQLHandler implements Context, Interfaces\SQLHandlerInterface
         $this->get('dbManager')->closeStatement($statement);
 
         return $result;
+    }
+
+    /**
+     * Errors found then throw exception.
+     */
+    public function throwExceptionIfErrors(Traversable $sqlStatement)
+    {
+        return $this->get('dbManager')->throwExceptionIfErrors($sqlStatement);
     }
 
     /**

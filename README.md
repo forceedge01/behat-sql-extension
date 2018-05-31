@@ -25,6 +25,8 @@ Patch fix:
 - 3: Debugging message to filter in for external ref resolution when enabling sql only debug.
 - 4: Show error info after every sql statement executed when debugger fully enabled.
 - 5: Only create key store reference when we get last Id back.
+- 6: If the query does not have any params provided, return immediately to execute.
+- 7: Option to enable strict exceptions.
 
 Installation
 ------------
@@ -136,6 +138,18 @@ $_SESSION['behat']['GenesisSqlExtension']['notQuotableKeywords'][] = 'YOUR-REGEX
 ```
 
 Note: The `schema` is a very important parameter for the SQLContext, if you are working with multiple databases don't set a fixed schema. To reference a table from another database simply prefix that databases' name as per the sql convention and it will be used as your schema on the fly for that table. If you are just using one database in your application set the schema the same as the database.
+
+Enabling strict exceptions
+--------------------------
+
+To enable throwing exceptions for any issues that come up during the execution of queries, you can do so by setting it on via the dbConnection like so:
+
+```php
+$this->get('dbManager')->getConnection()->setAttribute(
+  PDO::ATTR_ERRMODE,
+  PDO::ERRMODE_EXCEPTION
+);
+```
 
 ###2. Environment variable
 
