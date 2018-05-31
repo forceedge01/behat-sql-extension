@@ -218,41 +218,6 @@ class DBManagerTest extends TestHelper
     }
 
     /**
-     * @expectedException \Exception
-     */
-    public function testThrowExceptionIfErrorsWithErrors()
-    {
-        $sqlStatementMock = $this->getMockBuilder(\PDOStatement::class)
-            ->disableOriginalConstructor()
-            ->getMock();
-
-        $sqlStatementMock->expects($this->once())
-            ->method('errorCode')
-            ->willReturn(234);
-
-        $this->testObject->throwExceptionIfErrors($sqlStatementMock);
-    }
-
-    /**
-     * Check if the method returns false if no errors are found.
-     */
-    public function testThrowExceptionIfErrorsNoErrors()
-    {
-        $sqlStatementMock = $this->getMockBuilder(\PDOStatement::class)
-            ->disableOriginalConstructor()
-            ->getMock();
-
-        // This is the error code returned by mysql if no errors have occurred.
-        $sqlStatementMock->expects($this->once())
-            ->method('errorCode')
-            ->willReturn('00000');
-
-        $result = $this->testObject->throwExceptionIfErrors($sqlStatementMock);
-
-        $this->assertFalse($result);
-    }
-
-    /**
      * testGetConnectionDetails Test that getConnectionDetails executes as expected.
      */
     public function testGetConnectionDetailsWithoutPort()

@@ -277,20 +277,6 @@ class SQLHandlerTest extends TestHelper
     }
 
     /**
-     * Check if the method returns false if no errors are found.
-     */
-    public function testThrowExceptionIfErrorsNoErrors()
-    {
-        $sqlStatementMock = $this->getPdoStatementWithRows();
-
-        $this->mockDependency('dbHelperMock', 'throwExceptionIfErrors', [$sqlStatementMock]);
-
-        $result = $this->testObject->throwExceptionIfErrors($sqlStatementMock);
-
-        $this->assertTrue($result);
-    }
-
-    /**
      * Test that the entity can be set using the setter.
      */
     public function testResolveEntity()

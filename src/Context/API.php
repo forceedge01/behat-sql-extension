@@ -5,8 +5,6 @@ namespace Genesis\SQLExtension\Context;
 use Exception;
 use Genesis\SQLExtension\Context\Interfaces\SQLHandlerInterface;
 
-// session_start();
-
 /*
  * This file is part of the Behat\SQLExtension
  *
@@ -90,7 +88,6 @@ class API extends SQLHandler implements Interfaces\APIInterface
         try {
             $this->setCommandType($query->getType());
             $statement = $this->execute($query->getSql());
-            $this->throwExceptionIfErrors($statement);
 
             // If an ID was generated for us, use that to store results in keystore,
             // else use criteria.
@@ -134,12 +131,10 @@ class API extends SQLHandler implements Interfaces\APIInterface
         $with = $this->resolveQuery($with);
         $updateClause = $this->constructSQLClause($this->getCommandType(), ', ', $with);
 
-        // $query = $this->convertToQuery($columns);
         $resolvedValues = $this->resolveQuery($where);
 
         $this->queryParams = new Representations\QueryParams($entity, $where, $resolvedValues);
 
-        // $searchConditionOperator = $this->get('sqlBuilder')->getSearchConditionOperatorForColumns($query);
         $whereClause = $this->constructSQLClause(
             $this->getCommandType(),
             ' AND ',
@@ -201,9 +196,6 @@ class API extends SQLHandler implements Interfaces\APIInterface
         try {
             // Execute statement.
             $statement = $this->execute($query->getSql());
-
-            // Throw an exception if errors are found.
-            $this->throwExceptionIfErrors($statement);
         } catch (Exception $e) {
             throw new Exceptions\DeleteException($this->getEntity(), $e);
         }

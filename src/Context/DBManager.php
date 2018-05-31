@@ -110,6 +110,7 @@ class DBManager implements Interfaces\DBManagerInterface
                 $password,
                 $options
             );
+            $this->connection->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_WARNING);
         }
 
         return $this->connection;
