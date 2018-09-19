@@ -2,6 +2,8 @@
 
 namespace Genesis\SQLExtension\Tests;
 
+use IteratorAggregate;
+
 // Mock pdo class for testing.
 class PDO
 {
@@ -45,10 +47,57 @@ class PDO
     }
 }
 
+class TestPDOStatement implements IteratorAggregate
+{
+    public $queryString;
+
+    /* Methods */
+    public function bindColumn($column, $param, $type, $maxlen, $driverdata)
+    {}
+    public function bindParam($parameter, $variable, $data_type = \PDO::PARAM_STR, $length = 0, $driver_options)
+    {}
+    public function bindValue($parameter, $value, $data_type = \PDO::PARAM_STR)
+    {}
+    public function closeCursor()
+    {}
+    public function columnCount()
+    {}
+    public function debugDumpParams()
+    {}
+    public function errorCode()
+    {}
+    public function errorInfo()
+    {}
+    public function execute(array $input_parameters = [])
+    {}
+    public function fetch($fetch_style = 0, $cursor_orientation = \PDO::FETCH_ORI_NEXT, $cursor_offset = 0)
+    {}
+    public function fetchAll($fetch_style = 0, $fetch_argument = 0, array $ctor_args = array())
+    {}
+    public function fetchColumn($column_number = 0)
+    {}
+    public function fetchObject($class_name = "stdClass", array $ctor_args)
+    {}
+    public function getAttribute($attribute)
+    {}
+    public function getColumnMeta($column)
+    {}
+    public function nextRowset()
+    {}
+    public function rowCount()
+    {}
+    public function setAttribute($attribute, $value)
+    {}
+    public function setFetchMode($mode)
+    {}
+    public function getIterator()
+    {}
+}
+
 namespace Genesis\SQLExtension\Tests;
 
-use PHPUnit_Framework_TestCase;
 use Exception;
+use PHPUnit_Framework_TestCase;
 use ReflectionClass;
 use ReflectionMethod;
 use ReflectionProperty;
@@ -65,7 +114,7 @@ class TestHelper extends PHPUnit_Framework_TestCase
      */
     public function getPdoStatementWithRows($rowCount = true, $fetchAll = false)
     {
-        $statementMock = $this->getMockBuilder(\PDOStatement::class)
+        $statementMock = $this->getMockBuilder(TestPDOStatement::class)
             ->disableOriginalConstructor()
             ->getMock();
 
@@ -165,6 +214,15 @@ class TestHelper extends PHPUnit_Framework_TestCase
             ->will($this->returnValueMap($valueMap));
     }
 
+    /**
+     * @param string $class
+     *
+     * @return PHPUnit_Mock
+     */
+    protected function createMock($class)
+    {
+        return $this->getMockBuilder($class)->disableOriginalConstructor()->getMock();
+    }
 
     /**
      * @param string $method The method to make accessible.
