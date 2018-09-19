@@ -160,9 +160,7 @@ class DBManagerTest extends TestHelper
      */
     public function testThrowErrorsIfNoRowsAffectedNoRowsAffected()
     {
-        $sqlStatementMock = $this->getMockBuilder(\PDOStatement::class)
-            ->disableOriginalConstructor()
-            ->getMock();
+        $sqlStatementMock = $this->getPdoStatementWithRows();
 
         $sqlStatementMock->expects($this->once())
             ->method('fetch')
@@ -177,9 +175,7 @@ class DBManagerTest extends TestHelper
      */
     public function testThrowErrorsIfNoRowsAffectedDuplicateError()
     {
-        $sqlStatementMock = $this->getMockBuilder(\PDOStatement::class)
-            ->disableOriginalConstructor()
-            ->getMock();
+        $sqlStatementMock = $this->getPdoStatementWithRows();
 
         $sqlStatementMock->expects($this->once())
             ->method('fetch')
@@ -203,9 +199,7 @@ class DBManagerTest extends TestHelper
      */
     public function testThrowErrorsIfNoRowsAffectedNoException()
     {
-        $sqlStatementMock = $this->getMockBuilder(\PDOStatement::class)
-            ->disableOriginalConstructor()
-            ->getMock();
+        $sqlStatementMock = $this->getPdoStatementWithRows();
 
         $sqlStatementMock->expects($this->once())
             ->method('fetch')
