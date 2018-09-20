@@ -7,7 +7,6 @@ use Behat\Gherkin\Node\TableNode;
 use Exception;
 use Genesis\SQLExtension\Context\Exceptions\ExternalRefResolutionException;
 use Genesis\SQLExtension\Context\Representations\Entity;
-use PDOException;
 use Traversable;
 
 /*
