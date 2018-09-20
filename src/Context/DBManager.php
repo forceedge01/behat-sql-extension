@@ -3,7 +3,6 @@
 namespace Genesis\SQLExtension\Context;
 
 use Exception;
-use Genesis\SQLExtension\Context\DatabaseProviders;
 use Genesis\SQLExtension\Context\Interfaces\DatabaseProviderFactoryInterface;
 use Genesis\SQLExtension\Context\Interfaces\DatabaseProviderInterface;
 use PDO;
