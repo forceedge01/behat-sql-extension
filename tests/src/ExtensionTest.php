@@ -4,10 +4,7 @@ namespace Genesis\SQLExtension\Tests\Context;
 
 use Genesis\SQLExtension\Extension;
 use PHPUnit_Framework_TestCase;
-use Symfony\Component\Config\Definition\Builder\ArrayNodeDefinition;
-use Symfony\Component\Config\Definition\Builder\NodeBuilder;
-use Symfony\Component\Config\Definition\Builder\ScalarNodeDefinition;
-use Symfony\Component\Config\Definition\ScalarNode;
+use Symfony\Component\Config\Definition\Builder;
 
 class ExtensionTest extends PHPUnit_Framework_TestCase
 {
@@ -23,22 +20,22 @@ class ExtensionTest extends PHPUnit_Framework_TestCase
 
     public function testConfigure()
     {
-        /** @var ArrayNodeDefinition|\PHPUnit_Framework_MockObject_MockObject $arrayNodeDefinitionMock1 */
-        $arrayNodeDefinitionMock1 = $this->getMockBuilder(ArrayNodeDefinition::class)
+        /** @var Builder\ArrayNodeDefinition|\PHPUnit_Framework_MockObject_MockObject $arrayNodeDefinitionMock1 */
+        $arrayNodeDefinitionMock1 = $this->getMockBuilder(Builder\ArrayNodeDefinition::class)
             ->disableOriginalConstructor()
             ->getMock();
 
-        $arrayNodeDefinitionMock2 = $this->getMockBuilder(ArrayNodeDefinition::class)
+        $arrayNodeDefinitionMock2 = $this->getMockBuilder(Builder\ArrayNodeDefinition::class)
             ->disableOriginalConstructor()
             ->getMock();
 
-        $nodeBuilderMock1 = $this->getMockBuilder(NodeBuilder::class)
+        $nodeBuilderMock1 = $this->getMockBuilder(Builder\NodeBuilder::class)
             ->getMock();
 
-        $nodeBuilderMock2 = $this->getMockBuilder(NodeBuilder::class)
+        $nodeBuilderMock2 = $this->getMockBuilder(Builder\NodeBuilder::class)
             ->getMock();
 
-        $scalarNodeDefinitionMock = $this->getMockBuilder(ScalarNodeDefinition::class)
+        $scalarNodeDefinitionMock = $this->getMockBuilder(Builder\ScalarNodeDefinition::class)
             ->disableOriginalConstructor()
             ->getMock();
 
