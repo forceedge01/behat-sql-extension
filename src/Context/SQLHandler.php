@@ -146,17 +146,15 @@ class SQLHandler implements Context
         $table = trim($table, '`');
 
         // Statement to extract all required columns for a table.
-        $sqlStatement = "
-            SELECT 
-                column_name, data_type 
-            FROM 
-                information_schema.columns 
-            WHERE 
-                is_nullable = 'NO'
-            AND 
-                table_name = '%s'
-            AND 
-                table_schema = '%s';";
+        $sqlStatement = <<<SQL
+SELECT 
+    `column_name` AS `column_name`, 
+    `data_type` AS `data_type` 
+FROM  `information_schema`.`columns` 
+WHERE `is_nullable` = 'NO'
+    AND `table_name` = '%s'
+    AND `table_schema` = '%s'
+SQL;
 
         // Get not null columns
         $sql = sprintf(
