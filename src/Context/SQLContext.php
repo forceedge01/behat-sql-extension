@@ -4,8 +4,6 @@ namespace Genesis\SQLExtension\Context;
 
 use Behat\Behat\Context\Step\Given;
 use Behat\Gherkin\Node\TableNode;
-use Genesis\SQLExtension\Context\DatabaseProviders;
-use Genesis\SQLExtension\Context\Debugger;
 
 /*
  * This file is part of the Behat\SQLExtension
@@ -31,19 +29,21 @@ class SQLContext extends API implements Interfaces\SQLContextInterface
      * @param string $username The username.
      * @param string $password The password.
      * @param string $dbprefix The database prefix to use.
+     * @param int $port
      */
-    public function __construct($engine, $host, $schema, $dbname, $username, $password, $dbprefix)
+    public function __construct($engine, $host, $schema, $dbname, $username, $password, $dbprefix, $port = null)
     {
         // Combine the database connection details and pass on to DBManager.
         // TODO: Create DBConnectionDetails object.
         $dbConnectionDetails = [
             'engine' => $engine,
             'host' => $host,
+            'port' => $port,
             'schema' => $schema,
             'dbname' => $dbname,
             'username' => $username,
             'password' => $password,
-            'dbprefix' => $dbprefix
+            'prefix' => $dbprefix,
         ];
 
         parent::__construct(

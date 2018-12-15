@@ -46,7 +46,7 @@ use Genesis\SQLExtension\Context;
 $databaseParams = [
     'engine' => 'mssql', // The database engine to use, mysql, mssql, pgsql.
     'schema' => 'dbo', // The database schema. Optional.
-    'name' => 'MyDB', // The database name.
+    'dbname' => 'MyDB', // The database name.
     'prefix' => 'dev_', // You can provide a database prefix which could be different based on the environment.
     'host' => '192.168.0.1', // The database host.
     'port' => '9876', // The database port.
