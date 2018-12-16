@@ -43,7 +43,7 @@ class mysql extends BaseProvider
     {
         $sql = sprintf(
             '
-            SELECT `COLUMN_NAME`
+            SELECT `COLUMN_NAME` AS `COLUMN_NAME`
             FROM `information_schema`.`COLUMNS`
             WHERE (`TABLE_SCHEMA` = "%s")
             AND (`TABLE_NAME` = "%s")
@@ -87,7 +87,8 @@ class mysql extends BaseProvider
         // Statement to extract all required columns for a table.
         $sqlStatement = "
             SELECT 
-                `column_name`, `data_type` 
+                `column_name` AS `column_name`,
+                `data_type` AS `data_type`
             FROM 
                 information_schema.columns 
             WHERE 

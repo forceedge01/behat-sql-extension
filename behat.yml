@@ -1,0 +1,12 @@
+default:
+  suites:
+    generic-php55:
+      contexts:
+        - FeatureContext
+        - Genesis\SQLExtension\Context\SQLContext
+  extensions:
+    Genesis\SQLExtension\Extension:
+      connection_details:
+        engine: sqlite
+        dbname: features/mydb.db
+      debug: 2

@@ -88,7 +88,7 @@ class Extension implements ExtensionInterface
                 arrayNode('connection_details')->
                     children()->
                         scalarNode('engine')->
-                            defaultValue('pgsql')->
+                            defaultValue(null)->
                         end()->
                         scalarNode('host')->
                             defaultValue('127.0.0.1')->
@@ -103,7 +103,7 @@ class Extension implements ExtensionInterface
                             defaultValue(null)->
                         end()->
                         scalarNode('username')->
-                            defaultValue('root')->
+                            defaultValue(null)->
                         end()->
                         scalarNode('password')->
                             defaultValue(null)->

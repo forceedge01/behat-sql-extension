@@ -90,7 +90,7 @@ class mysqlTest extends TestHelper
         $database = 'my_app';
         $table = 'user';
         $expectedSql = '
-            SELECT `COLUMN_NAME`
+            SELECT `COLUMN_NAME` AS `COLUMN_NAME`
             FROM `information_schema`.`COLUMNS`
             WHERE (`TABLE_SCHEMA` = "my_app")
             AND (`TABLE_NAME` = "user")
@@ -114,7 +114,7 @@ class mysqlTest extends TestHelper
         $database = 'my_app';
         $table = 'user';
         $expectedSql = '
-            SELECT `COLUMN_NAME`
+            SELECT `COLUMN_NAME` AS `COLUMN_NAME`
             FROM `information_schema`.`COLUMNS`
             WHERE (`TABLE_SCHEMA` = "my_app")
             AND (`TABLE_NAME` = "user")
@@ -140,7 +140,8 @@ class mysqlTest extends TestHelper
         $database = 'mydb';
         $expectedSql = "
             SELECT 
-                `column_name`, `data_type` 
+                `column_name` AS `column_name`,
+                `data_type` AS `data_type`
             FROM 
                 information_schema.columns 
             WHERE 
@@ -169,7 +170,8 @@ class mysqlTest extends TestHelper
         $table = 'user';
         $expectedSql = "
             SELECT 
-                `column_name`, `data_type` 
+                `column_name` AS `column_name`,
+                `data_type` AS `data_type`
             FROM 
                 information_schema.columns 
             WHERE 
