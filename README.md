@@ -9,6 +9,8 @@ Generic library: Provides easy data manipulation with any PDO enabled database f
 - An API for advanced integration.
 - Advanced query internal resolutions for quick setup.
 
+You can find usage examples in the features/test.feature file.
+
 New Features in version 6:
 --------------------------
 - Database providers - now supports mssql, mysql, postgres.
