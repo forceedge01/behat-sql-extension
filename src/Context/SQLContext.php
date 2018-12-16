@@ -22,6 +22,8 @@ use Behat\Gherkin\Node\TableNode;
 class SQLContext extends API implements Interfaces\SQLContextInterface
 {
     /**
+     * Override any of the extension params through the context declaration.
+     *
      * @param string $engine The engine to use.
      * @param string $host The host to connect to.
      * @param string $schema The schema to use.
@@ -31,10 +33,16 @@ class SQLContext extends API implements Interfaces\SQLContextInterface
      * @param string $dbprefix The database prefix to use.
      * @param int $port
      */
-    public function __construct($engine, $host, $schema, $dbname, $username, $password, $dbprefix, $port = null)
-    {
-        // Combine the database connection details and pass on to DBManager.
-        // TODO: Create DBConnectionDetails object.
+    public function __construct(
+        $engine = null,
+        $host = null,
+        $schema = null,
+        $dbname = null,
+        $username = null,
+        $password = null,
+        $dbprefix = null,
+        $port = null
+    ) {
         $dbConnectionDetails = [
             'engine' => $engine,
             'host' => $host,

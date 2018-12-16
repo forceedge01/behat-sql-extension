@@ -1,0 +1,24 @@
+default:
+  suites:
+    generic-php55:
+      contexts:
+        - FeatureContext
+        - Genesis\SQLExtension\Context\SQLContext
+  extensions:
+    Genesis\SQLExtension\Extension:
+      connection_details:
+        engine: sqlite
+        host: localhost
+        # port: 
+        # schema: 
+        dbname: features/mydb.db
+        # username: 
+        # password: 
+        # dbprefix: 
+      # Keywords to be used with the SQL extension steps
+      # keywords:
+      #   ...
+      # notQuotableKeywords:
+      #   ...
+      # 1 for max debug, 2 dumps only SQL queries executed.
+      debug: 1

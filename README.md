@@ -77,9 +77,8 @@ In addition to the usual mink-extension parameters, you can pass in a `connectio
 ```yaml
 default:
     extensions:
+        ...
         Genesis\SQLExtension\Extension:
-          goutte: ~
-          ...
           # Database connection details
           connection_details:
             engine: pgsql
