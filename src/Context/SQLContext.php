@@ -48,7 +48,7 @@ class SQLContext extends API implements Interfaces\SQLContextInterface
             'host' => $host,
             'port' => $port,
             'schema' => $schema,
-            'dbname' => $dbname,
+            'name' => $dbname,
             'username' => $username,
             'password' => $password,
             'prefix' => $dbprefix,

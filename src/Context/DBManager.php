@@ -270,7 +270,7 @@ class DBManager implements Interfaces\DBManagerInterface
 
             // Allow params to be over-ridable.
             $this->params['DBSCHEMA'] = $this->arrayIfElse($dbParams, 'schema', null);
-            $this->params['DBNAME'] = $this->arrayIfElse($dbParams, 'dbname', null);
+            $this->params['DBNAME'] = $this->arrayIfElse($dbParams, 'name', null);
             $this->params['DBPREFIX'] = $this->arrayIfElse($dbParams, 'prefix', null);
             $this->params['DBHOST'] = $this->arrayIfElse($dbParams, 'host', null);
             $this->params['DBPORT'] = $this->arrayIfElse($dbParams, 'port', null);
