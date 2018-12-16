@@ -9,6 +9,8 @@ Generic library: Provides easy data manipulation with any PDO enabled database f
 - An API for advanced integration.
 - Advanced query internal resolutions for quick setup.
 
+You can find usage examples in the features/test.feature file.
+
 New Features in version 6:
 --------------------------
 - Database providers - now supports mssql, mysql, postgres.
@@ -41,7 +43,7 @@ use Genesis\SQLExtension\Context;
 $databaseParams = [
     'engine' => 'mssql', // The database engine to use, mysql, mssql, pgsql.
     'schema' => 'dbo', // The database schema. Optional.
-    'name' => 'MyDB', // The database name.
+    'dbname' => 'MyDB', // The database name.
     'prefix' => 'dev_', // You can provide a database prefix which could be different based on the environment.
     'host' => '192.168.0.1', // The database host.
     'port' => '9876', // The database port.
@@ -72,9 +74,8 @@ In addition to the usual mink-extension parameters, you can pass in a `connectio
 ```yaml
 default:
     extensions:
+        ...
         Genesis\SQLExtension\Extension:
-          goutte: ~
-          ...
           # Database connection details
           connection_details:
             engine: pgsql

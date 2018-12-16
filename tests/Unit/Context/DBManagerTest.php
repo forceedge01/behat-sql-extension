@@ -54,9 +54,33 @@ class DBManagerTest extends TestHelper
      */
     public function testGetParams()
     {
-        $result = $this->testObject->getParams();
+        $dbParams = [
+            'engine' => 'mysql',
+            'host' => 'localhost',
+            'port' => '3600',
+            'schema' => 'myschema',
+            'dbname' => 'my-special-db',
+            'username' => 'root',
+            'password' => 'toor',
+            'prefix' => 'dev_'
+        ];
 
-        $this->assertInternalType('array', $result);
+        $providerFactoryMock = $this->createMock(DatabaseProviderFactoryInterface::class);
+        $providerFactoryMock->expects($this->any())
+            ->method('getProvider')
+            ->willReturn($this->dependencies['databaseProvider']);
+
+        $dbManager = new DBManager($providerFactoryMock, $dbParams);
+        $params = $dbManager->getParams();
+
+        self::assertEquals($params['DBSCHEMA'], $dbParams['schema']);
+        self::assertEquals($params['DBNAME'], $dbParams['dbname']);
+        self::assertEquals($params['DBPREFIX'], $dbParams['prefix']);
+        self::assertEquals($params['DBHOST'], $dbParams['host']);
+        self::assertEquals($params['DBPORT'], $dbParams['port']);
+        self::assertEquals($params['DBUSER'], $dbParams['username']);
+        self::assertEquals($params['DBPASSWORD'], $dbParams['password']);
+        self::assertEquals($params['DBENGINE'], $dbParams['engine']);
     }
 
     public function testGetSetConnectionAlreadySet()
