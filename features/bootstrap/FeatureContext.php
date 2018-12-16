@@ -50,28 +50,6 @@ class FeatureContext implements Context
         $sqlContext = $scope->getEnvironment()->getContext(SQLContext::class);
         $pdoConnection = $sqlContext->get('dbManager')->getConnection();
 
-        // $result = $pdoConnection->query('select * from User');
-
-        // // BEGIN PREX
-        // $vars = array(
-        //     $result->fetchAll(),
-        //     //get_class($result),
-        //     //get_class_methods($result),
-        //     //get_defined_vars(),
-        //     //get_defined_constants(),
-        // );
-        // echo '<pre>';
-        // foreach ($vars as $key => $var) {
-        //     var_dump($var);
-        //     echo PHP_EOL . '===============================' . PHP_EOL . PHP_EOL;
-        // }
-        // echo 'Debug backtrace ' . PHP_EOL;
-        // print_r(debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 5));
-        // echo 'PREX output from: ' . __FILE__ . ', Line: ' . __LINE__;
-        // exit;
-        // // END PREX
-        
-
         $pdoConnection->query(
             'DROP TABLE User;'
         );
