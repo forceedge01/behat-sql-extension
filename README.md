@@ -25,6 +25,7 @@ Patch fix:
 ------------
 - 1: Added behat tests to self validate context, more unit tests to validate database params passed in by behat.yml and other sources.
 - 2: Revert index name from dbname to name as it isn't backwards compatible change.
+- 3: Allow both name or dbname to be passed in for consistency and backwards compatibility.
 
 Installation
 ------------
@@ -44,7 +45,7 @@ use Genesis\SQLExtension\Context;
 $databaseParams = [
     'engine' => 'mssql', // The database engine to use, mysql, mssql, pgsql.
     'schema' => 'dbo', // The database schema. Optional.
-    'name' => 'MyDB', // The database name.
+    'dbname' => 'MyDB', // The database name.
     'prefix' => 'dev_', // You can provide a database prefix which could be different based on the environment.
     'host' => '192.168.0.1', // The database host.
     'port' => '9876', // The database port.
