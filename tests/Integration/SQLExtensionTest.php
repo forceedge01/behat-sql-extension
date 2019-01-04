@@ -705,7 +705,7 @@ class SQLExtensionTest extends TestHelper
                 // Call for the external reference.
                 $this->getPdoStatementWithRows(1, [[0 => '17', 'id' => '17']]),
                 // Call to get the required columns.
-                $this->getPdoStatementWithRows(1, [['column_name' => 'column4', 'data_type' => 'datetime']]),
+                $this->getPdoStatementWithRows(1, [['column_name' => 'column4', 'data_type' => 'datetime', 'data_length' => null]]),
                 // Insert the new record.
                 $this->getPdoStatementWithRows(1, true),
                 // Call to get the record back with the newly created data.
