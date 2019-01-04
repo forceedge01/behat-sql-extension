@@ -785,6 +785,23 @@ class SQLHandler implements Context, Interfaces\SQLHandlerInterface
     }
 
     /**
+     * @return Representations\Query
+     */
+    public function getSampleInsertQuery($table, $values)
+    {
+        $entity = $this->resolveEntity($table);
+        $resolvedValues = $this->resolveQuery($values);
+        $queryParams = new Representations\QueryParams($entity, $values, $resolvedValues);
+        list($columnNames, $columnValues) = $this->getTableColumns(
+            $queryParams->getEntity(),
+            $queryParams->getResolvedValues()
+        );
+        $insertQueryBuilder = new Builder\InsertQueryBuilder($queryParams, $columnNames, $columnValues);
+
+        return Builder\QueryDirector::build($insertQueryBuilder);
+    }
+
+    /**
      * @param array $values The values to resolve.
      *
      * @return array

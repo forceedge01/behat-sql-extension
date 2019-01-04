@@ -316,6 +316,7 @@ class SQLBuilder implements Interfaces\SQLBuilderInterface
                 break;
             case 'tinyint':
             case 'smallint':
+            case 'decimal':
                 $value = rand(0, 9);
                 break;
             case 'string':
