@@ -102,7 +102,7 @@ class mysql extends BaseProvider
         $sql = sprintf(
             $sqlStatement,
             $table,
-            $schema
+            $schema ? $schema : $database
         );
 
         // Reset schema after the fields have been extracted.
