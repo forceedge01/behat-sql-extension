@@ -20,15 +20,11 @@ New Feature in Minor:
 - 1: OBDC Support added.
 - 2: Debug mode options provided.
 - 3: Support for sqlite.
+- 4: Allow sample sql statement generation.
 
 Patch fix:
 ------------
-- 1: Added behat tests to self validate context, more unit tests to validate database params passed in by behat.yml and other sources.
-- 2: Revert index name from dbname to name as it isn't backwards compatible change.
-- 3: Allow both name or dbname to be passed in for consistency and backwards compatibility.
-- 4: Use database name from basic config if not provided individually for entity.
-- 5: Dynamically fetch column character length for mysql db.
-- 6: Allow smaple data be generated for bigint type.
+- None
 
 Installation
 ------------
