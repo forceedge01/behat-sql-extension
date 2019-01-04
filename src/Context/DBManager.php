@@ -125,10 +125,11 @@ class DBManager implements Interfaces\DBManagerInterface
     public function getPrimaryKeyForTable($database, $schema, $table)
     {
         $keyReference = $database . $schema . $table;
+        $databaseToUse = $this->getParams()['DBPREFIX'] . ($database ? $database : $this->getParams()['DBNAME']);
 
         if (! isset(self::$primaryKeys[$keyReference])) {
             self::$primaryKeys[$keyReference] = $this->databaseProvider->getPrimaryKeyForTable(
-                $database,
+                $databaseToUse,
                 $schema,
                 $table
             );
@@ -193,10 +194,11 @@ class DBManager implements Interfaces\DBManagerInterface
     public function getRequiredTableColumns($database, $schema, $table)
     {
         $requiredColumnReference = $database . $schema . $table;
+        $databaseToUse = $this->getParams()['DBPREFIX'] . ($database ? $database : $this->getParams()['DBNAME']);
 
         if (! isset(self::$requiredColumns[$requiredColumnReference])) {
             self::$requiredColumns[$requiredColumnReference] = $this->databaseProvider->getRequiredTableColumns(
-                $database,
+                $databaseToUse,
                 $schema,
                 $table
             );

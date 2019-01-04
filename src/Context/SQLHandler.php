@@ -602,19 +602,32 @@ class SQLHandler implements Context, Interfaces\SQLHandlerInterface
         switch (count($result)) {
             // Just the table name.
             case 1:
-                $this->entity = new Entity($inputEntity, $result[0]);
+                $dbname = null;//$this->getParams()['DBPREFIX'] . $this->getParams()['DBNAME'];
+                $schema = null;//$this->getParams()['DBSCHEMA'];
+                $table = $result[0];
                 break;
             // Database and table name;
             case 2:
-                $this->entity = new Entity($inputEntity, $result[1], $this->getParams()['DBPREFIX'] . $result[0]);
+                $dbname = $this->getParams()['DBPREFIX'] . $result[0];
+                $schema = null;//$this->getParams()['DBSCHEMA'];
+                $table = $result[1];
                 break;
             // Scheme provided as well.
             case 3:
-                $this->entity = new Entity($inputEntity, $result[2], $this->getParams()['DBPREFIX'] . $result[0], $result[1]);
+                $dbname = $this->getParams()['DBPREFIX'] . $result[0];
+                $schema = $result[1];
+                $table = $result[2];
                 break;
             default:
                 throw new Exception('Explode produced too many chunks of the entity to handle.');
         }
+
+        $this->entity = new Entity(
+            $inputEntity,
+            $table,
+            $dbname,
+            $schema
+        );
 
         $this->debugLog(sprintf('SET ENTITY: %s', $this->entity->getEntityName()));
 
