@@ -87,8 +87,9 @@ class mysql extends BaseProvider
         // Statement to extract all required columns for a table.
         $sqlStatement = "
             SELECT 
-                `column_name` AS `column_name`,
-                `data_type` AS `data_type`
+                `{$this->getColumnNameFieldName()}` AS `column_name`,
+                `{$this->getDataTypeFieldName()}` AS `data_type`,
+                `{$this->getMaxCharacterFieldName()}` AS data_length
             FROM 
                 information_schema.columns 
             WHERE 
@@ -119,11 +120,35 @@ class mysql extends BaseProvider
             foreach ($result as $column) {
                 $cols[$column['column_name']] = [
                     'type' => $column['data_type'],
-                    'length' => 5000
+                    'length' => $column['data_length'] ? $column['data_length'] : 5000
                 ];
             }
         }
 
         return $cols;
+    }
+
+    /**
+     * @return string
+     */
+    protected function getColumnNameFieldName()
+    {
+        return 'column_name';
+    }
+
+    /**
+     * @return string
+     */
+    protected function getDataTypeFieldName()
+    {
+        return 'data_type';
+    }
+
+    /**
+     * @return string
+     */
+    protected function getMaxCharacterFieldName()
+    {
+        return 'character_maximum_length';
     }
 }
