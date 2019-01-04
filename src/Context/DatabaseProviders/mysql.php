@@ -89,7 +89,7 @@ class mysql extends BaseProvider
             SELECT 
                 `{$this->getColumnNameFieldName()}` AS `column_name`,
                 `{$this->getDataTypeFieldName()}` AS `data_type`,
-                `{$this->getMaxCharacterFieldName()}` AS data_length
+                `{$this->getMaxCharacterFieldName()}` AS `data_length`
             FROM 
                 information_schema.columns 
             WHERE 
