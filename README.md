@@ -28,6 +28,7 @@ Patch fix:
 - 3: Allow both name or dbname to be passed in for consistency and backwards compatibility.
 - 4: Use database name from basic config if not provided individually for entity.
 - 5: Dynamically fetch column character length for mysql db.
+- 6: Allow smaple data be generated for bigint type.
 
 Installation
 ------------
