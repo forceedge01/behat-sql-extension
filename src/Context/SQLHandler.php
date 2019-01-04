@@ -602,14 +602,14 @@ class SQLHandler implements Context, Interfaces\SQLHandlerInterface
         switch (count($result)) {
             // Just the table name.
             case 1:
-                $dbname = null;//$this->getParams()['DBPREFIX'] . $this->getParams()['DBNAME'];
-                $schema = null;//$this->getParams()['DBSCHEMA'];
+                $dbname = null;
+                $schema = null;
                 $table = $result[0];
                 break;
             // Database and table name;
             case 2:
                 $dbname = $this->getParams()['DBPREFIX'] . $result[0];
-                $schema = null;//$this->getParams()['DBSCHEMA'];
+                $schema = null;
                 $table = $result[1];
                 break;
             // Scheme provided as well.
