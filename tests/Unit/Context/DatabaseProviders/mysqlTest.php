@@ -141,7 +141,8 @@ class mysqlTest extends TestHelper
         $expectedSql = "
             SELECT 
                 `column_name` AS `column_name`,
-                `data_type` AS `data_type`
+                `data_type` AS `data_type`,
+                `character_maximum_length` AS `data_length`
             FROM 
                 information_schema.columns 
             WHERE 
@@ -171,7 +172,8 @@ class mysqlTest extends TestHelper
         $expectedSql = "
             SELECT 
                 `column_name` AS `column_name`,
-                `data_type` AS `data_type`
+                `data_type` AS `data_type`,
+                `character_maximum_length` AS `data_length`
             FROM 
                 information_schema.columns 
             WHERE 
@@ -185,14 +187,14 @@ class mysqlTest extends TestHelper
             ->method('execute')
             ->with($expectedSql)
             ->will($this->returnValue($this->getPdoStatementWithRows(2, [
-                    ['column_name' => 'id', 'data_type' => 'int'],
-                    ['column_name' => 'name', 'data_type' => 'string']
+                    ['column_name' => 'id', 'data_type' => 'int', 'data_length' => null],
+                    ['column_name' => 'name', 'data_type' => 'string', 'data_length' => '500'],
             ])));
 
         $result = $this->testObject->getRequiredTableColumns(null, $dbSchema, $table);
         $expectedResult = [
             'id' => ['type' => 'int', 'length' => 5000],
-            'name' => ['type' => 'string', 'length' => 5000]
+            'name' => ['type' => 'string', 'length' => 500]
         ];
 
         $this->assertEquals($expectedResult, $result);
