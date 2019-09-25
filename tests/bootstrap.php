@@ -4,7 +4,7 @@ require __DIR__ . '/../vendor/autoload.php';
 
 date_default_timezone_set('Europe/London');
 
-session_start();
+$_SESSION = [];
 
 // Necessary vars for testing.
 DEFINE('SQLDBENGINE', 'mysql');
