@@ -25,7 +25,8 @@
          }
     },
     "suggest": {
-        "genesis/sql-api-wrapper": "Extends behat-sql-extension to provide a powerful and simple framework to manage your data modules.",
-        "genesis/test-routing": "Simplistic routing that can extend main app routing for testing purposes."
+        "genesis/sql-data-mods": "Extends behat-sql-extension to provide a powerful and simple framework to manage your data modules.",
+        "genesis/test-routing": "Simplistic routing that can extend main app routing for testing purposes.",
+        "genesis/behat-fail-aid": "Give your failures clarity and save time."
     }
 }

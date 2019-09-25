@@ -119,12 +119,11 @@ class API extends SQLHandler implements Interfaces\APIInterface
     public function update($table, array $with, array $where)
     {
         $this->debugLog('------- UPDATE -------');
+        $entity = $this->resolveEntity($table);
 
         if (! $where) {
-            throw new Exception('You must provide a where clause!');
+            throw new Exceptions\UpdateException($entity, new Exception('You must provide a where clause!'));
         }
-
-        $entity = $this->resolveEntity($table);
         $this->setCommandType(SQLHandlerInterface::COMMAND_TYPE_UPDATE);
 
         // Build up the update clause.
@@ -172,12 +171,12 @@ class API extends SQLHandler implements Interfaces\APIInterface
     public function delete($table, array $where)
     {
         $this->debugLog('------- DELETE -------');
+        $entity = $this->resolveEntity($table);
 
         if (! $where) {
-            throw new Exception('You must provide a where clause!');
+            throw new Exceptions\DeleteException($entity, new Exception('You must provide a where clause!'));
         }
 
-        $entity = $this->resolveEntity($table);
         $this->setCommandType(SQLHandlerInterface::COMMAND_TYPE_DELETE);
         $resolvedValues = $this->resolveQuery($where);
 
