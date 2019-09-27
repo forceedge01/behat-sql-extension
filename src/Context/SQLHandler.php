@@ -83,9 +83,9 @@ class SQLHandler implements Context, Interfaces\SQLHandlerInterface
     /**
      * Construct the object.
      *
-     * @param Interfaces\DBManagerInterface $dbManager
-     * @param Interfaces\SQLBuilderInterface $sqlBuilder
-     * @param Interfaces\KeyStoreInterface $keyStore
+     * @param Interfaces\DBManagerInterface       $dbManager
+     * @param Interfaces\SQLBuilderInterface      $sqlBuilder
+     * @param Interfaces\KeyStoreInterface        $keyStore
      * @param Interfaces\SQLHistoryInterface|null $sqlHistory
      */
     public function __construct(
@@ -157,7 +157,7 @@ class SQLHandler implements Context, Interfaces\SQLHandlerInterface
      *
      * @param string $commandType
      * @param string $glue
-     * @param array $columns
+     * @param array  $columns
      *
      * @return array
      */
@@ -255,14 +255,14 @@ class SQLHandler implements Context, Interfaces\SQLHandlerInterface
      * Sets a behat keyword.
      *
      * @param string $key
-     * @param mixed $value
+     * @param mixed  $value
      */
     public function setKeyword($key, $value)
     {
         $this->debugLog(sprintf(
             'Saving keyword "%s" with value "%s"',
             $key,
-            $value
+            print_r($value, true)
         ));
 
         return $this->keyStore->setKeyword($key, $value);
@@ -352,9 +352,9 @@ class SQLHandler implements Context, Interfaces\SQLHandlerInterface
      * @param string $commandType
      * @param string $entityName
      * @param string $sql
-     * @param int $lastId
+     * @param int    $lastId
      *
-     * @return this
+     * @return $this
      */
     private function recordHistory($commandType, $entityName, $sql, $lastId)
     {
@@ -375,6 +375,7 @@ class SQLHandler implements Context, Interfaces\SQLHandlerInterface
      *
      * @param mixed $entity
      * @param mixed $id
+     * @param mixed $rawTable
      */
     protected function saveLastId($rawTable, $id)
     {
@@ -474,7 +475,8 @@ class SQLHandler implements Context, Interfaces\SQLHandlerInterface
      * Set the record as keywords for re-use.
      *
      * @param string $entity
-     * @param array $record
+     * @param array  $record
+     * @param mixed  $rawTable
      *
      * @return array
      */
@@ -494,7 +496,7 @@ class SQLHandler implements Context, Interfaces\SQLHandlerInterface
      * Do what needs to be done with the last insert id.
      *
      * @param Entity $entity
-     * @param mixed $id
+     * @param mixed  $id
      */
     public function handleLastId(Entity $entity, $id)
     {
@@ -506,8 +508,8 @@ class SQLHandler implements Context, Interfaces\SQLHandlerInterface
     /**
      * Gets table columns and its values.
      *
-     * @param string $entity The table to get the columns of.
-     * @param array $overridingColumns The overriding columns.
+     * @param string $entity            The table to get the columns of.
+     * @param array  $overridingColumns The overriding columns.
      *
      * @return array
      */
@@ -550,7 +552,7 @@ class SQLHandler implements Context, Interfaces\SQLHandlerInterface
     }
 
     /**
-     * @param  TableNode $node The node with all fields and data.
+     * @param TableNode $node The node with all fields and data.
      *
      * @return array The queries built of the TableNode.
      */
@@ -560,7 +562,7 @@ class SQLHandler implements Context, Interfaces\SQLHandlerInterface
     }
 
     /**
-     * @param  TableNode $node The node with all fields and data.
+     * @param TableNode $node The node with all fields and data.
      *
      * @return array The queries built of the TableNode.
      */
@@ -581,6 +583,7 @@ class SQLHandler implements Context, Interfaces\SQLHandlerInterface
      * Set the entity for further processing.
      *
      * @param Entity $entity
+     * @param mixed  $inputEntity
      */
     public function resolveEntity($inputEntity)
     {
@@ -786,6 +789,8 @@ class SQLHandler implements Context, Interfaces\SQLHandlerInterface
 
     /**
      * @return Representations\Query
+     * @param  mixed                 $table
+     * @param  mixed                 $values
      */
     public function getSampleInsertQuery($table, $values)
     {
@@ -817,7 +822,7 @@ class SQLHandler implements Context, Interfaces\SQLHandlerInterface
 
     /**
      * @param string $commandType The command type.
-     * @param array $query The query to resolve to sql clause.
+     * @param array  $query       The query to resolve to sql clause.
      *
      * @return string
      */
