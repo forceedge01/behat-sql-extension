@@ -146,6 +146,54 @@ class SQLBuilderTest extends TestHelper
     }
 
     /**
+     * testconstructSQLClause Test that constructSQLClause executes as expected with a not.
+     */
+    public function testconstructSQLClauseGreaterThan()
+    {
+        $_SESSION['behat']['GenesisSqlExtension']['keywords'] = [];
+        $_SESSION['behat']['GenesisSqlExtension']['notQuotableKeywords'] = [];
+
+        // Prepare / Mock
+        $glue = ' - ';
+        $columns = [
+            'firstname' => '>Abdul',
+            'lastname' => '>5'
+        ];
+
+        // Execute
+        $result = $this->testObject->constructSQLClause('select', $glue, $columns);
+
+        $expected = "`firstname` = '>Abdul' - `lastname` > 5";
+
+        // Assert Result
+        $this->assertEquals($expected, $result);
+    }
+
+    /**
+     * testconstructSQLClause Test that constructSQLClause executes as expected with a not.
+     */
+    public function testconstructSQLClauseLessThan()
+    {
+        $_SESSION['behat']['GenesisSqlExtension']['keywords'] = [];
+        $_SESSION['behat']['GenesisSqlExtension']['notQuotableKeywords'] = [];
+
+        // Prepare / Mock
+        $glue = ' - ';
+        $columns = [
+            'firstname' => '<Abdul',
+            'lastname' => '<2019-05-31'
+        ];
+
+        // Execute
+        $result = $this->testObject->constructSQLClause('select', $glue, $columns);
+
+        $expected = "`firstname` = '<Abdul' - `lastname` < '2019-05-31'";
+
+        // Assert Result
+        $this->assertEquals($expected, $result);
+    }
+
+    /**
      * testconstructSQLClause Test that constructSQLClause executes as expected.
      */
     public function testconstructSQLClause()

@@ -22,7 +22,7 @@ class SQLBuilder implements Interfaces\SQLBuilderInterface
     /**
      * @param DatabaseProviderInterface $databaseProvider
      *
-     * @return this
+     * @return $this
      */
     public function setDatabaseProvider(DatabaseProviderInterface $databaseProvider)
     {
@@ -34,7 +34,7 @@ class SQLBuilder implements Interfaces\SQLBuilderInterface
      *
      * @param string $commandType
      * @param string $glue
-     * @param array $columns
+     * @param array  $columns
      *
      * @return string
      */
@@ -45,7 +45,7 @@ class SQLBuilder implements Interfaces\SQLBuilderInterface
         $rightDelimiter = $this->databaseProvider->getRightDelimiterForReservedWord();
 
         foreach ($columns as $column => $value) {
-            $newValue = ltrim($value, '!');
+            $newValue = $this->cleanValue($value);
             $quotedValue = $this->quoteOrNot($newValue);
             $comparator = $this->getComparatorFromValue(
                 $value,
@@ -70,43 +70,77 @@ class SQLBuilder implements Interfaces\SQLBuilderInterface
     }
 
     /**
+     * Clean value up from DSL syntax.
+     *
+     * @param string $value
+     *
+     * @return string
+     */
+    private function cleanValue($value)
+    {
+        $trimmed = ltrim($value, '!');
+
+        // Safely remove the greater or less symbol if the resulting value is a numeric or date.
+        if (strpos($trimmed, '<') === 0 || strpos($trimmed, '>') === 0) {
+            $numericValue = ltrim($trimmed, '<>');
+
+            if (is_numeric($numericValue)
+                || preg_match('/^\d{4}-\d{2}-\d{2}/', $numericValue) === 1
+            ) {
+                return $numericValue;
+            }
+        }
+
+        return $trimmed;
+    }
+
+    /**
      * Gets the comparator based on the value provided.
      * This could be =, LIKE, != or something else based on the value.
      *
-     * @param string $value The value that holds the comparator info.
-     * @param string $glue The glue used for the clause construction.
+     * @param string $value       The value that holds the comparator info.
+     * @param string $glue        The glue used for the clause construction.
      * @param string $commandType The command type being constructed.
      *
-     * @return string
+     * @return array
      */
     private function getComparatorFromValue($value, $glue, $commandType)
     {
         $comparator = '%s=';
         $notOperator = '';
-        $newValue = ltrim($value, '!');
+        $newValue = $this->cleanValue($value);
 
-        // Check if the supplied value is null and that the construct is not for insert and update,
-        // if so change the format.
-        if (strtolower($newValue) == 'null' and
-            trim($glue) != ',' and
-            in_array($commandType, ['update', 'select', 'delete'])) {
+        if (strtolower($newValue) == 'null'
+            && trim($glue) != ','
+            && in_array($commandType, ['update', 'select', 'delete'])
+        ) {
+            // Check if the supplied value is null and that the construct is not for insert and update,
+            // if so change the format.
             $comparator = 'is%s';
+        } elseif (preg_match('/^%.+%$/', $value)) {
+            // Check if the value is surrounded by wildcards. If so, we'll want to use a LIKE comparator.
+            $comparator = 'LIKE';
+        } elseif (is_numeric($newValue)
+            || preg_match('/^\d{4}-\d{2}-\d{2}/', $newValue) === 1
+        ) {
+            // Apply greater or less than on numbers and date values only.
+            if (strpos($value, '>') === 0) {
+                $comparator = '>';
+            } elseif (strpos($value, '<') === 0) {
+                $comparator = '<';
+            }
         }
 
         // Check if a not is applied to the value.
         if (strpos($value, '!') === 0) {
-            if (strtolower($newValue) == 'null' and
-            trim($glue) != ',' and
-            in_array($commandType, ['update', 'select', 'delete'])) {
+            if (strtolower($newValue) == 'null'
+                && trim($glue) != ','
+                && in_array($commandType, ['update', 'select', 'delete'])
+            ) {
                 $notOperator = ' not';
             } else {
                 $notOperator = '!';
             }
-        }
-
-        // Check if the value is surrounded by wildcards. If so, we'll want to use a LIKE comparator.
-        if (preg_match('/^%.+%$/', $value)) {
-            $comparator = 'LIKE';
         }
 
         return sprintf($comparator, $notOperator);
@@ -295,9 +329,9 @@ class SQLBuilder implements Interfaces\SQLBuilderInterface
      * returns sample data for a data type.
      *
      * @param array $type [
-     *     'type' => '<type>',
-     *     'length' => <length>
-     * ]
+     *                    'type' => '<type>',
+     *                    'length' => <length>
+     *                    ]
      *
      * @return string|bool
      */
@@ -353,7 +387,7 @@ class SQLBuilder implements Interfaces\SQLBuilderInterface
                 }
                 break;
         }
-        
+
         return $value;
     }
 
@@ -417,7 +451,7 @@ class SQLBuilder implements Interfaces\SQLBuilderInterface
      * Get single query for the external reference.
      *
      * @param string $externalRef The external ref enclosed in [].
-     * @param string $prefix The database prefix.
+     * @param string $prefix      The database prefix.
      *
      * @return Representations\Query
      */
@@ -459,7 +493,7 @@ class SQLBuilder implements Interfaces\SQLBuilderInterface
     }
 
     /**
-     * @param string $table
+     * @param string      $table
      * @param string|null $prefix
      *
      * @return Entity
@@ -494,7 +528,7 @@ class SQLBuilder implements Interfaces\SQLBuilderInterface
      * Get the qualified table name.
      *
      * @param string $prefix The db prefix.
-     * @param string $table The table name.
+     * @param string $table  The table name.
      *
      * @return string
      */
@@ -563,8 +597,8 @@ class SQLBuilder implements Interfaces\SQLBuilderInterface
      * Prepends the prefix.
      *
      * @param string $prefix The prefix to prepend.
-     * @param string $table The table to prefix.
-     * @param mixed $entity
+     * @param string $table  The table to prefix.
+     * @param mixed  $entity
      *
      * @return string|null If no database name is given, returns null.
      */
