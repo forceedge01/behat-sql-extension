@@ -480,6 +480,64 @@ class SQLExtensionTest extends TestHelper
     }
 
     /**
+     * Test that this method works with values provided.
+     *
+     * @group test
+     */
+    public function testiShouldHaveAWithInvalidGreaterLessThanValues()
+    {
+        $entity = 'database.someTable4';
+        $with = "column1:>abc,column2:<xyz,column3:NULL,column4:!NULL,column5:what's up doc";
+        $this->testObject->get('dbManager')->getConnection()->expects($this->any())
+            ->method('prepare')
+            ->with($this->isType('string'))
+            ->willReturn($this->getPdoStatementWithRows(true, [[0 => 'id']]));
+
+        $result = $this->testObject->iShouldHaveAWith($entity, $with);
+        // Expected SQL.
+        $expectedSQL = "SELECT * FROM dev_database.someTable4 WHERE `column1` = '>abc' AND `column2` = '<xyz' AND `column3` is NULL AND `column4` is not NULL AND `column5` = 'what\'s up doc'";
+        // Assert.
+        $this->assertEquals($expectedSQL, $result);
+        $this->assertNotNull($this->testObject->getEntity());
+        $this->assertEquals('select', $this->testObject->getCommandType());
+
+        // Check history.
+        $this->assertCount(0, $this->testObject->get('sqlHistory')->getHistory()['insert']);
+        $this->assertCount(1, $this->testObject->get('sqlHistory')->getHistory()['select']);
+        $this->assertCount(0, $this->testObject->get('sqlHistory')->getHistory()['delete']);
+        $this->assertCount(0, $this->testObject->get('sqlHistory')->getHistory()['update']);
+    }
+
+    /**
+     * Test that this method works with values provided.
+     *
+     * @group test
+     */
+    public function testiShouldHaveAWithValidGreaterLessThanValues()
+    {
+        $entity = 'database.someTable4';
+        $with = "column1:>5,column2:<1970-01-01,column3:NULL,column4:!NULL,column5:what's up doc";
+        $this->testObject->get('dbManager')->getConnection()->expects($this->any())
+            ->method('prepare')
+            ->with($this->isType('string'))
+            ->willReturn($this->getPdoStatementWithRows(true, [[0 => 'id']]));
+
+        $result = $this->testObject->iShouldHaveAWith($entity, $with);
+        // Expected SQL.
+        $expectedSQL = "SELECT * FROM dev_database.someTable4 WHERE `column1` > 5 AND `column2` < '1970-01-01' AND `column3` is NULL AND `column4` is not NULL AND `column5` = 'what\'s up doc'";
+        // Assert.
+        $this->assertEquals($expectedSQL, $result);
+        $this->assertNotNull($this->testObject->getEntity());
+        $this->assertEquals('select', $this->testObject->getCommandType());
+
+        // Check history.
+        $this->assertCount(0, $this->testObject->get('sqlHistory')->getHistory()['insert']);
+        $this->assertCount(1, $this->testObject->get('sqlHistory')->getHistory()['select']);
+        $this->assertCount(0, $this->testObject->get('sqlHistory')->getHistory()['delete']);
+        $this->assertCount(0, $this->testObject->get('sqlHistory')->getHistory()['update']);
+    }
+
+    /**
      * Test that this method works with values containing wildcards for a LIKE search.
      *
      * @group test
@@ -717,7 +775,7 @@ class SQLExtensionTest extends TestHelper
             ->willReturn(5);
 
         $result = $this->testObject->iHaveAWhere($entity, $column);
-        
+
         // Expected SQL.
         $expectedSQL = "INSERT INTO dev_database.unique (`column4`, `column1`, `column2`, `column3`) VALUES (CURRENT_TIMESTAMP, 'abc', 17, 'what\'s up doc')";
 
