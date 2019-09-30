@@ -20,6 +20,7 @@ New Feature in Minor:
 - 1: OBDC Support added.
 - 2: Debug mode options provided.
 - 3: Support for sqlite.
+- 4: Apply greater than or less than operators.
 
 Patch fix:
 ------------
@@ -246,6 +247,20 @@ You can perform a LIKE clause with the following format:
 ```
 Then I should have a "user" with "user_agent:%Firefox%" in the database
 ```
+
+### Greater than or less than comparison.
+
+In order to apply greater than or less than comparisons:
+
+```
+Then I should have a "user" with "dob:>2001-01-01" in the database
+```
+OR
+```
+Then I should have a "user" with "age:<18" in the database
+```
+
+Note: These operators are only applicable on numbers and date formats (yyyy-mm-dd).
 
 ### Re-using values from another record
 
