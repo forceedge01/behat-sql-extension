@@ -54,7 +54,7 @@ $databaseParams = [
     'host' => '192.168.0.1', // The database host.
     'port' => '9876', // The database port.
     'username' => 'db_username', // The username for the database.
-    'password => 'db_password' // The password for the database.
+    'password' => 'db_password' // The password for the database.
 ];
 
 $this->sqlContext = new Context\API(
