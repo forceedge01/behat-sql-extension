@@ -8,7 +8,7 @@ class LocalKeyStore implements Interfaces\KeyStoreInterface
      * Sets a behat keyword.
      *
      * @param string $key
-     * @param mixed $value
+     * @param mixed  $value
      *
      * @return $this
      */
@@ -71,20 +71,22 @@ class LocalKeyStore implements Interfaces\KeyStoreInterface
     /**
      * Provide a string with keywords to be parsed.
      *
-     * @param string $string The string to parse.
+     * @param string   $string  The string to parse.
+     * @param callable $closure A custom closure method to manipulate the replaced value even further.
      *
      * @return string
      */
-    public function parseKeywordsInString($string)
+    public function parseKeywordsInString($string, callable $closure = null)
     {
         $matches = [];
 
         // Extract potential keywords
         preg_match_all('/({.+?})/', $string, $matches);
+        $func = $closure ? $closure : 'str_replace';
 
         if (isset($matches[0])) {
             foreach ($matches[0] as $match) {
-                $string = str_replace($match, $this->getKeywordIfExists($match), $string);
+                $string = $func($match, $this->getKeywordIfExists($match), $string);
             }
         }
 
