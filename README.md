@@ -225,14 +225,14 @@ Given I have an existing "@table" with "@update" where "@where"
 ### Using the not operator.
 
 You can use the not operator to say a column should not be equal to value as follows:
-```
+```gherkin
 Then I should have a "user" with "email:its.inevitable@hotmail.com, active: !null" in the database
 ```
 
 This will generate `active is not null`. For a value other than null it would generate`column != value`.
 
 The same can be written as:
-```
+```gherkin
 Then I should have a "user" with:
     | column | value                      |
     | email  | its.inevitable@hotmail.com |
@@ -244,7 +244,7 @@ Note the top row is just explanatory, it will not be used as part of the query.
 
 You can perform a LIKE clause with the following format:
 
-```
+```gherkin
 Then I should have a "user" with "user_agent:%Firefox%" in the database
 ```
 
@@ -252,11 +252,11 @@ Then I should have a "user" with "user_agent:%Firefox%" in the database
 
 In order to apply greater than or less than comparisons:
 
-```
+```gherkin
 Then I should have a "user" with "dob:>2001-01-01" in the database
 ```
 OR
-```
+```gherkin
 Then I should have a "user" with "age:<18" in the database
 ```
 
