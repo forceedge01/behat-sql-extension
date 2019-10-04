@@ -81,6 +81,28 @@ class dblib extends BaseProvider
         self::$primaryKeys[$key] = false;
         if (isset($result[0]['PRIMARYKEYCOLUMN'])) {
             self::$primaryKeys[$key] = $result[0]['PRIMARYKEYCOLUMN'];
+        } else {
+            // Try to find the auto increment id in the table if it exists and treat that as the id.
+            $sql = "
+                SELECT
+                    TABLE_NAME as TABLENAME, COLUMN_NAME as PRIMARYKEYCOLUMN
+                FROM
+                    information_schema.columns TC
+                WHERE
+                    TABLE_NAME = '$table'
+                AND
+                    IS_NULLABLE = 'NO'
+                AND
+                    COLUMNPROPERTY(object_id(TABLE_SCHEMA+'.'+TABLE_NAME), COLUMN_NAME, 'IsIdentity') = 1
+            ";
+
+            $statement = $this->getExecutor()->execute($sql);
+            $result = $statement->fetchAll();
+            $this->getExecutor()->closeStatement($statement);
+
+            if (isset($result[0]['PRIMARYKEYCOLUMN'])) {
+                self::$primaryKeys[$key] = $result[0]['PRIMARYKEYCOLUMN'];
+            }
         }
 
         return self::$primaryKeys[$key];
@@ -113,6 +135,8 @@ class dblib extends BaseProvider
                 TABLE_NAME = '$table'
             AND
                 IS_NULLABLE = 'NO'
+            AND
+                COLUMNPROPERTY(object_id(TABLE_SCHEMA+'.'+TABLE_NAME), COLUMN_NAME, 'IsIdentity') != 1
             AND
                 Column_DEFAULT IS null {$additionalWhereClause};";
 

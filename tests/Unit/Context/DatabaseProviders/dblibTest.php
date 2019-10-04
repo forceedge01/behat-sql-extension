@@ -41,7 +41,7 @@ class dblibTest extends TestHelper
     {
         // Execute
         $result = $this->testObject->getPdoDnsString($dbname = 'testing', $host = 'myhost', $port = 55454);
-    
+
         // Assert Result
         self::assertEquals('dblib:host=myhost:55454;dbname=testing', $result);
     }
@@ -53,7 +53,7 @@ class dblibTest extends TestHelper
     {
         // Execute
         $result = $this->testObject->getPdoDnsString($dbname = 'testing', $host = 'myhost');
-    
+
         // Assert Result
         self::assertEquals('dblib:host=myhost;dbname=testing', $result);
     }
@@ -65,7 +65,7 @@ class dblibTest extends TestHelper
     {
         // Execute
         $result = $this->testObject->getLeftDelimiterForReservedWord();
-    
+
         // Assert Result
         self::assertEquals('[', $result);
     }
@@ -77,7 +77,7 @@ class dblibTest extends TestHelper
     {
         // Execute
         $result = $this->testObject->getRightDelimiterForReservedWord();
-    
+
         // Assert Result
         self::assertEquals(']', $result);
     }
@@ -97,14 +97,33 @@ class dblibTest extends TestHelper
                          TC.CONSTRAINT_NAME = KU.CONSTRAINT_NAME AND 
                          KU.table_name='$table' ;";
 
-        $this->testObject->getExecutor()->expects($this->once())
+        $expectedSql2 = "
+                SELECT
+                    TABLE_NAME as TABLENAME, COLUMN_NAME as PRIMARYKEYCOLUMN
+                FROM
+                    information_schema.columns TC
+                WHERE
+                    TABLE_NAME = '$table'
+                AND
+                    IS_NULLABLE = 'NO'
+                AND
+                    COLUMNPROPERTY(object_id(TABLE_SCHEMA+'.'+TABLE_NAME), COLUMN_NAME, 'IsIdentity') = 1
+            ";
+
+        $this->testObject->getExecutor()->expects($this->exactly(2))
             ->method('execute')
-            ->with($expectedSql)
-            ->will($this->returnValue($this->getPdoStatementWithRows(0, [])));
+            ->withConsecutive([$expectedSql], [$expectedSql2])
+            ->willReturnOnConsecutiveCalls(
+                $this->getPdoStatementWithRows(0, []),
+                $this->getPdoStatementWithRows(1, [[
+                    'TABLENAME' => $table,
+                    'PRIMARYKEYCOLUMN' => 'auto_id'
+                ]])
+            );
 
         $result = $this->testObject->getPrimaryKeyForTable(null, null, $table);
 
-        $this->assertFalse($result);
+        $this->assertEquals('auto_id', $result);
     }
 
     /**
@@ -123,10 +142,26 @@ class dblibTest extends TestHelper
                          TC.CONSTRAINT_NAME = KU.CONSTRAINT_NAME AND 
                          KU.table_name='$table'  AND TC.TABLE_SCHEMA = 'mySchema';";
 
-        $this->testObject->getExecutor()->expects($this->once())
+        $expectedSql2 = "
+                SELECT
+                    TABLE_NAME as TABLENAME, COLUMN_NAME as PRIMARYKEYCOLUMN
+                FROM
+                    information_schema.columns TC
+                WHERE
+                    TABLE_NAME = '$table'
+                AND
+                    IS_NULLABLE = 'NO'
+                AND
+                    COLUMNPROPERTY(object_id(TABLE_SCHEMA+'.'+TABLE_NAME), COLUMN_NAME, 'IsIdentity') = 1
+            ";
+
+        $this->testObject->getExecutor()->expects($this->exactly(2))
             ->method('execute')
-            ->with($expectedSql)
-            ->will($this->returnValue($this->getPdoStatementWithRows(0, [])));
+            ->withConsecutive([$expectedSql], [$expectedSql2])
+            ->willReturnOnConsecutiveCalls(
+                $this->getPdoStatementWithRows(0, []),
+                $this->getPdoStatementWithRows(1, [])
+            );
 
         $result = $this->testObject->getPrimaryKeyForTable(null, $schema, $table);
 
@@ -150,10 +185,26 @@ class dblibTest extends TestHelper
                          TC.CONSTRAINT_NAME = KU.CONSTRAINT_NAME AND 
                          KU.table_name='$table'  AND TC.TABLE_CATALOG = 'my_app' AND TC.TABLE_SCHEMA = 'mySchema';";
 
-        $this->testObject->getExecutor()->expects($this->once())
+        $expectedSql2 = "
+                SELECT
+                    TABLE_NAME as TABLENAME, COLUMN_NAME as PRIMARYKEYCOLUMN
+                FROM
+                    information_schema.columns TC
+                WHERE
+                    TABLE_NAME = '$table'
+                AND
+                    IS_NULLABLE = 'NO'
+                AND
+                    COLUMNPROPERTY(object_id(TABLE_SCHEMA+'.'+TABLE_NAME), COLUMN_NAME, 'IsIdentity') = 1
+            ";
+
+        $this->testObject->getExecutor()->expects($this->exactly(2))
             ->method('execute')
-            ->with($expectedSql)
-            ->will($this->returnValue($this->getPdoStatementWithRows(0, [])));
+            ->withConsecutive([$expectedSql], [$expectedSql2])
+            ->willReturnOnConsecutiveCalls(
+                $this->getPdoStatementWithRows(0, []),
+                $this->getPdoStatementWithRows(0, [])
+            );
 
         $result = $this->testObject->getPrimaryKeyForTable($database, $schema, $table);
 
@@ -207,6 +258,8 @@ class dblibTest extends TestHelper
             AND
                 IS_NULLABLE = 'NO'
             AND
+                COLUMNPROPERTY(object_id(TABLE_SCHEMA+'.'+TABLE_NAME), COLUMN_NAME, 'IsIdentity') != 1
+            AND
                 Column_DEFAULT IS null  AND TABLE_CATALOG = 'mydb' AND TABLE_SCHEMA = 'myschema';";
 
         $this->testObject->getExecutor()->expects($this->once())
@@ -235,6 +288,8 @@ class dblibTest extends TestHelper
                 TABLE_NAME = '$table'
             AND
                 IS_NULLABLE = 'NO'
+            AND
+                COLUMNPROPERTY(object_id(TABLE_SCHEMA+'.'+TABLE_NAME), COLUMN_NAME, 'IsIdentity') != 1
             AND
                 Column_DEFAULT IS null  AND TABLE_SCHEMA = 'myschema';";
 
