@@ -5,8 +5,15 @@ namespace Genesis\SQLExtension\Context\Interfaces;
 interface KeyStoreInterface
 {
     /**
+     * Reset the local store to initial state.
+     *
+     * @return void
+     */
+    public function reset();
+
+    /**
      * @param string $key
-     * @param mixed $value
+     * @param mixed  $value
      */
     public function setKeyword($key, $value);
 

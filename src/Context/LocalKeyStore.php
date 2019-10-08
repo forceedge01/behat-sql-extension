@@ -5,6 +5,18 @@ namespace Genesis\SQLExtension\Context;
 class LocalKeyStore implements Interfaces\KeyStoreInterface
 {
     /**
+     * Reset the local store.
+     *
+     * @return void
+     */
+    public function reset()
+    {
+        $_SESSION['behat']['GenesisSqlExtension']['keywords'] = [];
+
+        return $this;
+    }
+
+    /**
      * Sets a behat keyword.
      *
      * @param string $key

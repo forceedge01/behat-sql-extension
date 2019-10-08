@@ -24,14 +24,14 @@ class SQLContext extends API implements Interfaces\SQLContextInterface
     /**
      * Override any of the extension params through the context declaration.
      *
-     * @param string $engine The engine to use.
-     * @param string $host The host to connect to.
-     * @param string $schema The schema to use.
-     * @param string $dbname The dbname to connect to.
+     * @param string $engine   The engine to use.
+     * @param string $host     The host to connect to.
+     * @param string $schema   The schema to use.
+     * @param string $dbname   The dbname to connect to.
      * @param string $username The username.
      * @param string $password The password.
      * @param string $dbprefix The database prefix to use.
-     * @param int $port
+     * @param int    $port
      */
     public function __construct(
         $engine = null,
@@ -62,9 +62,20 @@ class SQLContext extends API implements Interfaces\SQLContextInterface
         );
     }
 
+    /**
+     * @BeforeScenario
+     *
+     * @return void
+     * @param  mixed $beforeScenario
+     */
+    public function clearStore($beforeScenario)
+    {
+        $this->get('keyStore')->reset();
+    }
 
     /**
      * @Given /^(?:|I )have(?:| an| a) "([^"]*)" where:$/
+     * @param mixed $entity
      */
     public function iHaveWhere($entity, TableNode $nodes)
     {
@@ -98,6 +109,8 @@ class SQLContext extends API implements Interfaces\SQLContextInterface
     /**
      * @Given /^(?:|I )have(?:| an| a) "([^"]*)" where "([^"]*)"$/
      * @Given /^(?:|I )have(?:| an| a) "([^"]*)" with "([^"]*)"$/
+     * @param mixed $entity
+     * @param mixed $columns
      */
     public function iHaveAWhere($entity, $columns)
     {
@@ -111,6 +124,8 @@ class SQLContext extends API implements Interfaces\SQLContextInterface
      * @Given /^(?:|I )don't have(?:| an| a) "([^"]*)" where "([^"]*)"$/
      * @Given /^(?:|I )don't have(?:| an| a) "([^"]*)" with "([^"]*)"$/
      * @Given /^(?:|I )do not have(?:| an| a) "([^"]*)" where "([^"]*)"$/
+     * @param mixed $entity
+     * @param mixed $columns
      */
     public function iDontHaveAWhere($entity, $columns)
     {
@@ -143,6 +158,7 @@ class SQLContext extends API implements Interfaces\SQLContextInterface
 
     /**
      * @Given /^(?:|I )do not have(?:| an| a) "([^"]*)" where:$/
+     * @param mixed $entity
      */
     public function iDontHaveWhere($entity, TableNode $nodes)
     {
@@ -160,6 +176,9 @@ class SQLContext extends API implements Interfaces\SQLContextInterface
 
     /**
      * @Given /^(?:|I )have an existing "([^"]*)" with "([^"]*)" where "([^"]*)"$/
+     * @param mixed $entity
+     * @param mixed $with
+     * @param mixed $columns
      */
     public function iHaveAnExistingWithWhere($entity, $with, $columns)
     {
@@ -174,6 +193,8 @@ class SQLContext extends API implements Interfaces\SQLContextInterface
 
     /**
      * @Given /^(?:|I )have(?:| an| a) existing "([^"]*)" where "([^"]*)"$/
+     * @param mixed $entity
+     * @param mixed $where
      */
     public function iHaveAnExistingWhere($entity, $where)
     {
@@ -185,6 +206,7 @@ class SQLContext extends API implements Interfaces\SQLContextInterface
 
     /**
      * @Then /^(?:|I )should have(?:| an| a) "([^"]*)" with:$/
+     * @param mixed $entity
      */
     public function iShouldHaveAWithTable($entity, TableNode $with)
     {
@@ -199,6 +221,8 @@ class SQLContext extends API implements Interfaces\SQLContextInterface
 
     /**
      * @Then /^(?:|I )should have(?:| an| a) "([^"]*)" with "([^"]*)"(?:| in the database)$/
+     * @param mixed $entity
+     * @param mixed $with
      */
     public function iShouldHaveAWith($entity, $with)
     {
@@ -210,6 +234,8 @@ class SQLContext extends API implements Interfaces\SQLContextInterface
 
     /**
      * @Then /^(?:|I )should not have(?:| an| a) "([^"]*)" with "([^"]*)"(?:| in the database)$/
+     * @param mixed $entity
+     * @param mixed $with
      */
     public function iShouldNotHaveAWith($entity, $with)
     {
@@ -221,6 +247,7 @@ class SQLContext extends API implements Interfaces\SQLContextInterface
 
     /**
      * @Then /^(?:|I )should not have(?:| an| a) "([^"]*)" with:$/
+     * @param mixed $entity
      */
     public function iShouldNotHaveAWithTable($entity, TableNode $with)
     {
@@ -235,6 +262,7 @@ class SQLContext extends API implements Interfaces\SQLContextInterface
 
     /**
      * @Given /^(?:|I )save the id as "([^"]*)"$/
+     * @param mixed $key
      */
     public function iSaveTheIdAs($key)
     {
