@@ -2,7 +2,6 @@
 
 namespace Genesis\SQLExtension\Tests\Unit\Context;
 
-use Behat\Gherkin\Node\TableNode;
 use Exception;
 use Genesis\SQLExtension\Context\API;
 use Genesis\SQLExtension\Context\Interfaces\DBManagerInterface;
@@ -20,7 +19,7 @@ use PDO;
 class APITest extends TestHelper
 {
     /**
-     * @var object $testObject The object to be tested.
+     * @var object The object to be tested.
      */
     private $testObject;
 
@@ -147,8 +146,12 @@ class APITest extends TestHelper
             'column1' => 'abc'
         ];
 
-        $this->mockDependency('sqlBuilder', 'convertToArray',
-                array('column1:abc'), $convertedQuery1);
+        $this->mockDependency(
+            'sqlBuilder',
+            'convertToArray',
+            array('column1:abc'),
+            $convertedQuery1
+        );
 
         $this->mockDependency(
             'sqlBuilder',
@@ -269,6 +272,17 @@ class APITest extends TestHelper
     }
 
     /**
+     * @expectedException Genesis\SQLExtension\Context\Exceptions\NoWhereClauseException
+     */
+    public function testDeleteNoWhereClauseException()
+    {
+        $entity = 'abc';
+        $column = [];
+
+        $this->testObject->delete($entity, $column);
+    }
+
+    /**
      * Test that this method works with values provided.
      */
     public function testIDontHaveAWhereWithValues()
@@ -291,8 +305,12 @@ class APITest extends TestHelper
             'column4' => 'what\'s up doc'
         ];
 
-        $this->mockDependency('sqlBuilder', 'convertToArray',
-                array('column1:abc,column2:xyz,column3:NULL,column4:what\'s up doc'), $convertedQuery1);
+        $this->mockDependency(
+            'sqlBuilder',
+            'convertToArray',
+            array('column1:abc,column2:xyz,column3:NULL,column4:what\'s up doc'),
+            $convertedQuery1
+        );
 
         $this->mockDependency(
             'sqlBuilder',
@@ -326,6 +344,18 @@ class APITest extends TestHelper
     public function testiHaveAnExistingWithWhere()
     {
         $entity = '';
+        $with = [];
+        $columns = [];
+
+        $this->testObject->update($entity, $with, $columns);
+    }
+
+    /**
+     * @expectedException Genesis\SQLExtension\Context\Exceptions\NoWhereClauseException
+     */
+    public function testUpdateNoWhereClauseException()
+    {
+        $entity = 'abc';
         $with = [];
         $columns = [];
 
@@ -411,8 +441,12 @@ class APITest extends TestHelper
             'column4' => 'what\'s up doc'
         ];
 
-        $this->mockDependency('sqlBuilder', 'convertToArray',
-                array('column1:abc,column2:xyz,column3:NULL,column4:what\'s up doc'), $convertedQuery1);
+        $this->mockDependency(
+            'sqlBuilder',
+            'convertToArray',
+            array('column1:abc,column2:xyz,column3:NULL,column4:what\'s up doc'),
+            $convertedQuery1
+        );
 
         $this->mockDependency(
             'sqlBuilder',
