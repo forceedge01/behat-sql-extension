@@ -11,9 +11,9 @@ Generic library: Provides easy data manipulation with any PDO enabled database f
 
 You can find usage examples in the features/test.feature file.
 
-New Features in version 6:
+New Features in version 8:
 --------------------------
-- Database providers - now supports mssql, mysql, postgres.
+- Custom exceptions.
 
 New Feature in Minor:
 -----------------------
