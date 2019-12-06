@@ -11,16 +11,22 @@
         }
     ],
     "require": {
-        "php": "~5.4",
+        "php": "~5.5|~7.0",
         "ext-pdo": "*",
         "behat/behat": "~3.0"
     },
     "require-dev": {
-        "phpunit/phpunit": "~5.2"
+        "phpunit/phpunit": "~4.8"
     },
     "autoload": {
         "psr-4": {
-            "Genesis\\SQLExtension\\": "src/"
+            "Genesis\\SQLExtension\\": "src/",
+            "Genesis\\SQLExtension\\Tests\\": "tests/"
          }
+    },
+    "suggest": {
+        "genesis/sql-data-mods": "Extends behat-sql-extension to provide a powerful and simple framework to manage your data modules.",
+        "genesis/test-routing": "Simplistic routing that can extend main app routing for testing purposes.",
+        "genesis/behat-fail-aid": "Give your failures clarity and save time."
     }
 }

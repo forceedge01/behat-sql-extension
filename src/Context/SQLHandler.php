@@ -4,6 +4,10 @@ namespace Genesis\SQLExtension\Context;
 
 use Behat\Behat\Context\Context;
 use Behat\Gherkin\Node\TableNode;
+use Exception;
+use Genesis\SQLExtension\Context\Exceptions\ExternalRefResolutionException;
+use Genesis\SQLExtension\Context\Representations\Entity;
+use Traversable;
 
 /*
  * This file is part of the Behat\SQLExtension
@@ -19,308 +23,255 @@ use Behat\Gherkin\Node\TableNode;
  *
  * @author Abdul Wahab Qureshi <its.inevitable@hotmail.com>
  */
-class SQLHandler implements Context
+class SQLHandler implements Context, Interfaces\SQLHandlerInterface
 {
-    const IGNORE_DUPLICATE = true;
-    const EXPLODE_MAX_LIMIT = 2;
+    /**
+     * @var Entity[]
+     */
+    private static $entityCollection;
 
+    /**
+     * Entity being worked on i.e the table.
+     */
     protected $entity;
 
+    /**
+     * Last query executed.
+     */
     private $lastQuery;
-    private $connection;
-    private $params;
+
+    /**
+     * The id of the last sql statement executed.
+     */
     private $lastId;
-    private $sqlStatement;
-    private $columns = [];
+
+    /**
+     * The clause type being executed.
+     */
+    private $commandType;
+
+    /**
+     * The allowed command types to be executed.
+     */
+    private $allowedCommandTypes = [
+        'select',
+        'insert',
+        'delete',
+        'update'
+    ];
+
+    /**
+     * The database connection manager.
+     */
+    private $dbManager;
+
+    /**
+     * The key store.
+     */
+    private $keyStore;
+
+    /**
+     * Holds the history of commands executed.
+     */
+    private $sqlHistory;
+
+    /**
+     * @var Representations\SQLCommand.
+     */
+    protected $queryParams;
 
     /**
      * Construct the object.
+     *
+     * @param Interfaces\DBManagerInterface       $dbManager
+     * @param Interfaces\SQLBuilderInterface      $sqlBuilder
+     * @param Interfaces\KeyStoreInterface        $keyStore
+     * @param Interfaces\SQLHistoryInterface|null $sqlHistory
      */
-    public function __construct(array $dbParams = array())
-    {
-        // Set the database creds.
-        $this->setDBParams($dbParams);
+    public function __construct(
+        Interfaces\DBManagerInterface $dbManager,
+        Interfaces\SQLBuilderInterface $sqlBuilder,
+        Interfaces\KeyStoreInterface $keyStore,
+        Interfaces\SQLHistoryInterface $sqlHistory = null
+    ) {
+        $this->dbManager = $dbManager;
+        $this->keyStore = $keyStore;
+        $this->sqlBuilder = $sqlBuilder;
+        $this->sqlHistory = $sqlHistory;
+
+        $this->sqlBuilder->setDatabaseProvider($this->dbManager->getDatabaseProvider());
     }
 
     /**
-     * Gets the connection for query execution.
+     * Get a dependency.
+     *
+     * @param string $dependency.
+     *
+     * @return object
      */
-    public function getConnection()
+    public function get($dependency)
     {
-        if (! $this->connection) {
-            list($dns, $username, $password) = $this->connectionString();
-
-            $this->setConnection(new \PDO($dns, $username, $password));
+        if (! property_exists($this, $dependency)) {
+            throw new Exception(sprintf('Dependency "%s" not found', $dependency));
         }
 
-        return $this->connection;
+        return $this->$dependency;
     }
 
     /**
-     * Set the pdo connection.
+     * Set the clause type.
+     *
+     * @param string $commandType
      */
-    public function setConnection($connection)
+    public function setCommandType($commandType)
     {
-        $this->connection = $connection;
+        // Set the clause type debug message.
+        $this->debugLog(sprintf('Command type set to: %s', $commandType));
+
+        // Check if the clause given is one of the allowed ones.
+        if (! in_array($commandType, $this->allowedCommandTypes)) {
+            throw new Exception(sprintf(
+                'Invalid command type provided "%s", command type must be one of "%s"',
+                $commandType,
+                implode(', ', $this->allowedCommandTypes)
+            ));
+        }
+
+        $this->commandType = $commandType;
 
         return $this;
     }
 
     /**
-     * Sets the database param from either the environment variable or params
-     * passed in by behat.yml, params have precedence over env variable.
+     * Get the clause type.
+     *
+     * @return string
      */
-    public function setDBParams(array $dbParams = array())
+    public function getCommandType()
     {
-        if (defined('SQLDBENGINE')) {
-            $this->params = [
-                'DBSCHEMA' => SQLDBSCHEMA,
-                'DBNAME' => SQLDBNAME,
-                'DBPREFIX' => SQLDBPREFIX
-            ];
+        return $this->commandType;
+    }
 
-            // Allow params to be over-ridable.
-            $this->params['DBHOST'] = (isset($dbParams['host']) ? $dbParams['host'] : SQLDBHOST);
-            $this->params['DBUSER'] = (isset($dbParams['username']) ? $dbParams['username'] : SQLDBUSERNAME);
-            $this->params['DBPASSWORD'] = (isset($dbParams['password']) ? $dbParams['password'] : SQLDBPASSWORD);
-            $this->params['DBENGINE'] = (isset($dbParams['engine']) ? $dbParams['engine'] : SQLDBENGINE);
-        } else {
-            $params = getenv('BEHAT_ENV_PARAMS');
+    /**
+     * Construct the sql clause.
+     *
+     * @param string $commandType
+     * @param string $glue
+     * @param array  $columns
+     *
+     * @return array
+     */
+    public function constructSQLClause($commandType, $glue, array $columns)
+    {
+        return $this->sqlBuilder->constructSQLClause($commandType, $glue, $columns);
+    }
 
-            if (! $params) {
-                throw new \Exception('"BEHAT_ENV_PARAMS" environment variable was not found.');
+    /**
+     * Filter keywords and convert to array.
+     *
+     * @param string $query The queries to fitler.
+     *
+     * @return array
+     */
+    public function convertToResolvedArray(array $values)
+    {
+        // Match all external query references.
+        $columns = $this->get('sqlBuilder')->parseExternalQueryReferences($this->convertToQuery($values));
+        $columns = $this->get('sqlBuilder')->convertToArray($columns);
+
+        $filteredColumns = [];
+
+        // Check for keywords.
+        foreach ($columns as $column => $value) {
+            // Check if the value provided is a keyword or an external ref, if so get value.
+            if ($this->get('sqlBuilder')->isExternalReferencePlaceholder($value)) {
+                $value = $this->resolveExternalReferencePlaceholder($value);
             }
 
-            $params = explode(';', $params);
-
-            foreach ($params as $param) {
-                list($key, $val) = explode(':', $param);
-                $this->params[$key] = trim($val);
-            }
+            $filteredColumns[$column] = $value;
         }
 
-        return $this;
+        return $filteredColumns;
     }
 
     /**
-     * Get db params set.
+     * @param string $placeholder The placeholder to resolve.
+     *
+     * @return string
      */
-    public function getParams()
+    private function resolveExternalReferencePlaceholder($placeholder)
     {
-        return $this->params;
-    }
+        Debugger::log(sprintf('Resolving external ref: "%s"', $placeholder));
 
-    /**
-     * Creates the connection string for the pdo object.
-     */
-    private function connectionString()
-    {
-        return [
-            sprintf(
-                '%s:dbname=%s;host=%s',
-                $this->params['DBENGINE'],
-                $this->params['DBNAME'],
-                $this->params['DBHOST']
-            ),
-            $this->params['DBUSER'],
-            $this->params['DBPASSWORD']
-        ];
-    }
+        $externalRef = $this->get('sqlBuilder')->getRefFromPlaceholder($placeholder);
 
-    /**
-     * Gets a column list for a table with their type.
-     */
-    protected function requiredTableColumns($table)
-    {
-        // If the DBSCHEMA is not set, try using the database name if provided with the table.
-        if (! $this->params['DBSCHEMA']) {
-            preg_match('/(.*)\./', $table, $db);
+        // Execute query and get placeholder back.
+        $query = $this
+            ->get('sqlBuilder')
+            ->getSQLQueryForExternalReference(
+                $externalRef,
+                $this->getParams()['DBPREFIX']
+            );
 
-            if (isset($db[1])) {
-                $this->params['DBSCHEMA'] = $db[1];
-            }
-        }
+        $this->setCommandType($query->getType());
+        Debugger::log('Executing External Ref SQL: ' . $query->getSql());
 
-        // Parse out the table name.
-        $table = preg_replace('/(.*\.)/', '', $table);
-        $table = trim($table, '`');
+        $statement = $this->get('dbManager')->execute($query->getSql());
 
-        // Statement to extract all required columns for a table.
-        $sqlStatement = "
-            SELECT 
-                column_name, data_type 
-            FROM 
-                information_schema.columns 
-            WHERE 
-                is_nullable = 'NO'
-            AND 
-                table_name = '%s'
-            AND 
-                table_schema = '%s';";
-
-        // Get not null columns
-        $sql = sprintf(
-            $sqlStatement,
-            $table,
-            $this->params['DBSCHEMA']
+        $this->recordHistory(
+            $query->getType(),
+            $query->getQueryParams()->getEntity()->getEntityName(),
+            $query->getSql(),
+            null
         );
 
-        $statement = $this->execute($sql);
-        $this->throwExceptionIfErrors($statement);
-        $result = $statement->fetchAll();
+        $value = $this->get('dbManager')->getFirstValueFromStatement($statement);
 
-        if (! $result) {
-            return [];
+        if (! isset($value[0])) {
+            throw new ExternalRefResolutionException($externalRef, $query->getSql());
         }
 
-        $cols = [];
-        foreach ($result as $column) {
-            $cols[$column['column_name']] = $column['data_type'];
-        }
+        $placeholderValue = $value[0];
+        $this->get('dbManager')->closeStatement($statement);
 
-        // Dont populate primary key, let db handle that
-        unset($cols['id']);
+        Debugger::log(sprintf('Resolved external ref placeholder: "%s"', $placeholderValue));
 
-        return $cols;
+        return $placeholderValue;
     }
 
     /**
-     * returns sample data for a data type.
+     * @param string $query
+     *
+     * @depreciated Use convertToResolvedArray instead.
      */
-    public function sampleData($type)
+    public function filterAndConvertToArray($query)
     {
-        switch (strtolower($type)) {
-            case 'boolean':
-                return 'false';
-            case 'integer':
-            case 'double':
-            case 'int':
-                return rand();
-            case 'tinyint':
-                return rand(0, 9);
-            case 'string':
-            case 'text':
-            case 'varchar':
-            case 'character varying':
-            case 'tinytext':
-            case 'longtext':
-                return $this->quoteOrNot(sprintf("behat-test-string-%s", time()));
-            case 'char':
-                return "'f'";
-            case 'timestamp':
-            case 'timestamp with time zone':
-                return 'NOW()';
-            case 'null':
-                return null;
-            default:
-                return $this->quoteOrNot(sprintf("behat-test-string-%s", time()));
-        }
-    }
+        $this->debugLog(sprintf('Depreciated method "%s", use convertToResolvedArray instead.', __FUNCTION__));
 
-    /**
-     * Constructs a clause based on the glue, to be used for where and update clause.
-     */
-    public function constructSQLClause($glue, array $columns)
-    {
-        $whereClause = [];
-
-        foreach ($columns as $column => $value) {
-            $newValue = ltrim($value, '!');
-            $quotedValue = $this->quoteOrNot($newValue);
-            $comparator = '%s=';
-            $notOperator = '';
-
-            // Check if the supplied value is null, if so change the format.
-            if (strtolower($newValue) == 'null') {
-                $comparator = 'is%s';
-            }
-
-            // Check if a not is applied to the value.
-            if ($newValue !== $value) {
-                if (strtolower($newValue) == 'null') {
-                    $notOperator = ' not';
-                } else {
-                    $notOperator = '!';
-                }
-            }
-
-            // Check if the value is surrounded by wildcards. If so, we'll want to use a LIKE comparator.
-            if (preg_match('/^%.+%$/', $value)) {
-                $comparator = 'LIKE';
-            }
-
-            // Make up the sql.
-            $comparator = sprintf($comparator, $notOperator);
-
-            $whereClause[] = sprintf('%s %s %s', $column, $comparator, $quotedValue);
-        }
-
-        return implode($glue, $whereClause);
-    }
-
-    /**
-     * Gets table columns and its values, returns array.
-     */
-    protected function getTableColumns($entity)
-    {
-        $columnClause = [];
-
-        // Get all columns for insertion
-        $allColumns = array_merge($this->requiredTableColumns($entity), $this->columns);
-
-        // Set values for columns
-        foreach ($allColumns as $col => $type) {
-            $columnClause[$col] = isset($this->columns[$col]) ?
-                $this->quoteOrNot($this->columns[$col]) :
-                $this->sampleData($type);
-        }
-
-        $columnNames = implode(', ', array_keys($columnClause));
-        $columnValues = implode(', ', $columnClause);
-
-        return [$columnNames, $columnValues];
-    }
-
-    /**
-     * Converts the incoming string param from steps to array.
-     */
-    public function filterAndConvertToArray($columns)
-    {
-        $this->columns = [];
-        $columns = explode(',', $columns);
-
-        foreach ($columns as $column) {
-            try {
-                list($col, $val) = explode(':', $column, self::EXPLODE_MAX_LIMIT);
-            } catch (\Exception $e) {
-                throw new \Exception('Unable to explode columns based on ":" separator');
-            }
-
-            $val = $this->checkForKeyword(trim($val));
-            $this->columns[trim($col)] = $val;
-        }
-
-        return $this;
+        return $this->convertToResolvedArray($query);
     }
 
     /**
      * Sets a behat keyword.
+     *
+     * @param string $key
+     * @param mixed  $value
      */
     public function setKeyword($key, $value)
     {
         $this->debugLog(sprintf(
             'Saving keyword "%s" with value "%s"',
             $key,
-            $value
+            print_r($value, true)
         ));
 
-        $_SESSION['behat']['GenesisSqlExtension']['keywords'][$key] = $value;
-
-        return $this;
+        return $this->keyStore->setKeyword($key, $value);
     }
 
     /**
      * Fetches a specific keyword from the behat keywords store.
+     *
+     * @param string $key
      */
     public function getKeyword($key)
     {
@@ -329,15 +280,7 @@ class SQLHandler implements Context
             $key
         ));
 
-        if (! isset($_SESSION['behat']['GenesisSqlExtension']['keywords'][$key])) {
-            throw new \Exception(sprintf(
-                'Key "%s" not found in behat store, all keys available: %s',
-                $key,
-                print_r($_SESSION['behat']['GenesisSqlExtension']['keywords'], true)
-            ));
-        }
-
-        $value = $_SESSION['behat']['GenesisSqlExtension']['keywords'][$key];
+        $value = $this->keyStore->getKeyword($key);
 
         $this->debugLog(sprintf(
             'Retrieved keyword "%s" with value "%s"',
@@ -350,142 +293,135 @@ class SQLHandler implements Context
 
     /**
      * Checks the value for possible keywords set in behat.yml file.
+     *
+     * @param string $key
      */
-    private function checkForKeyword($value)
+    public function checkForKeyword($key)
     {
-        if (! isset($_SESSION['behat']['GenesisSqlExtension']['keywords'])) {
-            return $value;
-        }
-
-        foreach ($_SESSION['behat']['GenesisSqlExtension']['keywords'] as $keyword => $val) {
-            $key = sprintf('{%s}', $keyword);
-
-            if ($value == $key) {
-                $value = str_replace($key, $val, $value);
-            }
-        }
-
-        return $value;
+        return $this->keyStore->getKeywordIfExists($key);
     }
 
     /**
      * Prints out messages when in debug mode.
+     *
+     * @param mixed $log
      */
     public function debugLog($log)
     {
-        if (defined('DEBUG_MODE') and DEBUG_MODE == 1) {
-            $log = 'DEBUG >>> ' . $log;
-            echo $log . PHP_EOL . PHP_EOL;
-        }
-
-        return $this;
+        Debugger::log($log);
     }
 
     /**
      * Executes sql command.
+     *
+     * @param string $sql
      */
-    protected function execute($sql)
+    public function execute($sql)
     {
+        $this->debugLog('Executing SQL: ' . $sql);
         $this->lastQuery = $sql;
 
-        $this->debugLog(sprintf('Executing SQL: %s', $sql));
+        $statement = $this->dbManager->execute($sql);
+        $this->lastId = $this->dbManager->getLastInsertId($this->getEntity()->getTableName());
+        $primaryKey = $this->getEntity()->getPrimaryKey();
 
-        $this->sqlStatement = $this->getConnection()->prepare($sql, []);
-        $this->sqlStatement->execute();
-        $this->lastId = $this->connection->lastInsertId(sprintf('%s_id_seq', $this->getEntity()));
+        // Check if the value for the primary key was supplied and use that, if not use whatever is fetched.
+        // Works better with tables that have no auto generation on the primary key column.
+        if (isset($this->queryParams->getRawValues()[$primaryKey]) &&
+            $this->getCommandType() === Interfaces\SQLHandlerInterface::COMMAND_TYPE_INSERT) {
+            $this->lastId = $this->queryParams->getRawValues()[$primaryKey];
+            Debugger::log('Last Id: ' . $this->lastId);
+        }
+
+        $this->recordHistory(
+            $this->getCommandType(),
+            $this->getEntity()->getEntityName(),
+            $sql,
+            $this->lastId
+        );
 
         // If their is an id, save it!
         if ($this->lastId) {
             $this->handleLastId($this->getEntity(), $this->lastId);
         }
 
-        return $this->sqlStatement;
+        return $statement;
+    }
+
+    /**
+     * @param string $commandType
+     * @param string $entityName
+     * @param string $sql
+     * @param int    $lastId
+     *
+     * @return $this
+     */
+    private function recordHistory($commandType, $entityName, $sql, $lastId)
+    {
+        if ($this->get('sqlHistory') instanceof Interfaces\SQLHistoryInterface) {
+            $this->get('sqlHistory')->addToHistory(
+                $commandType,
+                $entityName,
+                $sql,
+                $lastId
+            );
+        }
+
+        return $this;
     }
 
     /**
      * Save the last insert id in the session for later retrieval.
+     *
+     * @param mixed $entity
+     * @param mixed $id
+     * @param mixed $rawTable
      */
-    protected function saveLastId($entity, $id)
+    protected function saveLastId($rawTable, $id)
     {
         $this->debugLog(sprintf('Last ID fetched: %d', $id));
 
-        $_SESSION['behat']['GenesisSqlExtension']['last_id'][$entity][] = $id;
-    }
-
-    /**
-     * Get all id's inserted for an entity.
-     */
-    protected function getLastIds($entity)
-    {
-        if (isset($_SESSION['behat']['GenesisSqlExtension']['last_id'][$entity])) {
-            return $_SESSION['behat']['GenesisSqlExtension']['last_id'][$entity];
-        }
-
-        return false;
+        $_SESSION['behat']['GenesisSqlExtension']['last_id'][$rawTable][$this->getCommandType()][] = $id;
     }
 
     /**
      * Check for any mysql errors.
+     *
+     * @param mixed $ignoreDuplicate
      */
-    public function throwErrorIfNoRowsAffected($sqlStatement, $ignoreDuplicate = false)
+    public function throwErrorIfNoRowsAffected(Traversable $sqlStatement, $ignoreDuplicate = false)
     {
-        if (! $this->hasFetchedRows($sqlStatement)) {
-            $error = print_r($sqlStatement->errorInfo(), true);
-
-            if ($ignoreDuplicate and preg_match('/duplicate/i', $error)) {
-                return $sqlStatement->errorInfo();
-            }
-
-            throw new \Exception(
-                sprintf(
-                    'No rows were effected!%sSQL: "%s",%sError: %s',
-                    PHP_EOL,
-                    $sqlStatement->queryString,
-                    PHP_EOL,
-                    $error
-                )
-            );
-        }
-
-        return false;
-    }
-
-    /**
-     * Errors found then throw exception.
-     */
-    public function throwExceptionIfErrors($sqlStatement)
-    {
-        if ((int) $sqlStatement->errorCode()) {
-            throw new \Exception(
-                print_r($sqlStatement->errorInfo(), true)
-            );
-        }
-
-        return false;
+        return $this->dbManager->throwErrorIfNoRowsAffected($sqlStatement, $ignoreDuplicate);
     }
 
     /**
      * Gets the last insert id.
      */
-    protected function getLastInsertId()
+    public function getLastId()
     {
-        if (! $this->lastId) {
-            throw new \Exception('Could not get last id');
+        try {
+            return $this->getKeyword($this->getEntity()->getRawInput() . '.' . $this->getEntity()->getPrimaryKey());
+        } catch (Exception $e) {
+            return false;
         }
-
-        return $this->lastId;
     }
 
     /**
      * Quotes value if needed for sql.
+     *
+     * @param string $val
+     *
+     * @return string
      */
     public function quoteOrNot($val)
     {
-        return ((is_string($val) || is_numeric($val)) and !$this->isNotQuotable($val)) ? sprintf("'%s'", $val) : $val;
+        return $this->get('sqlBuilder')->quoteOrNot($val);
     }
 
     /**
      * Get the duplicate key from the error message.
+     *
+     * @param mixed $error
      */
     public function getKeyFromDuplicateError($error)
     {
@@ -508,186 +444,216 @@ class SQLHandler implements Context
     }
 
     /**
-     * Sets the last id by executing a select on the id column.
+     * Set all keys from the current entity.
+     *
+     * @param Representations\Query $query
+     *
+     * @return array
      */
-    protected function setLastIdWhere($entity, $criteria)
+    public function setKeywordsFromQuery(Representations\Query $query)
     {
-        $sql = sprintf('SELECT id FROM %s WHERE %s', $entity, $criteria);
-        $statement = $this->execute($sql);
-        $this->throwErrorIfNoRowsAffected($statement);
-        $result = $statement->fetchAll();
+        $this->setCommandType($query->getType());
+        $statement = $this->execute($query->getSql());
+        $result = $this->get('dbManager')->getFirstValueFromStatement($statement);
 
-        if (! isset($result[0]['id'])) {
-            throw new \Exception('Id not found in table.');
+        if (! $result) {
+            throw new Exceptions\RecordNotFoundException(
+                $query->getSql(),
+                $query->getQueryParams()->getEntity()->getEntityName()
+            );
         }
 
-        $this->debugLog(sprintf('Last ID fetched: %d', $result[0]['id']));
-        $this->handleLastId($entity, $result[0]['id']);
+        $this->get('dbManager')->closeStatement($statement);
 
-        return $statement;
+        return $this->setKeywordsFromRecord(
+            $query->getQueryParams()->getEntity()->getRawInput(),
+            $result
+        );
+    }
+
+    /**
+     * Set the record as keywords for re-use.
+     *
+     * @param string $entity
+     * @param array  $record
+     * @param mixed  $rawTable
+     *
+     * @return array
+     */
+    public function setKeywordsFromRecord($rawTable, array $record)
+    {
+        // Set all columns as reusable.
+        foreach ($record as $column => $value) {
+            if (! is_numeric($column)) {
+                $this->setKeyword(sprintf('%s.%s', $rawTable, $column), $value);
+            }
+        }
+
+        return $record;
     }
 
     /**
      * Do what needs to be done with the last insert id.
+     *
+     * @param Entity $entity
+     * @param mixed  $id
      */
-    protected function handleLastId($entity, $id)
+    public function handleLastId(Entity $entity, $id)
     {
-        $entity = $this->getUserInputEntity($entity);
         $this->lastId = $id;
-        $entity = $this->makeSQLUnsafe($entity);
-        $this->saveLastId($entity, $this->lastId);
-        $this->setKeyword($entity . '_id', $this->lastId);
+        $this->saveLastId($entity->getRawInput(), $this->lastId);
+        $this->setKeyword($entity->getRawInput() . '.' . $entity->getPrimaryKey(), $this->lastId);
     }
 
     /**
-     * Get the entity the way the user had inputted it.
+     * Gets table columns and its values.
+     *
+     * @param string $entity            The table to get the columns of.
+     * @param array  $overridingColumns The overriding columns.
+     *
+     * @return array
      */
-    private function getUserInputEntity($entity)
+    public function getTableColumns(Entity $entity, array $overridingColumns = array())
     {
-        // Get rid of any special chars introduced.
-        $entity = $this->makeSQLUnsafe($entity);
+        $columnClause = [];
 
-        // Only replace first occurrence.
-        return preg_replace('/' . $this->getParams()['DBPREFIX'] . '/', '', $entity, 1);
-    }
+        if (! $entity->getRequiredColumns()) {
+            $entity->setRequiredColumns($this->getRequiredTableColumns($entity));
+        }
 
-    /**
-     * Checks if the value isn't a keyword.
-     */
-    private function isNotQuotable($val)
-    {
-        $keywords = [
-            'true',
-            'false',
-            'null',
-            'NOW\(\)',
-            'COUNT\(.*\)',
-            'MAX\(.*\)',
-            '\d+'
-        ];
+        // Get all columns for insertion
+        $allColumns = array_merge($entity->getRequiredColumns(), $overridingColumns);
+        $leftDelimiter = $this->get('dbManager')->getLeftDelimiterForReservedWord();
+        $rightDelimiter = $this->get('dbManager')->getRightDelimiterForReservedWord();
 
-        $keywords = array_merge($keywords, $_SESSION['behat']['GenesisSqlExtension']['notQuotableKeywords']);
+        // Set values for columns
+        foreach ($allColumns as $col => $type) {
+            $delimitedColumn = $leftDelimiter . $col . $rightDelimiter;
+            // Check if a column is provided, if not use sample data to fill in.
+            if (array_key_exists($col, $overridingColumns)) {
+                // If the value is provided get value and check if its a keyword.
+                $value = $this->checkForKeyword($overridingColumns[$col]);
 
-        // Check if the val is a keyword
-        foreach ($keywords as $keyword) {
-            if (preg_match(sprintf('/^%s$/is', $keyword), $val)) {
-                return true;
+                // If the value is not a keyword then use the value provided as is.
+                if (! $value) {
+                    $value = $overridingColumns[$col];
+                }
+                // Assign value back to the column.
+                $columnClause[$delimitedColumn] = $this->quoteOrNot($value);
+            } else {
+                $columnClause[$delimitedColumn] = $this->sqlBuilder->sampleData($type);
             }
         }
 
-        return false;
+        $columnNames = implode(', ', array_keys($columnClause));
+        $columnValues = implode(', ', $columnClause);
+
+        return [$columnNames, $columnValues];
     }
 
     /**
-     * @param  TableNode $node The node with all fields and data.
+     * @param TableNode $node The node with all fields and data.
      *
      * @return array The queries built of the TableNode.
      */
     public function convertTableNodeToQueries(TableNode $node)
     {
-        // Get the title row.
-        $columns = $node->getRow(0);
-
-        // Get all rows and extract the heading.
-        $rows = $node->getRows();
-        unset($rows[0]);
-
-        if (! $rows) {
-            throw new \Exception('No data provided to loop through.');
-        }
-
-        $queries = [];
-
-        // Loop through the rest of the rows and form up the queries.
-        foreach ($rows as $row) {
-            $query = '';
-            foreach ($row as $index => $value) {
-                $query .= sprintf('%s:%s,', $columns[$index], $value);
-            }
-            $queries[] = trim($query, ',');
-        }
-
-        return $queries;
+        return $this->sqlBuilder->convertTableNodeToQueries($node);
     }
 
     /**
-     * @param  TableNode $node The node with all fields and data.
+     * @param TableNode $node The node with all fields and data.
      *
      * @return array The queries built of the TableNode.
      */
     public function convertTableNodeToSingleContextClause(TableNode $node)
     {
-        // Get all rows and extract the heading.
-        $rows = $node->getRows();
-        // Get rid of the top row as its just represents the title.
-        unset($rows[0]);
-
-        if (! $rows) {
-            throw new \Exception('No data provided to loop through.');
-        }
-
-        $clauseArray = [];
-        // Loop through the rest of the rows and form up the queries.
-        foreach ($rows as $row) {
-            $clauseArray[] = implode(':', $row);
-        }
-
-        return implode(',', $clauseArray);
+        return $this->sqlBuilder->convertTableNodeToSingleContextClause($node);
     }
 
     /**
      * Checks if the command executed affected any rows.
      */
-    protected function hasFetchedRows($sqlStatement)
+    public function hasFetchedRows(Traversable $sqlStatement)
     {
-        return ($sqlStatement->rowCount());
-    }
-
-    /**
-     * Get the value of columns var.
-     */
-    public function getColumns()
-    {
-        return $this->columns;
-    }
-
-    /**
-     * Make a string SQL safe.
-     */
-    public function makeSQLSafe($string)
-    {
-        $string = str_replace('', '', $string);
-
-        $chunks = explode('.', $string);
-
-        return implode('.', $chunks);
-    }
-
-    /**
-     * Remove any quote chars.
-     */
-    public function makeSQLUnsafe($string)
-    {
-        return str_replace('`', '', $string);
+        return $this->dbManager->hasFetchedRows($sqlStatement);
     }
 
     /**
      * Set the entity for further processing.
+     *
+     * @param Entity $entity
+     * @param mixed  $inputEntity
      */
-    public function setEntity($entity)
+    public function resolveEntity($inputEntity)
     {
-        $this->debugLog(sprintf('ENTITY: %s', $entity));
-
-        $expectedEntity = $this->makeSQLSafe($this->getParams()['DBPREFIX'] . $entity);
-
-        $this->debugLog(sprintf('SET ENTITY: %s', $expectedEntity));
-
-        // Concatinate the entity with the sqldbprefix value only if not already done.
-        if ($expectedEntity !== $this->entity) {
-            $this->entity = $expectedEntity;
+        if (! $inputEntity) {
+            throw new Exception('Blank entity/table provided!');
         }
 
-        return $this;
+        $this->debugLog(sprintf('ENTITY: %s', $inputEntity));
+
+        if (isset(self::$entityCollection[$inputEntity]) && self::$entityCollection[$inputEntity] instanceof Entity) {
+            $this->entity = self::$entityCollection[$inputEntity];
+            return $this->entity;
+        }
+
+        // An entity references a table, with or without the database and the schema information.
+        // Check accordingly.
+        $result = explode('.', $inputEntity);
+
+        switch (count($result)) {
+            // Just the table name.
+            case 1:
+                $dbname = null;
+                $schema = null;
+                $table = $result[0];
+                break;
+            // Database and table name;
+            case 2:
+                $dbname = $this->getParams()['DBPREFIX'] . $result[0];
+                $schema = null;
+                $table = $result[1];
+                break;
+            // Scheme provided as well.
+            case 3:
+                $dbname = $this->getParams()['DBPREFIX'] . $result[0];
+                $schema = $result[1];
+                $table = $result[2];
+                break;
+            default:
+                throw new Exception('Explode produced too many chunks of the entity to handle.');
+        }
+
+        $this->entity = new Entity(
+            $inputEntity,
+            $table,
+            $dbname,
+            $schema
+        );
+
+        $this->debugLog(sprintf('SET ENTITY: %s', $this->entity->getEntityName()));
+
+        // Set the primary key for the current table.
+        $primaryKey = $this->dbManager->getPrimaryKeyForTable(
+            $this->entity->getDatabaseName(),
+            $this->entity->getSchemaName(),
+            $this->entity->getTableName()
+        );
+
+        // Bug, some tables may genuinely not have a primary key on them.
+        if (! $primaryKey) {
+            $primaryKey = 'id';
+        }
+
+        $this->entity->setPrimaryKey($primaryKey);
+
+        // Add it to the collection for caching.
+        self::$entityCollection[$inputEntity] = $this->entity;
+
+        $this->debugLog(sprintf('PRIMARY KEY: %s', $this->entity->getPrimaryKey()));
+
+        return $this->entity;
     }
 
     /**
@@ -696,5 +662,175 @@ class SQLHandler implements Context
     public function getEntity()
     {
         return $this->entity;
+    }
+
+    /**
+     * Get the database name.
+     */
+    public function getDatabaseName()
+    {
+        return $this->databaseName;
+    }
+
+    /**
+     * Get the table name.
+     */
+    public function getTableName()
+    {
+        return $this->tableName;
+    }
+
+    /**
+     * Get the required table columns for a table.
+     *
+     * @param Entity $entity
+     *
+     * @return array
+     */
+    public function getRequiredTableColumns(Entity $entity)
+    {
+        $requiredColumns = $this->dbManager->getRequiredTableColumns(
+            $entity->getDatabaseName(),
+            $entity->getSchemaName(),
+            $entity->getTableName()
+        );
+
+        // If we've got a primary key, we'd filter it out to let the db handle auto generation.
+        if ($entity->getPrimaryKey()) {
+            unset($requiredColumns[$entity->getPrimaryKey()]);
+        }
+
+        return $requiredColumns;
+    }
+
+    /**
+     * @return array
+     */
+    private function getParams()
+    {
+        return $this->dbManager->getParams();
+    }
+
+    /**
+     * Convert an array to a genesis query.
+     *
+     * @param array $columns
+     *
+     * @return string
+     */
+    public function convertToQuery(array $columnsValuePair)
+    {
+        $query = '';
+
+        foreach ($columnsValuePair as $column => $value) {
+            $query .= sprintf('%s:%s,', $column, $value);
+        }
+
+        return trim($query, ',');
+    }
+
+    /**
+     * Get all id's inserted for an entity.
+     *
+     * @param null|mixed $entity
+     */
+    public function getLastIds($entity = null)
+    {
+        if ($entity) {
+            if (isset($_SESSION['behat']['GenesisSqlExtension']['last_id'][$entity])) {
+                return $_SESSION['behat']['GenesisSqlExtension']['last_id'][$entity];
+            }
+
+            return false;
+        }
+
+        return $_SESSION['behat']['GenesisSqlExtension']['last_id'];
+    }
+
+    /**
+     * Get a record by a criteria.
+     *
+     * @param Representations\Query $query
+     *
+     * @return array
+     */
+    public function fetchByQuery(Representations\Query $query)
+    {
+        $this->setCommandType($query->getType());
+        $statement = $this->get('dbManager')->execute($query->getSql());
+        $result = $statement->fetchAll();
+
+        if (! $result) {
+            throw new Exceptions\RecordNotFoundException(
+                $query->getSql(),
+                $query->getQueryParams()->getEntity()->getEntityName()
+            );
+        }
+
+        $this->recordHistory(
+            $query->getType(),
+            $query->getQueryParams()->getEntity()->getEntityName(),
+            $query->getSql(),
+            null
+        );
+
+        $this->get('dbManager')->closeStatement($statement);
+
+        return $result;
+    }
+
+    /**
+     * Errors found then throw exception.
+     */
+    public function throwExceptionIfErrors(Traversable $sqlStatement)
+    {
+        return $this->get('dbManager')->throwExceptionIfErrors($sqlStatement);
+    }
+
+    /**
+     * @return Representations\Query
+     * @param  mixed                 $table
+     * @param  mixed                 $values
+     */
+    public function getSampleInsertQuery($table, $values)
+    {
+        $entity = $this->resolveEntity($table);
+        $resolvedValues = $this->resolveQuery($values);
+        $queryParams = new Representations\QueryParams($entity, $values, $resolvedValues);
+        list($columnNames, $columnValues) = $this->getTableColumns(
+            $queryParams->getEntity(),
+            $queryParams->getResolvedValues()
+        );
+        $insertQueryBuilder = new Builder\InsertQueryBuilder($queryParams, $columnNames, $columnValues);
+
+        return Builder\QueryDirector::build($insertQueryBuilder);
+    }
+
+    /**
+     * @param array $values The values to resolve.
+     *
+     * @return array
+     */
+    protected function resolveQuery(array $values)
+    {
+        foreach ($values as $index => $value) {
+            $values[$index] = $this->get('keyStore')->parseKeywordsInString($value);
+        }
+
+        return $this->convertToResolvedArray($values);
+    }
+
+    /**
+     * @param string $commandType The command type.
+     * @param array  $query       The query to resolve to sql clause.
+     *
+     * @return string
+     */
+    protected function resolveQueryToSQLClause($commandType, array $query)
+    {
+        $resolveQuery = $this->resolveQuery($query);
+        $sqlClause = $this->constructSQLClause($commandType, ' AND ', $resolveQuery);
+
+        return $sqlClause;
     }
 }

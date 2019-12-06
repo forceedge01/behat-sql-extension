@@ -19,10 +19,63 @@ use Behat\Gherkin\Node\TableNode;
  *
  * @author Abdul Wahab Qureshi <its.inevitable@hotmail.com>
  */
-class SQLContext extends SQLHandler implements Interfaces\SQLContextInterface
+class SQLContext extends API implements Interfaces\SQLContextInterface
 {
     /**
+     * Override any of the extension params through the context declaration.
+     *
+     * @param string $engine   The engine to use.
+     * @param string $host     The host to connect to.
+     * @param string $schema   The schema to use.
+     * @param string $dbname   The dbname to connect to.
+     * @param string $username The username.
+     * @param string $password The password.
+     * @param string $dbprefix The database prefix to use.
+     * @param int    $port
+     */
+    public function __construct(
+        $engine = null,
+        $host = null,
+        $schema = null,
+        $dbname = null,
+        $username = null,
+        $password = null,
+        $dbprefix = null,
+        $port = null
+    ) {
+        $dbConnectionDetails = [
+            'engine' => $engine,
+            'host' => $host,
+            'port' => $port,
+            'schema' => $schema,
+            'name' => $dbname,
+            'username' => $username,
+            'password' => $password,
+            'prefix' => $dbprefix,
+        ];
+
+        parent::__construct(
+            new DBManager(new DatabaseProviders\Factory(), $dbConnectionDetails),
+            new SQLBuilder(),
+            new LocalKeyStore(),
+            new SQLHistory()
+        );
+    }
+
+    /**
+     * @BeforeScenario
+     *
+     * @return void
+     * @param  mixed $beforeScenario
+     */
+    public function clearStore($beforeScenario)
+    {
+        $this->get('keyStore')->reset();
+    }
+
+    /**
      * @Given /^(?:|I )have(?:| an| a) "([^"]*)" where:$/
+     * @param mixed $entity
      */
     public function iHaveWhere($entity, TableNode $nodes)
     {
@@ -56,85 +109,30 @@ class SQLContext extends SQLHandler implements Interfaces\SQLContextInterface
     /**
      * @Given /^(?:|I )have(?:| an| a) "([^"]*)" where "([^"]*)"$/
      * @Given /^(?:|I )have(?:| an| a) "([^"]*)" with "([^"]*)"$/
+     * @param mixed $entity
+     * @param mixed $columns
      */
     public function iHaveAWhere($entity, $columns)
     {
-        $this->debugLog('------- I HAVE WHERE -------');
+        $columns = $this->get('sqlBuilder')->parseExternalQueryReferences($columns);
+        $columns = $this->get('sqlBuilder')->convertToArray($columns);
 
-        // Normalize data.
-        $this->setEntity($entity);
-
-        $this->filterAndConvertToArray($columns);
-
-        $this->debugLog('Trying to select existing record.');
-
-        // Check if the record exists.
-        // This needs to be done in two ways.
-        $whereClause = $this->constructSQLClause(' AND ', $this->getColumns());
-        $sql = sprintf('SELECT * FROM %s WHERE %s', $this->getEntity(), $whereClause);
-        $statement = $this->execute($sql);
-
-        // If it does, set the last id and return.
-        if ($this->hasFetchedRows($statement)) {
-            // Set the last id to use from fetched row.
-            $result = $statement->fetchAll();
-            if (isset($result[0]['id'])) {
-                $this->handleLastId($this->getEntity(), $result[0]['id']);
-            }
-
-            return $sql;
-        }
-
-        $this->debugLog('No record found, trying to insert.');
-
-        // If the record does not already exist, create it.
-        list($columnNames, $columnValues) = $this->getTableColumns($this->getEntity());
-        $sql = sprintf('INSERT INTO %s (%s) VALUES (%s)', $this->getEntity(), $columnNames, $columnValues);
-        $statement = $this->execute($sql);
-        $this->throwErrorIfNoRowsAffected($statement, self::IGNORE_DUPLICATE);
-        $result = $statement->fetchAll();
-
-        // Extract duplicate key and run update using it
-        if ($key = $this->getKeyFromDuplicateError($result)) {
-            $this->debugLog(sprintf('Duplicate key found, running update using key "%s"', $key));
-
-            $this->iHaveAnExistingWithWhere(
-                $this->getEntity(),
-                $columns,
-                sprintf('%s:%s', $key, $this->getColumns()[$key])
-            );
-
-            $this->setLastIdWhere(
-                $this->getEntity(),
-                sprintf('%s = %s', $key, $this->quoteOrNot($this->getColumns()[$key]))
-            );
-        }
-
-        return $sql;
+        return $this->insert($entity, $columns);
     }
 
     /**
-     * @Given /^(?:|I )dont have(?:| an| a) "([^"]*)" where "([^"]*)"$/
-     * @Given /^(?:|I )dont have(?:| an| a) "([^"]*)" with "([^"]*)"$/
+     * @Given /^(?:|I )don't have(?:| an| a) "([^"]*)" where "([^"]*)"$/
+     * @Given /^(?:|I )don't have(?:| an| a) "([^"]*)" with "([^"]*)"$/
+     * @Given /^(?:|I )do not have(?:| an| a) "([^"]*)" where "([^"]*)"$/
+     * @param mixed $entity
+     * @param mixed $columns
      */
     public function iDontHaveAWhere($entity, $columns)
     {
-        $this->debugLog('------- I DONT HAVE WHERE -------');
+        $columns = $this->get('sqlBuilder')->parseExternalQueryReferences($columns);
+        $columns = $this->get('sqlBuilder')->convertToArray($columns);
 
-        if (! $columns) {
-            throw new \Exception('You must provide a where clause!');
-        }
-
-        $this->setEntity($entity);
-
-        $this->filterAndConvertToArray($columns);
-        $whereClause = $this->constructSQLClause(' AND ', $this->getColumns());
-
-        $sql = sprintf('DELETE FROM %s WHERE %s', $this->getEntity(), $whereClause);
-        $statement = $this->execute($sql);
-        $this->throwExceptionIfErrors($statement);
-
-        return $sql;
+        return $this->delete($entity, $columns);
     }
 
     /**
@@ -143,7 +141,10 @@ class SQLContext extends SQLHandler implements Interfaces\SQLContextInterface
      */
     public function iDontHave(TableNode $nodes)
     {
+        // Get all table node rows.
         $nodes = $nodes->getRows();
+
+        // Get rid of first row as its just for readability.
         unset($nodes[0]);
         $sqls = [];
 
@@ -157,12 +158,15 @@ class SQLContext extends SQLHandler implements Interfaces\SQLContextInterface
 
     /**
      * @Given /^(?:|I )do not have(?:| an| a) "([^"]*)" where:$/
+     * @param mixed $entity
      */
     public function iDontHaveWhere($entity, TableNode $nodes)
     {
+        // Convert table node to parse able string.
         $queries = $this->convertTableNodeToQueries($nodes);
         $sqls = [];
 
+        // Run through the dontHave step definition for each query.
         foreach ($queries as $query) {
             $sqls[] = $this->iDontHaveAWhere($entity, $query);
         }
@@ -172,162 +176,98 @@ class SQLContext extends SQLHandler implements Interfaces\SQLContextInterface
 
     /**
      * @Given /^(?:|I )have an existing "([^"]*)" with "([^"]*)" where "([^"]*)"$/
+     * @param mixed $entity
+     * @param mixed $with
+     * @param mixed $columns
      */
     public function iHaveAnExistingWithWhere($entity, $with, $columns)
     {
-        $this->debugLog('------- I HAVE AN EXISTING WITH WHERE -------');
+        $with = $this->get('sqlBuilder')->parseExternalQueryReferences($with);
+        $with = $this->get('sqlBuilder')->convertToArray($with);
 
-        if (! $columns) {
-            throw new \Exception('You must provide a where clause!');
-        }
+        $columns = $this->get('sqlBuilder')->parseExternalQueryReferences($columns);
+        $columns = $this->get('sqlBuilder')->convertToArray($columns);
 
-        $this->setEntity($entity);
-
-        $this->filterAndConvertToArray($with);
-        $updateClause = $this->constructSQLClause(', ', $this->getColumns());
-        $this->filterAndConvertToArray($columns);
-        $whereClause = $this->constructSQLClause(' AND ', $this->getColumns());
-
-        $sql = sprintf('UPDATE %s SET %s WHERE %s', $this->getEntity(), $updateClause, $whereClause);
-        $statement = $this->execute($sql);
-        $this->throwErrorIfNoRowsAffected($statement, self::IGNORE_DUPLICATE);
-
-        $this->setLastIdWhere(
-            $this->getEntity(),
-            $whereClause
-        );
-
-        return $sql;
+        return $this->update($entity, $with, $columns);
     }
 
     /**
      * @Given /^(?:|I )have(?:| an| a) existing "([^"]*)" where "([^"]*)"$/
+     * @param mixed $entity
+     * @param mixed $where
      */
     public function iHaveAnExistingWhere($entity, $where)
     {
-        $this->debugLog('------- I HAVE AN EXISTING WHERE -------');
+        $where = $this->get('sqlBuilder')->parseExternalQueryReferences($where);
+        $where = $this->get('sqlBuilder')->convertToArray($where);
 
-        $this->setEntity($entity);
-
-        // Create array out of the with string given.
-        $this->filterAndConvertToArray($where);
-        // Create a usable sql clause.
-        $selectWhereClause = $this->constructSQLClause(' AND ', $this->getColumns());
-
-        return $this->setLastIdWhere(
-            $this->getEntity(),
-            $selectWhereClause
-        );
+        return $this->select($entity, $where);
     }
 
     /**
      * @Then /^(?:|I )should have(?:| an| a) "([^"]*)" with:$/
+     * @param mixed $entity
      */
     public function iShouldHaveAWithTable($entity, TableNode $with)
     {
+        // Convert the table node to parse able string.
         $clause = $this->convertTableNodeToSingleContextClause($with);
+
+        // Run through the shouldHaveWith step definition.
         $sql = $this->iShouldHaveAWith($entity, $clause);
 
         return $sql;
     }
 
     /**
-     * @Then /^(?:|I )should have(?:| an| a) "([^"]*)" with "([^"]*)"$/
+     * @Then /^(?:|I )should have(?:| an| a) "([^"]*)" with "([^"]*)"(?:| in the database)$/
+     * @param mixed $entity
+     * @param mixed $with
      */
     public function iShouldHaveAWith($entity, $with)
     {
-        $this->debugLog('------- I SHOULD HAVE A WITH -------');
+        $with = $this->get('sqlBuilder')->parseExternalQueryReferences($with);
+        $with = $this->get('sqlBuilder')->convertToArray($with);
 
-        $this->setEntity($entity);
+        return $this->assertExists($entity, $with);
+    }
 
-        // Create array out of the with string given.
-        $this->filterAndConvertToArray($with);
-        // Create a usable sql clause.
-        $selectWhereClause = $this->constructSQLClause(' AND ', $this->getColumns());
+    /**
+     * @Then /^(?:|I )should not have(?:| an| a) "([^"]*)" with "([^"]*)"(?:| in the database)$/
+     * @param mixed $entity
+     * @param mixed $with
+     */
+    public function iShouldNotHaveAWith($entity, $with)
+    {
+        $with = $this->get('sqlBuilder')->parseExternalQueryReferences($with);
+        $with = $this->get('sqlBuilder')->convertToArray($with);
 
-        // Create the sql to be inserted.
-        $sql = sprintf(
-            'SELECT * FROM %s WHERE %s',
-            $this->getEntity(),
-            $selectWhereClause
-        );
-
-        // Execute the sql query, if the query throws a generic not found error,
-        // catch it and give it some context.
-        try {
-            $statement = $this->execute($sql);
-            $this->throwErrorIfNoRowsAffected($statement);
-        } catch (\Exception $e) {
-            if (! $this->hasFetchedRows($statement)) {
-                throw new \Exception(sprintf(
-                    'Record not found with "%s" in "%s"',
-                    $selectWhereClause,
-                    $this->getEntity()
-                ));
-            }
-        }
-
-        return $sql;
+        return $this->assertNotExists($entity, $with);
     }
 
     /**
      * @Then /^(?:|I )should not have(?:| an| a) "([^"]*)" with:$/
+     * @param mixed $entity
      */
     public function iShouldNotHaveAWithTable($entity, TableNode $with)
     {
+        // Convert the table node to parse able string.
         $clause = $this->convertTableNodeToSingleContextClause($with);
+
+        // Run through the shouldNotHave step definition.
         $sql = $this->iShouldNotHaveAWith($entity, $clause);
 
         return $sql;
     }
 
     /**
-     * @Then /^(?:|I )should not have(?:| an| a) "([^"]*)" with "([^"]*)"$/
-     */
-    public function iShouldNotHaveAWith($entity, $with)
-    {
-        $this->debugLog('------- I SHOULD NOT HAVE A WHERE -------');
-
-        $this->setEntity($entity);
-
-        // Create array out of the with string given.
-        $this->filterAndConvertToArray($with);
-        // Create a usable sql clause.
-        $selectWhereClause = $this->constructSQLClause(' AND ', $this->getColumns());
-
-        // Create the sql to be inserted.
-        $sql = sprintf(
-            'SELECT * FROM %s WHERE %s',
-            $this->getEntity(),
-            $selectWhereClause
-        );
-
-        // Execute the sql query, if the query throws a generic not found error,
-        // catch it and give it some context.
-        try {
-            $statement = $this->execute($sql);
-            $this->throwErrorIfNoRowsAffected($statement);
-        } catch (\Exception $e) {
-            if ($this->hasFetchedRows($statement)) {
-                throw new \Exception(sprintf(
-                    'Record not found with "%s" in "%s"',
-                    $selectWhereClause,
-                    $this->getEntity()
-                ));
-            }
-        }
-
-        return $sql;
-    }
-
-    /**
      * @Given /^(?:|I )save the id as "([^"]*)"$/
+     * @param mixed $key
      */
     public function iSaveTheIdAs($key)
     {
         $this->debugLog('------- I SAVE THE ID -------');
-
-        $this->setKeyword($key, $this->getLastInsertId());
+        $this->setKeyword($key, $this->getLastId());
 
         return $this;
     }
@@ -339,8 +279,6 @@ class SQLContext extends SQLHandler implements Interfaces\SQLContextInterface
     {
         $this->debugLog('------- I AM IN DEBUG MODE -------');
 
-        if (! defined('DEBUG_MODE')) {
-            define('DEBUG_MODE', 1);
-        }
+        Debugger::enable(Debugger::MODE_ALL);
     }
 }
