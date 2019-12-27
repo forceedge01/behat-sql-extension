@@ -20,7 +20,6 @@ class SQLBuilder implements Interfaces\SQLBuilderInterface
     private $databaseProvider;
 
     /**
-     * @param DatabaseProviderInterface $databaseProvider
      *
      * @return $this
      */
@@ -34,7 +33,6 @@ class SQLBuilder implements Interfaces\SQLBuilderInterface
      *
      * @param string $commandType
      * @param string $glue
-     * @param array  $columns
      *
      * @return string
      */
@@ -149,13 +147,12 @@ class SQLBuilder implements Interfaces\SQLBuilderInterface
     /**
      * Converts the incoming string param from steps to array.
      *
-     * @param mixed $query
      *
      * @return array
      */
     public function convertToArray($query)
     {
-        if (! $query) {
+        if (!$query) {
             return [];
         }
 
@@ -194,7 +191,7 @@ class SQLBuilder implements Interfaces\SQLBuilderInterface
      */
     public function quoteOrNot($val)
     {
-        return ((is_string($val) || is_numeric($val)) && ! $this->isNotQuotable($val)) ?
+        return ((is_string($val) || is_numeric($val)) && !$this->isNotQuotable($val)) ?
             sprintf(
                 "'%s'",
                 str_replace(
@@ -236,7 +233,7 @@ class SQLBuilder implements Interfaces\SQLBuilderInterface
             '\d+'
         ];
 
-        if (! isset($_SESSION['behat']['GenesisSqlExtension']['notQuotableKeywords'])) {
+        if (!isset($_SESSION['behat']['GenesisSqlExtension']['notQuotableKeywords'])) {
             $_SESSION['behat']['GenesisSqlExtension']['notQuotableKeywords'] = [];
         }
 
@@ -262,7 +259,7 @@ class SQLBuilder implements Interfaces\SQLBuilderInterface
         // Get all rows and extract the heading.
         $rows = $node->getRows();
 
-        if (! $rows || ! isset($rows[1])) {
+        if (!$rows || !isset($rows[1])) {
             throw new Exception('No data provided to loop through.');
         }
 
@@ -294,7 +291,7 @@ class SQLBuilder implements Interfaces\SQLBuilderInterface
         // Get all rows and extract the heading.
         $rows = $node->getRows();
 
-        if (! $rows || ! isset($rows[1])) {
+        if (!$rows || !isset($rows[1])) {
             throw new Exception('No data provided to loop through.');
         }
 
@@ -311,7 +308,6 @@ class SQLBuilder implements Interfaces\SQLBuilderInterface
     }
 
     /**
-     * @param array $values
      *
      * @return string
      */
@@ -407,7 +403,7 @@ class SQLBuilder implements Interfaces\SQLBuilderInterface
         list($garbage, $index) = explode('_', $placeholder);
         unset($garbage);
 
-        if (! array_key_exists($index, $this->refs)) {
+        if (!array_key_exists($index, $this->refs)) {
             return false;
         }
 
@@ -457,7 +453,7 @@ class SQLBuilder implements Interfaces\SQLBuilderInterface
      */
     public function getSQLQueryForExternalReference($externalRef, $prefix = null)
     {
-        if (! $this->isExternalReference($externalRef)) {
+        if (!$this->isExternalReference($externalRef)) {
             throw new Exception(
                 'Invalid external ref provided, external ref must be enclosed in "[]" and where split by "|".
                 Example format [{table}.{column1}|{column2}:{value}]'
@@ -525,6 +521,16 @@ class SQLBuilder implements Interfaces\SQLBuilderInterface
     }
 
     /**
+     * @param string $string
+     *
+     * @return string
+     */
+    public static function escapeString($string)
+    {
+        return str_replace(',', '\\,', $string);
+    }
+
+    /**
      * Get the qualified table name.
      *
      * @param string $prefix The db prefix.
@@ -537,7 +543,7 @@ class SQLBuilder implements Interfaces\SQLBuilderInterface
         $dbname = $this->getPrefixedDatabaseName($prefix, $table);
         $table = $this->getTableName($table);
 
-        if (! $dbname) {
+        if (!$dbname) {
             return $table;
         }
 
@@ -577,7 +583,7 @@ class SQLBuilder implements Interfaces\SQLBuilderInterface
         preg_match_all($pattern, $query, $refs);
 
         // If there are any external ref matches, then replace them with placeholders.
-        if (isset($refs[0]) and ! empty($refs[0])) {
+        if (isset($refs[0]) and !empty($refs[0])) {
             Debugger::log('External refs found: ' . print_r($refs[0], true));
             foreach ($refs[0] as $ref) {
                 $placeholder = $this->getPlaceholderForRef($ref);
@@ -597,8 +603,6 @@ class SQLBuilder implements Interfaces\SQLBuilderInterface
      * Prepends the prefix.
      *
      * @param string $prefix The prefix to prepend.
-     * @param string $table  The table to prefix.
-     * @param mixed  $entity
      *
      * @return string|null If no database name is given, returns null.
      */
