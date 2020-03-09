@@ -54,7 +54,11 @@ class SelectQueryBuilder extends QueryBuilder
     {
         $table = $this->query->getQueryParams()->getEntity()->getEntityName();
 
-        $sql = "SELECT {$this->selectColumns} FROM {$table} WHERE {$this->whereClause}";
+        $sql = "SELECT {$this->selectColumns} FROM {$table}";
+        if ($this->whereClause) {
+            $sql .= " WHERE {$this->whereClause}";
+        }
+
         $this->query->setSql($sql);
 
         return $this;

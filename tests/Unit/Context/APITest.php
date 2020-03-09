@@ -109,7 +109,7 @@ class APITest extends TestHelper
     /**
      * Test that this method works with values provided.
      */
-    public function testIHaveAWhereWithValuesRecordDoesNotExists()
+    public function testInsert()
     {
         $entity = 'database.unique1';
         $column = ['column1' => 'abc'];
@@ -187,7 +187,7 @@ class APITest extends TestHelper
      *
      * @group duplicate
      */
-    public function testIHaveAWhereDuplicateRecord()
+    public function testInsertDuplicateRecords()
     {
         $entity = 'database.unique1';
         $column = ['column1' => 'abc'];
@@ -263,7 +263,7 @@ class APITest extends TestHelper
     /**
      * @expectedException Exception
      */
-    public function testIDontHaveAWhere()
+    public function testDelete()
     {
         $entity = '';
         $column = [];
@@ -285,7 +285,7 @@ class APITest extends TestHelper
     /**
      * Test that this method works with values provided.
      */
-    public function testIDontHaveAWhereWithValues()
+    public function testDeleteWithWhere()
     {
         $entity = 'database.someTable';
         $column = ['column1' => 'abc', 'column2' => 'xyz', 'column3' => 'NULL', 'column4' => 'what\'s up doc'];
@@ -341,7 +341,7 @@ class APITest extends TestHelper
     /**
      * @expectedException Exception
      */
-    public function testiHaveAnExistingWithWhere()
+    public function testUpdateNoTable()
     {
         $entity = '';
         $with = [];
@@ -353,7 +353,7 @@ class APITest extends TestHelper
     /**
      * @expectedException Genesis\SQLExtension\Context\Exceptions\NoWhereClauseException
      */
-    public function testUpdateNoWhereClauseException()
+    public function testUpdateNoWhereOrColumns()
     {
         $entity = 'abc';
         $with = [];
@@ -365,7 +365,7 @@ class APITest extends TestHelper
     /**
      * Test that this method works with values provided.
      */
-    public function testiHaveAnExistingWithWhereWithValues()
+    public function testUpdateWithValues()
     {
         $entity = 'database.someTable2';
         $with = ['column1' => 'abc', 'column2' => 'xyz', 'column3' => 'NULL', 'column4' => 'what\'s up doc'];
@@ -429,7 +429,7 @@ class APITest extends TestHelper
     /**
      * Test that this method works as expected.
      */
-    public function testiHaveAnExistingWhere()
+    public function testSelect()
     {
         $entity = 'database.someTable2';
         $where = ['column1' => 'abc', 'column2' => 'xyz', 'column3' => 'NULL', 'column4' => 'what\'s up doc'];
@@ -486,7 +486,7 @@ class APITest extends TestHelper
     /**
      * Test that this method works with values provided.
      */
-    public function testiShouldHaveAWithWithValues()
+    public function testSelectWithOtherValues()
     {
         $entity = 'database.someTable4';
         $with = ['column1' => 'abc', 'column2' => 'xyz', 'column3' => '!NULL'];
@@ -534,7 +534,7 @@ class APITest extends TestHelper
      *
      * @expectedException Genesis\SQLExtension\Context\Exceptions\SelectException
      */
-    public function testiShouldHaveAWithWithNoRecordFound()
+    public function testSelectThrowsException()
     {
         $entity = 'database.someTable4';
         $with = ['column1' => 'abc', 'column2' => 'xyz', 'column3' => '!NULL'];
@@ -570,7 +570,7 @@ class APITest extends TestHelper
      *
      * @expectedException Exception
      */
-    public function testiShouldNotHaveAWithWithValues()
+    public function testAssertNotExistsException()
     {
         $entity = 'database.someTable3';
         $with = ['column1' => 'abc', 'column2' => 'xyz', 'column3' => 'what\'s up doc'];
@@ -598,7 +598,7 @@ class APITest extends TestHelper
     /**
      * Test that this method works with values provided.
      */
-    public function testiShouldNotHaveAWithNoValues()
+    public function testAssertNotExists()
     {
         $entity = 'database.someTable3';
         $with = ['column1' => 'abc', 'column2' => 'xyz', 'column3' => 'what\'s up doc'];
@@ -634,7 +634,7 @@ class APITest extends TestHelper
     /**
      * Test that this method works with values containing wildcards for a LIKE search.
      */
-    public function testiShouldHaveAWithWithLikeValues()
+    public function testAssertExists()
     {
         $entity = 'database.someTable4';
         $with = ['column1' => 'abc', 'column2' => '%xyz%'];
@@ -672,5 +672,60 @@ class APITest extends TestHelper
         // Assert.
         $this->assertEquals($expectedSQL, $result);
         $this->assertNotNull($this->testObject->getEntity());
+    }
+
+    public function testCount()
+    {
+        $entity = 'database.someTable2';
+        $where = ['column1' => 'abc', 'column2' => 'xyz', 'column3' => 'NULL', 'column4' => 'what\'s up doc'];
+
+        $convertedQuery1 = [
+            'column1' => 'abc',
+            'column2' => 'xyz',
+            'column3' => 'NULL',
+            'column4' => 'what\'s up doc'
+        ];
+
+        $this->mockDependency(
+            'sqlBuilder',
+            'convertToArray',
+            array('column1:abc,column2:xyz,column3:NULL,column4:what\'s up doc'),
+            $convertedQuery1
+        );
+
+        $this->mockDependency(
+            'sqlBuilder',
+            'constructSQLClause',
+            array(
+                'select',
+                ' AND ',
+                $convertedQuery1
+            ),
+            "`column1` = 'abc' AND `column2` = 'xyz' AND `column3` is NULL AND `column4` = 'what\\'s up doc'"
+        );
+
+        $expectedResult = [['SELECT_COUNT_someTable2' => 5, 0 => 5]];
+        $statement = $this->getPdoStatementWithRows();
+        $statement->expects($this->once())
+            ->method('fetch')
+            ->will($this->returnValue($expectedResult[0]));
+
+        $this->mockDependency('dbHelperMock', 'execute', ["SELECT COUNT(*) AS SELECT_COUNT_someTable2 FROM dev_database.someTable2 WHERE `column1` = 'abc' AND `column2` = 'xyz' AND `column3` is NULL AND `column4` = 'what\'s up doc'"], $statement);
+
+        $this->mockDependency('dbHelperMock', 'throwErrorIfNoRowsAffected', [$statement]);
+        $this->mockDependency('sqlBuilder', 'getSearchConditionOperatorForColumns', null, ' AND ');
+        $this->mockDependency('sqlBuilder', 'getPrefixedDatabaseName', null, 'dev_database');
+        $this->mockDependency('sqlBuilder', 'getTableName', null, 'someTable2');
+
+        $this->dependencies['dbHelperMock']->expects($this->any())
+            ->method('getFirstValueFromStatement')
+            ->will($this->returnCallback(function ($statement) {
+                return $statement->fetch(PDO::FETCH_BOTH);
+            }));
+
+        $result = $this->testObject->count($entity, $where);
+
+        $this->assertInternalType('int', $result);
+        $this->assertSame($result, 5);
     }
 }
