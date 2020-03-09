@@ -7,8 +7,8 @@ interface APIInterface extends SQLHandlerInterface
     /**
      * User friendly version of iHaveAWith.
      *
-     * @param string $table The table to insert into.
-     * @param array $values Values to insert.
+     * @param string $table  The table to insert into.
+     * @param array  $values Values to insert.
      *
      * @return string
      */
@@ -18,7 +18,7 @@ interface APIInterface extends SQLHandlerInterface
      * User friendly version of iDontHaveAWhere.
      *
      * @param string $table The table to delete from.
-     * @param array $where The where clause.
+     * @param array  $where The where clause.
      *
      * @return string
      */
@@ -27,9 +27,9 @@ interface APIInterface extends SQLHandlerInterface
     /**
      * User friendly version of iHaveAnExistingWithWhere.
      *
-     * @param string $table The table to delete from.
-     * @param array $update The columns to update.
-     * @param array $where The where clause.
+     * @param string $table  The table to delete from.
+     * @param array  $update The columns to update.
+     * @param array  $where  The where clause.
      *
      * @return string
      */
@@ -39,11 +39,19 @@ interface APIInterface extends SQLHandlerInterface
      * User friendly version of iHaveAnExistingWhere.
      *
      * @param string $table The table to delete from.
-     * @param array $where The where clause.
+     * @param array  $where The where clause.
      *
      * @return string
      */
     public function select($table, array $where);
+
+    /**
+     * @param string $table
+     * @param array  $columns
+     *
+     * @return int
+     */
+    public function count($table, array $columns = []);
 
     /**
      * Get a dependency.
@@ -58,7 +66,7 @@ interface APIInterface extends SQLHandlerInterface
      * Assert if record exists.
      *
      * @param string $table The table to delete from.
-     * @param array $where The where clause.
+     * @param array  $where The where clause.
      *
      * @return string
      */
@@ -68,7 +76,7 @@ interface APIInterface extends SQLHandlerInterface
      * Assert if record does not exist.
      *
      * @param string $table The table to delete from.
-     * @param array $where The where clause.
+     * @param array  $where The where clause.
      *
      * @return string
      */
@@ -78,9 +86,9 @@ interface APIInterface extends SQLHandlerInterface
      * Construct an external reference clause for the query.
      * Note: This will only work with the first result returned.
      *
-     * @param string $table The table to select from.
+     * @param string $table  The table to select from.
      * @param string $column The column to select within the table.
-     * @param array $where The array to filter the values from.
+     * @param array  $where  The array to filter the values from.
      *
      * @example Example usage: Update postcode where address Id is provided.
      *

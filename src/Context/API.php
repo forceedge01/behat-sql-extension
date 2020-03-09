@@ -57,6 +57,37 @@ class API extends SQLHandler implements Interfaces\APIInterface
     /**
      * {@inheritDoc}
      */
+    public function count($table, array $columns = [])
+    {
+        $this->debugLog('------- SELECT -------');
+
+        $this->resolveEntity($table);
+        $this->setCommandType(SQLHandlerInterface::COMMAND_TYPE_SELECT);
+        $resolvedValues = $this->resolveQuery($columns);
+        $this->queryParams = new Representations\QueryParams($this->getEntity(), $columns, $resolvedValues);
+
+        $searchConditionOperator = ' AND ';
+        $selectWhereClause = $this->constructSQLClause(
+            $this->getCommandType(),
+            $searchConditionOperator,
+            $this->queryParams->getResolvedValues()
+        );
+
+        $selectQueryBuilder = new Builder\SelectQueryBuilder($this->queryParams);
+        $selectQueryBuilder->setWhereClause($selectWhereClause);
+        $selectQueryBuilder->setColumns('COUNT(*) AS ' . $this->getSelectCountAlias());
+        $query = Builder\QueryDirector::build($selectQueryBuilder);
+
+        try {
+            return (int) $this->setKeywordsFromQuery($query)[$this->getSelectCountAlias()];
+        } catch (Exception $e) {
+            throw new Exceptions\SelectException($this->getEntity(), $e);
+        }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
     public function subSelect($table, $column, array $values)
     {
         $where = $this->get('sqlBuilder')->convertArrayToContextQueryFormat($values);

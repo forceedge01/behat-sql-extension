@@ -833,4 +833,9 @@ class SQLHandler implements Context, Interfaces\SQLHandlerInterface
 
         return $sqlClause;
     }
+
+    protected function getSelectCountAlias()
+    {
+        return 'SELECT_COUNT_' . $this->entity->getTableName();
+    }
 }
