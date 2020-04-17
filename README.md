@@ -19,6 +19,7 @@ New Feature in Minor:
 -----------------------
 - 1: OBDC Support added.
 - 2: Count API call added.
+- 3: Read all columns of a table. Dev improvements.
 
 Patch fix:
 ------------
