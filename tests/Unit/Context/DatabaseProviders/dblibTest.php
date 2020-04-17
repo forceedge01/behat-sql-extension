@@ -309,4 +309,39 @@ class dblibTest extends TestHelper
 
         $this->assertEquals($expectedResult, $result);
     }
+
+    /**
+     * Test when no required columns are found they are returned in the right format.
+     */
+    public function testGetTableColumnsResults()
+    {
+        $dbSchema = 'myschema';
+        $table = 'user';
+        $expectedSql = "
+            SELECT
+                COLUMN_NAME, DATA_TYPE, CHARACTER_MAXIMUM_LENGTH
+            FROM
+                information_schema.columns TC
+            WHERE
+                TABLE_NAME = '$table'
+            AND
+                COLUMNPROPERTY(object_id(TABLE_SCHEMA+'.'+TABLE_NAME), COLUMN_NAME, 'IsIdentity') != 1
+             AND TABLE_SCHEMA = 'myschema';";
+
+        $this->testObject->getExecutor()->expects($this->once())
+            ->method('execute')
+            ->with($expectedSql)
+            ->will($this->returnValue($this->getPdoStatementWithRows(2, [
+                    ['COLUMN_NAME' => 'id', 'DATA_TYPE' => 'int', 'CHARACTER_MAXIMUM_LENGTH' => 11],
+                    ['COLUMN_NAME' => 'name', 'DATA_TYPE' => 'string', 'CHARACTER_MAXIMUM_LENGTH' => 5000]
+            ])));
+
+        $result = $this->testObject->getTableColumns(null, $dbSchema, $table);
+        $expectedResult = [
+            'id' => ['type' => 'int', 'length' => 11],
+            'name' => ['type' => 'string', 'length' => 5000]
+        ];
+
+        $this->assertEquals($expectedResult, $result);
+    }
 }

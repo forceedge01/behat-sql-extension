@@ -41,7 +41,7 @@ class mysqlTest extends TestHelper
     {
         // Execute
         $result = $this->testObject->getPdoDnsString($dbname = 'testing', $host = 'myhost', $port = 55454);
-    
+
         // Assert Result
         self::assertEquals($result, 'mysql:dbname=testing;host=myhost;port=55454');
     }
@@ -53,7 +53,7 @@ class mysqlTest extends TestHelper
     {
         // Execute
         $result = $this->testObject->getPdoDnsString($dbname = 'testing', $host = 'myhost');
-    
+
         // Assert Result
         self::assertEquals($result, 'mysql:dbname=testing;host=myhost;port=3306');
     }
@@ -65,7 +65,7 @@ class mysqlTest extends TestHelper
     {
         // Execute
         $result = $this->testObject->getLeftDelimiterForReservedWord();
-    
+
         // Assert Result
         self::assertEquals('`', $result);
     }
@@ -77,7 +77,7 @@ class mysqlTest extends TestHelper
     {
         // Execute
         $result = $this->testObject->getRightDelimiterForReservedWord();
-    
+
         // Assert Result
         self::assertEquals('`', $result);
     }
@@ -192,6 +192,42 @@ class mysqlTest extends TestHelper
             ])));
 
         $result = $this->testObject->getRequiredTableColumns(null, $dbSchema, $table);
+        $expectedResult = [
+            'id' => ['type' => 'int', 'length' => 5000],
+            'name' => ['type' => 'string', 'length' => 500]
+        ];
+
+        $this->assertEquals($expectedResult, $result);
+    }
+
+    /**
+     * Test when no required columns are found they are returned in the right format.
+     */
+    public function testGetTableColumnsResults()
+    {
+        $dbSchema = 'myschema';
+        $table = 'user';
+        $expectedSql = "
+            SELECT 
+                `column_name` AS `column_name`,
+                `data_type` AS `data_type`,
+                `character_maximum_length` AS `data_length`
+            FROM 
+                information_schema.columns
+            AND 
+                table_name = 'user'
+            AND 
+                table_schema = 'myschema';";
+
+        $this->testObject->getExecutor()->expects($this->once())
+            ->method('execute')
+            ->with($expectedSql)
+            ->will($this->returnValue($this->getPdoStatementWithRows(2, [
+                    ['column_name' => 'id', 'data_type' => 'int', 'data_length' => null],
+                    ['column_name' => 'name', 'data_type' => 'string', 'data_length' => '500'],
+            ])));
+
+        $result = $this->testObject->getTableColumns(null, $dbSchema, $table);
         $expectedResult = [
             'id' => ['type' => 'int', 'length' => 5000],
             'name' => ['type' => 'string', 'length' => 500]
