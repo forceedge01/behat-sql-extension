@@ -40,7 +40,7 @@ class DBManager implements Interfaces\DBManagerInterface
 
     /**
      * @param DatabaseProviderFactoryInterface $dbProviderFactory
-     * @param array $params
+     * @param array                            $params
      */
     public function __construct(
         DatabaseProviderFactoryInterface $dbProviderFactory,
@@ -208,6 +208,29 @@ class DBManager implements Interfaces\DBManagerInterface
     }
 
     /**
+     * @param string $database
+     * @param string $schema
+     * @param string $table
+     *
+     * @return array
+     */
+    public function getTableColumns($database, $schema, $table)
+    {
+        $requiredColumnReference = $database . $schema . $table;
+        $databaseToUse = $this->getParams()['DBPREFIX'] . ($database ? $database : $this->getParams()['DBNAME']);
+
+        if (! isset(self::$requiredColumns[$requiredColumnReference])) {
+            self::$requiredColumns[$requiredColumnReference] = $this->databaseProvider->getTableColumns(
+                $databaseToUse,
+                $schema,
+                $table
+            );
+        }
+
+        return self::$requiredColumns[$requiredColumnReference];
+    }
+
+    /**
      * Get the last insert id.
      *
      * @param string $table For compatibility with postgres.
@@ -239,9 +262,9 @@ class DBManager implements Interfaces\DBManagerInterface
     }
 
     /**
-     * @param array $data The array to look into.
-     * @param string $if The index to check in the array.
-     * @param mixed $else If the index is not found, use this value.
+     * @param array  $data The array to look into.
+     * @param string $if   The index to check in the array.
+     * @param mixed  $else If the index is not found, use this value.
      *
      * @return mixed
      */
@@ -318,7 +341,7 @@ class DBManager implements Interfaces\DBManagerInterface
      * Check for any db errors. Use only with select statements.
      *
      * @param Traversable $sqlStatement
-     * @param bool $ignoreDuplicate
+     * @param bool        $ignoreDuplicate
      *
      * @return bool
      */

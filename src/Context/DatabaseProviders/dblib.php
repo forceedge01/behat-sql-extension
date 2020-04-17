@@ -158,6 +158,52 @@ class dblib extends BaseProvider
     }
 
     /**
+     * {@inheritDoc}
+     */
+    public function getTableColumns($database, $schema, $table)
+    {
+        $database = $this->normaliseMsSQLPotentialKeyword($database);
+        $schema = $this->normaliseMsSQLPotentialKeyword($schema);
+        $table = $this->normaliseMsSQLPotentialKeyword($table);
+
+        $additionalWhereClause = '';
+        if ($database) {
+            $additionalWhereClause = " AND TABLE_CATALOG = '$database'";
+        }
+
+        if ($schema) {
+            $additionalWhereClause .= " AND TABLE_SCHEMA = '$schema'";
+        }
+
+        $sql = "
+            SELECT
+                COLUMN_NAME, DATA_TYPE, CHARACTER_MAXIMUM_LENGTH
+            FROM
+                information_schema.columns TC
+            WHERE
+                TABLE_NAME = '$table'
+            AND
+                COLUMNPROPERTY(object_id(TABLE_SCHEMA+'.'+TABLE_NAME), COLUMN_NAME, 'IsIdentity') != 1
+            {$additionalWhereClause};";
+
+        $statement = $this->getExecutor()->execute($sql);
+        $result = $statement->fetchAll();
+        $this->getExecutor()->closeStatement($statement);
+
+        $columns = [];
+        if ($result) {
+            foreach ($result as $value) {
+                $columns[$value['COLUMN_NAME']] = [
+                    'type' => $value['DATA_TYPE'],
+                    'length' => $value['CHARACTER_MAXIMUM_LENGTH']
+                ];
+            }
+        }
+
+        return $columns;
+    }
+
+    /**
      * @param string $keyword
      *
      * @return string
