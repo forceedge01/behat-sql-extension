@@ -71,4 +71,24 @@ class sqlite extends BaseProvider
 
         return $requiredColumns;
     }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function getTableColumns($database, $schema, $table)
+    {
+        $query = 'PRAGMA table_info(' . $table . ')';
+        $statement = $this->getExecutor()->execute($query);
+        $requiredColumns = [];
+
+        foreach ($statement->fetchAll() as $column) {
+            $type = explode('(', $column['type']);
+            $requiredColumns[$column['name']] = [
+                'type' => $type[0],
+                'length' => isset($type[1]) ? (int) trim($type[1], '()') : 5000
+            ];
+        }
+
+        return $requiredColumns;
+    }
 }

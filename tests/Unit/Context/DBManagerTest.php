@@ -165,6 +165,29 @@ class DBManagerTest extends TestHelper
         $this->assertTrue($expectedResult === $result);
     }
 
+    public function testGetTableColumns()
+    {
+        $database = 'mydb';
+        $schema = 'myschema';
+        $table = 'user';
+
+        $expectedResult = [
+            'UserId' => [
+                'type' => 'int',
+                'length' => null
+            ]
+        ];
+
+        $this->dependencies['databaseProvider']->expects($this->any())
+            ->method('getTableColumns')
+            ->with($database, $schema, $table)
+            ->willReturn($expectedResult);
+
+        $result = $this->testObject->getTableColumns($database, $schema, $table);
+
+        $this->assertTrue($expectedResult === $result);
+    }
+
     public function testGetLastInsertId()
     {
         $table = 'user';

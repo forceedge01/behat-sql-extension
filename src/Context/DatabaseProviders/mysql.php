@@ -129,6 +129,69 @@ class mysql extends BaseProvider
     }
 
     /**
+     * {@inheritDoc}
+     */
+    public function getTableColumns($database, $schema, $table)
+    {
+        $resetSchema = false;
+        // If the DBSCHEMA is not set, try using the database name if provided with the table.
+        // If this happens the schema generation is dynamic so keep resetting the stored schema.
+        if (! $schema) {
+            $resetSchema = true;
+            preg_match('/(.*)\./', $table, $db);
+
+            if (isset($db[1])) {
+                $schema = $db[1];
+            }
+        }
+
+        // Parse out the table name.
+        $table = preg_replace('/(.*\.)/', '', $table);
+        $table = trim($table, '`');
+
+        // Statement to extract all required columns for a table.
+        $sqlStatement = "
+            SELECT 
+                `{$this->getColumnNameFieldName()}` AS `column_name`,
+                `{$this->getDataTypeFieldName()}` AS `data_type`,
+                `{$this->getMaxCharacterFieldName()}` AS `data_length`
+            FROM 
+                information_schema.columns
+            AND 
+                table_name = '%s'
+            AND 
+                table_schema = '%s';";
+
+        // Get not null columns
+        $sql = sprintf(
+            $sqlStatement,
+            $table,
+            $schema ? $schema : $database
+        );
+
+        // Reset schema after the fields have been extracted.
+        if ($resetSchema) {
+            $schema = null;
+        }
+
+        $statement = $this->getExecutor()->execute($sql);
+        $result = $statement->fetchAll();
+        $this->getExecutor()->closeStatement($statement);
+
+        $cols = [];
+        if ($result) {
+            foreach ($result as $column) {
+                $cols[$column['column_name']] = [
+                    'type' => $column['data_type'],
+                    'length' => $column['data_length'] ? $column['data_length'] : 5000
+                ];
+            }
+        }
+
+        return $cols;
+    }
+
+    /**
      * @return string
      */
     protected function getColumnNameFieldName()

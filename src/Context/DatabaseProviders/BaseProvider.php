@@ -30,4 +30,10 @@ abstract class BaseProvider implements DatabaseProviderInterface
     {
         return $this->executor;
     }
+
+    abstract public function getPrimaryKeyForTable($database, $schema, $table);
+
+    abstract public function getRequiredTableColumns($database, $schema, $table);
+
+    abstract public function getTableColumns($database, $schema, $table);
 }
