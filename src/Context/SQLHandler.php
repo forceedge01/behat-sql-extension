@@ -40,6 +40,9 @@ class SQLHandler implements Context, Interfaces\SQLHandlerInterface
      */
     private $lastQuery;
 
+
+    private $lastQueries = [];
+
     /**
      * The id of the last sql statement executed.
      */
@@ -116,6 +119,24 @@ class SQLHandler implements Context, Interfaces\SQLHandlerInterface
         }
 
         return $this->$dependency;
+    }
+
+    /**
+     * Set a dependency.
+     *
+     * @param string $dependency.
+     *
+     * @return object
+     */
+    public function set($dependency)
+    {
+        if (! property_exists($this, $dependency)) {
+            throw new Exception(sprintf('Dependency "%s" not found', $dependency));
+        }
+
+        $this->$dependency = $dependency;
+
+        return $this;
     }
 
     /**
@@ -320,6 +341,7 @@ class SQLHandler implements Context, Interfaces\SQLHandlerInterface
     {
         $this->debugLog('Executing SQL: ' . $sql);
         $this->lastQuery = $sql;
+        $this->lastQueries[$this->getCommandType()] = $sql;
 
         $statement = $this->dbManager->execute($sql);
         $this->lastId = $this->dbManager->getLastInsertId($this->getEntity()->getTableName());
@@ -346,6 +368,22 @@ class SQLHandler implements Context, Interfaces\SQLHandlerInterface
         }
 
         return $statement;
+    }
+
+    /**
+     * @return string
+     */
+    public function getLastQuery()
+    {
+        return $this->lastQuery;
+    }
+
+    /**
+     * @return array
+     */
+    public function getLastQueries()
+    {
+        return $this->lastQueries;
     }
 
     /**

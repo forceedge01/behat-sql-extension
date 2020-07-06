@@ -70,7 +70,7 @@ class LocalKeyStore implements Interfaces\KeyStoreInterface
         }
 
         foreach ($_SESSION['behat']['GenesisSqlExtension']['keywords'] as $keyword => $val) {
-            $keyValue = sprintf('{%s}', $keyword);
+            $keyValue = sprintf($this->getReplaceFormat(), $keyword);
 
             if ($key == $keyValue) {
                 $key = str_replace($keyValue, $val, $key);
@@ -93,7 +93,7 @@ class LocalKeyStore implements Interfaces\KeyStoreInterface
         $matches = [];
 
         // Extract potential keywords
-        preg_match_all('/({.+?})/', $string, $matches);
+        preg_match_all($this->getMatchRegex(), $string, $matches);
         $func = $closure ? $closure : 'str_replace';
 
         if (isset($matches[0])) {
@@ -103,5 +103,25 @@ class LocalKeyStore implements Interfaces\KeyStoreInterface
         }
 
         return $string;
+    }
+
+    /**
+     * @overridable
+     *
+     * @return string
+     */
+    protected function getMatchRegex()
+    {
+        return '/({.+?})/';
+    }
+
+    /**
+     * @overridable
+     *
+     * @return string
+     */
+    protected function getReplaceFormat()
+    {
+        return '{%s}';
     }
 }
