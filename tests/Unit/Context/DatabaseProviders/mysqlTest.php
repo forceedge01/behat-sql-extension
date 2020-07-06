@@ -214,7 +214,7 @@ class mysqlTest extends TestHelper
                 `character_maximum_length` AS `data_length`
             FROM 
                 information_schema.columns
-            AND 
+            WHERE
                 table_name = 'user'
             AND 
                 table_schema = 'myschema';";

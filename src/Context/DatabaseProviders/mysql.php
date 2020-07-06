@@ -157,7 +157,7 @@ class mysql extends BaseProvider
                 `{$this->getMaxCharacterFieldName()}` AS `data_length`
             FROM 
                 information_schema.columns
-            AND 
+            WHERE
                 table_name = '%s'
             AND 
                 table_schema = '%s';";
