@@ -147,7 +147,7 @@ $this->get('dbManager')->getConnection()->setAttribute(
 );
 ```
 
-Registering your own provider class
+Registering your own database provider class
 -----------------------------------
 
 In case the provided provider isn't compatible with your engine version or is missing, you can register your own provider before any calls are made like so:
