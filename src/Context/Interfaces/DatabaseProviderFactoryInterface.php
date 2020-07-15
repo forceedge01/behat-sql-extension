@@ -13,7 +13,7 @@ interface DatabaseProviderFactoryInterface
      *
      * @return DatabaseProviderInterface
      */
-    public function getProvider($engineProvider, DBManagerInterface $executor);
+    public function getProvider($engine, DBManagerInterface $executor);
 
     /**
      * This method can be extended to register custom providers.

@@ -31,6 +31,22 @@ abstract class BaseProvider implements DatabaseProviderInterface
         return $this->executor;
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    public function getLeftDelimiterForReservedWord()
+    {
+        return '';
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function getRightDelimiterForReservedWord()
+    {
+        return '';
+    }
+
     abstract public function getPrimaryKeyForTable($database, $schema, $table);
 
     abstract public function getRequiredTableColumns($database, $schema, $table);

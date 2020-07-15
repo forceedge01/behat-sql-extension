@@ -12,32 +12,80 @@ use Genesis\SQLExtension\Context\Interfaces\DatabaseProviderInterface;
  */
 class Factory implements DatabaseProviderFactoryInterface
 {
+    /**
+     * @var array Available providers.
+     */
     private $providers;
 
     /**
-     * @param string $engineProvider
+     * @var array instantiated providers.
+     */
+    private $instantiated;
+
+    public function __construct()
+    {
+        $this->registerProvider('mysql', mysql::class);
+        $this->registerProvider('dblib', dblib::class);
+        $this->registerProvider('mssql', mssql::class);
+        $this->registerProvider('odbc', odbc::class);
+        $this->registerProvider('pgsql', pgsql::class);
+        $this->registerProvider('sqlite', sqlite::class);
+        $this->registerProvider('sybase', sybase::class);
+    }
+
+    /**
+     * @param string $engine
      * @param DBManagerInterface $executor
      *
      * @return DatabaseProviderInterface
      */
-    public function getProvider($engineProvider, DBManagerInterface $executor)
+    public function getProvider($engine, DBManagerInterface $executor)
     {
-        if (! class_exists($engineProvider)) {
-            throw new Exception("Provider for engine '$engineProvider' not found.");
+        if (isset($this->instantiated[$engine])) {
+            return $this->instantiated[$engine];
         }
 
-        return new $engineProvider($executor);
+        $providerClass = $this->getClass($engine);
+
+        if (!$providerClass) {
+            throw new Exception("Provider for engine '$engine' not found.");
+        }
+
+        $this->instantiated[$engine] = new $providerClass($executor);
+
+        return $this->instantiated[$engine];
     }
 
     /**
-     * This method can be extended to register custom providers.
+     * Register a custom class.
      *
-     * @param string $engine
+     * @param string $name
+     * @param string $class
      *
      * @return string
      */
+    public function registerProvider($name, $class)
+    {
+        if (!is_subclass_of($class, DatabaseProviderInterface::class)) {
+            throw new Exception(sprintf(
+                'Provider class \'%s\' must implement \'%s\'',
+                $class,
+                DatabaseProviderInterface::class
+            ));
+        }
+
+        $this->providers[$name] = $class;
+
+        return $this;
+    }
+
+    /**
+     * @param string $engine
+     *
+     * @return string|null
+     */
     public function getClass($engine)
     {
-        return '\Genesis\SQLExtension\Context\DatabaseProviders\\' . $engine;
+        return isset($this->providers[$engine]) ? $this->providers[$engine] : null;
     }
 }
