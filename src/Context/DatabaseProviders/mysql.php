@@ -36,18 +36,22 @@ class mysql extends BaseProvider
         return '`';
     }
 
+    protected function getPrimaryKeyQuery()
+    {
+        return 'SELECT `COLUMN_NAME` AS `COLUMN_NAME`
+            FROM `information_schema`.`COLUMNS`
+            WHERE (`TABLE_SCHEMA` = "%s")
+            AND (`TABLE_NAME` = "%s")
+            AND (`COLUMN_KEY` = "PRI")';
+    }
+
     /**
      * {@inheritDoc}
      */
     public function getPrimaryKeyForTable($database, $schema, $table)
     {
         $sql = sprintf(
-            '
-            SELECT `COLUMN_NAME` AS `COLUMN_NAME`
-            FROM `information_schema`.`COLUMNS`
-            WHERE (`TABLE_SCHEMA` = "%s")
-            AND (`TABLE_NAME` = "%s")
-            AND (`COLUMN_KEY` = "PRI")',
+            $this->getPrimaryKeyQuery(),
             $database,
             $table
         );
@@ -61,6 +65,22 @@ class mysql extends BaseProvider
         }
 
         return $result[0][0];
+    }
+
+    protected function getRequiredTableColumnsQuery()
+    {
+        return "SELECT 
+                `{$this->getColumnNameFieldName()}` AS `column_name`,
+                `{$this->getDataTypeFieldName()}` AS `data_type`,
+                `{$this->getMaxCharacterFieldName()}` AS `data_length`
+            FROM 
+                information_schema.columns 
+            WHERE 
+                is_nullable = 'NO'
+            AND 
+                table_name = '%s'
+            AND 
+                table_schema = '%s';";
     }
 
     /**
@@ -85,19 +105,7 @@ class mysql extends BaseProvider
         $table = trim($table, '`');
 
         // Statement to extract all required columns for a table.
-        $sqlStatement = "
-            SELECT 
-                `{$this->getColumnNameFieldName()}` AS `column_name`,
-                `{$this->getDataTypeFieldName()}` AS `data_type`,
-                `{$this->getMaxCharacterFieldName()}` AS `data_length`
-            FROM 
-                information_schema.columns 
-            WHERE 
-                is_nullable = 'NO'
-            AND 
-                table_name = '%s'
-            AND 
-                table_schema = '%s';";
+        $sqlStatement = $this->getRequiredTableColumnsQuery();
 
         // Get not null columns
         $sql = sprintf(
@@ -128,6 +136,20 @@ class mysql extends BaseProvider
         return $cols;
     }
 
+    protected function getTableColumnsQuery()
+    {
+        return "SELECT 
+                `{$this->getColumnNameFieldName()}` AS `column_name`,
+                `{$this->getDataTypeFieldName()}` AS `data_type`,
+                `{$this->getMaxCharacterFieldName()}` AS `data_length`
+            FROM 
+                information_schema.columns
+            WHERE
+                table_name = '%s'
+            AND 
+                table_schema = '%s';";
+    }
+
     /**
      * {@inheritDoc}
      */
@@ -150,17 +172,7 @@ class mysql extends BaseProvider
         $table = trim($table, '`');
 
         // Statement to extract all required columns for a table.
-        $sqlStatement = "
-            SELECT 
-                `{$this->getColumnNameFieldName()}` AS `column_name`,
-                `{$this->getDataTypeFieldName()}` AS `data_type`,
-                `{$this->getMaxCharacterFieldName()}` AS `data_length`
-            FROM 
-                information_schema.columns
-            WHERE
-                table_name = '%s'
-            AND 
-                table_schema = '%s';";
+        $sqlStatement = $this->getTableColumnsQuery();
 
         // Get not null columns
         $sql = sprintf(

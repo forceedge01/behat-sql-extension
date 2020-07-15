@@ -98,7 +98,7 @@ class mysqlTest extends TestHelper
 
         $this->testObject->getExecutor()->expects($this->once())
             ->method('execute')
-            ->with($expectedSql)
+            ->with(trim($expectedSql))
             ->will($this->returnValue($this->getPdoStatementWithRows(0, [])));
 
         $result = $this->testObject->getPrimaryKeyForTable($database, null, $table);
@@ -113,8 +113,7 @@ class mysqlTest extends TestHelper
     {
         $database = 'my_app';
         $table = 'user';
-        $expectedSql = '
-            SELECT `COLUMN_NAME` AS `COLUMN_NAME`
+        $expectedSql = 'SELECT `COLUMN_NAME` AS `COLUMN_NAME`
             FROM `information_schema`.`COLUMNS`
             WHERE (`TABLE_SCHEMA` = "my_app")
             AND (`TABLE_NAME` = "user")
@@ -138,19 +137,18 @@ class mysqlTest extends TestHelper
         $table = 'user';
         $schema = 'myschema';
         $database = 'mydb';
-        $expectedSql = "
-            SELECT 
+        $expectedSql = 'SELECT 
                 `column_name` AS `column_name`,
                 `data_type` AS `data_type`,
                 `character_maximum_length` AS `data_length`
             FROM 
                 information_schema.columns 
             WHERE 
-                is_nullable = 'NO'
+                is_nullable = \'NO\'
             AND 
-                table_name = 'user'
+                table_name = \'user\'
             AND 
-                table_schema = 'myschema';";
+                table_schema = \'myschema\';';
 
         $this->testObject->getExecutor()->expects($this->once())
             ->method('execute')
@@ -169,19 +167,18 @@ class mysqlTest extends TestHelper
     {
         $dbSchema = 'myschema';
         $table = 'user';
-        $expectedSql = "
-            SELECT 
+        $expectedSql = 'SELECT 
                 `column_name` AS `column_name`,
                 `data_type` AS `data_type`,
                 `character_maximum_length` AS `data_length`
             FROM 
                 information_schema.columns 
             WHERE 
-                is_nullable = 'NO'
+                is_nullable = \'NO\'
             AND 
-                table_name = 'user'
+                table_name = \'user\'
             AND 
-                table_schema = 'myschema';";
+                table_schema = \'myschema\';';
 
         $this->testObject->getExecutor()->expects($this->once())
             ->method('execute')
@@ -207,7 +204,7 @@ class mysqlTest extends TestHelper
     {
         $dbSchema = 'myschema';
         $table = 'user';
-        $expectedSql = "
+        $expectedSql = '
             SELECT 
                 `column_name` AS `column_name`,
                 `data_type` AS `data_type`,
@@ -215,13 +212,13 @@ class mysqlTest extends TestHelper
             FROM 
                 information_schema.columns
             WHERE
-                table_name = 'user'
+                table_name = \'user\'
             AND 
-                table_schema = 'myschema';";
+                table_schema = \'myschema\';';
 
         $this->testObject->getExecutor()->expects($this->once())
             ->method('execute')
-            ->with($expectedSql)
+            ->with(trim($expectedSql))
             ->will($this->returnValue($this->getPdoStatementWithRows(2, [
                     ['column_name' => 'id', 'data_type' => 'int', 'data_length' => null],
                     ['column_name' => 'name', 'data_type' => 'string', 'data_length' => '500'],

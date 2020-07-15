@@ -48,7 +48,7 @@ class DBManager implements Interfaces\DBManagerInterface
     ) {
         $this->setDBParams($params);
         $this->databaseProvider = $dbProviderFactory->getProvider(
-            $dbProviderFactory->getClass($this->params['DBENGINE']),
+            $this->params['DBENGINE'],
             $this
         );
     }
@@ -126,6 +126,7 @@ class DBManager implements Interfaces\DBManagerInterface
     {
         $keyReference = $database . $schema . $table;
         $databaseToUse = $this->getParams()['DBPREFIX'] . ($database ? $database : $this->getParams()['DBNAME']);
+        $schema = $schema ? $schema : $this->getParams()['DBSCHEMA'];
 
         if (! isset(self::$primaryKeys[$keyReference])) {
             self::$primaryKeys[$keyReference] = $this->databaseProvider->getPrimaryKeyForTable(
