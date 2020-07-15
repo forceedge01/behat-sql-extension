@@ -147,6 +147,27 @@ $this->get('dbManager')->getConnection()->setAttribute(
 );
 ```
 
+Registering your own provider class
+-----------------------------------
+
+In case the provided provider isn't compatible with your engine version or is missing, you can register your own provider before any calls are made like so:
+
+```php
+<?php
+
+class FeatureContext
+{
+    public function __construct()
+    {
+        $this->sqlContext = ...;
+        $this->sqlContext->get('dbManager')->getProviderFactory()->registerProvider(
+          string $engine,
+          string $providerClass
+        );
+    }
+}
+```
+
 ###2. Environment variable
 
 An environment variable can be set for the database connection details in the following way:

@@ -39,6 +39,11 @@ class DBManager implements Interfaces\DBManagerInterface
     private static $requiredColumns;
 
     /**
+     * @var DatabaseProvider\Factory
+     */
+    private $factory;
+
+    /**
      * @param DatabaseProviderFactoryInterface $dbProviderFactory
      * @param array                            $params
      */
@@ -47,10 +52,15 @@ class DBManager implements Interfaces\DBManagerInterface
         array $params = array()
     ) {
         $this->setDBParams($params);
-        $this->databaseProvider = $dbProviderFactory->getProvider(
-            $this->params['DBENGINE'],
-            $this
-        );
+        $this->providerFactory = $dbProviderFactory;
+    }
+
+    /**
+     * @return DatabaseProviders\Factory
+     */
+    public function getProviderFactory()
+    {
+        return $this->providerFactory;
     }
 
     /**
@@ -58,6 +68,15 @@ class DBManager implements Interfaces\DBManagerInterface
      */
     public function getDatabaseProvider()
     {
+        if ($this->databaseProvider) {
+            return $this->databaseProvider;
+        }
+
+        $this->databaseProvider = $this->getProviderFactory()->getProvider(
+            $this->params['DBENGINE'],
+            $this
+        );
+
         return $this->databaseProvider;
     }
 
@@ -129,7 +148,7 @@ class DBManager implements Interfaces\DBManagerInterface
         $schema = $schema ? $schema : $this->getParams()['DBSCHEMA'];
 
         if (! isset(self::$primaryKeys[$keyReference])) {
-            self::$primaryKeys[$keyReference] = $this->databaseProvider->getPrimaryKeyForTable(
+            self::$primaryKeys[$keyReference] = $this->getDatabaseProvider()->getPrimaryKeyForTable(
                 $databaseToUse,
                 $schema,
                 $table
@@ -198,7 +217,7 @@ class DBManager implements Interfaces\DBManagerInterface
         $databaseToUse = $this->getParams()['DBPREFIX'] . ($database ? $database : $this->getParams()['DBNAME']);
 
         if (! isset(self::$requiredColumns[$requiredColumnReference])) {
-            self::$requiredColumns[$requiredColumnReference] = $this->databaseProvider->getRequiredTableColumns(
+            self::$requiredColumns[$requiredColumnReference] = $this->getDatabaseProvider()->getRequiredTableColumns(
                 $databaseToUse,
                 $schema,
                 $table
@@ -221,7 +240,7 @@ class DBManager implements Interfaces\DBManagerInterface
         $databaseToUse = $this->getParams()['DBPREFIX'] . ($database ? $database : $this->getParams()['DBNAME']);
 
         if (! isset(self::$requiredColumns[$requiredColumnReference])) {
-            self::$requiredColumns[$requiredColumnReference] = $this->databaseProvider->getTableColumns(
+            self::$requiredColumns[$requiredColumnReference] = $this->getDatabaseProvider()->getTableColumns(
                 $databaseToUse,
                 $schema,
                 $table
@@ -251,7 +270,7 @@ class DBManager implements Interfaces\DBManagerInterface
     private function getConnectionDetails()
     {
         return [
-            $this->databaseProvider->getPdoDnsString(
+            $this->getDatabaseProvider()->getPdoDnsString(
                 $this->params['DBNAME'],
                 $this->params['DBHOST'],
                 $this->params['DBPORT']
@@ -416,7 +435,7 @@ class DBManager implements Interfaces\DBManagerInterface
      */
     public function getLeftDelimiterForReservedWord()
     {
-        return $this->databaseProvider->getLeftDelimiterForReservedWord();
+        return $this->getDatabaseProvider()->getLeftDelimiterForReservedWord();
     }
 
     /**
@@ -424,6 +443,6 @@ class DBManager implements Interfaces\DBManagerInterface
      */
     public function getRightDelimiterForReservedWord()
     {
-        return $this->databaseProvider->getRightDelimiterForReservedWord();
+        return $this->getDatabaseProvider()->getRightDelimiterForReservedWord();
     }
 }
