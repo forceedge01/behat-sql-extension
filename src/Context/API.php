@@ -131,7 +131,6 @@ class API extends SQLHandler implements Interfaces\APIInterface
         }
 
         if ($lastId) {
-            Debugger::log('GOT LAST ID: ' . $lastId);
             $queryBuilder = new Builder\SelectQueryBuilder($this->queryParams);
             $queryBuilder->setWhereClause("{$entity->getPrimaryKey()} = {$this->quoteOrNot($lastId)}");
             $selectQuery = Builder\QueryDirector::build($queryBuilder);

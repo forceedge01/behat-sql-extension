@@ -367,7 +367,9 @@ class SQLHandler implements Context, Interfaces\SQLHandlerInterface
     }
 
     /**
-     * Procure the last id.
+     * For postgres we need to specify the sequence to return the last id. Check if the value for
+     * the primary key was supplied as input and use that, if not use whatever is fetched. Works
+     * better with tables that have no auto generation on the primary key column.
      *
      * @return mixed
      */
@@ -375,8 +377,6 @@ class SQLHandler implements Context, Interfaces\SQLHandlerInterface
     {
         $lastId = null;
         $primaryKey = $this->getEntity()->getPrimaryKey();
-        // Check if the value for the primary key was supplied and use that, if not use whatever is fetched.
-        // Works better with tables that have no auto generation on the primary key column.
         if (isset($queryParams->getRawValues()[$primaryKey]) &&
             $commandType === Interfaces\SQLHandlerInterface::COMMAND_TYPE_INSERT
         ) {
