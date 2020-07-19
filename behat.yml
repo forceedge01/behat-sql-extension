@@ -9,4 +9,12 @@ default:
       connection_details:
         engine: sqlite
         dbname: features/mydb.db
-      debug: 2
+      # connection_details:
+      #   engine: pgsql
+      #   dbname: postgres
+      #   port: 5432
+      #   schema: public
+      #   host: 0.0.0.0
+      #   username: postgres
+      #   password: password
+      debug: 1

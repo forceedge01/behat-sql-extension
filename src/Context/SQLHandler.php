@@ -6,7 +6,9 @@ use Behat\Behat\Context\Context;
 use Behat\Gherkin\Node\TableNode;
 use Exception;
 use Genesis\SQLExtension\Context\Exceptions\ExternalRefResolutionException;
+use Genesis\SQLExtension\Context\Interfaces\DBManagerInterface;
 use Genesis\SQLExtension\Context\Representations\Entity;
+use Genesis\SQLExtension\Context\Representations\QueryParams;
 use Traversable;
 
 /*
@@ -344,15 +346,14 @@ class SQLHandler implements Context, Interfaces\SQLHandlerInterface
         $this->lastQueries[$this->getCommandType()] = $sql;
 
         $statement = $this->dbManager->execute($sql);
-        $this->lastId = $this->dbManager->getLastInsertId($this->getEntity()->getTableName());
-        $primaryKey = $this->getEntity()->getPrimaryKey();
 
-        // Check if the value for the primary key was supplied and use that, if not use whatever is fetched.
-        // Works better with tables that have no auto generation on the primary key column.
-        if (isset($this->queryParams->getRawValues()[$primaryKey]) &&
-            $this->getCommandType() === Interfaces\SQLHandlerInterface::COMMAND_TYPE_INSERT) {
-            $this->lastId = $this->queryParams->getRawValues()[$primaryKey];
-            Debugger::log('Last Id: ' . $this->lastId);
+        if (in_array($this->getCommandType(), ['insert'])) {
+            $this->lastId = $this->procureLastId(
+                $this->getEntity(),
+                $this->queryParams,
+                $this->dbManager,
+                $this->getCommandType()
+            );
         }
 
         $this->recordHistory(
@@ -362,12 +363,39 @@ class SQLHandler implements Context, Interfaces\SQLHandlerInterface
             $this->lastId
         );
 
-        // If their is an id, save it!
-        if ($this->lastId) {
-            $this->handleLastId($this->getEntity(), $this->lastId);
+        return $statement;
+    }
+
+    /**
+     * Procure the last id.
+     *
+     * @return mixed
+     */
+    private function procureLastId(Entity $entity, QueryParams $queryParams, DBManagerInterface $dbManager, $commandType)
+    {
+        $lastId = null;
+        $primaryKey = $this->getEntity()->getPrimaryKey();
+        // Check if the value for the primary key was supplied and use that, if not use whatever is fetched.
+        // Works better with tables that have no auto generation on the primary key column.
+        if (isset($queryParams->getRawValues()[$primaryKey]) &&
+            $commandType === Interfaces\SQLHandlerInterface::COMMAND_TYPE_INSERT
+        ) {
+            $lastId = $queryParams->getRawValues()[$primaryKey];
+            Debugger::log('Last Id provided in values: ' . $lastId);
+        } else {
+            $lastId = $dbManager->getLastInsertId(
+                $entity->getTableName(),
+                $entity->getPrimaryKey()
+            );
+            Debugger::log('Last Id returned by db: ' . $lastId);
         }
 
-        return $statement;
+        // If their is an id, save it!
+        if ($lastId) {
+            $this->handleLastId($entity, $lastId);
+        }
+
+        return $lastId;
     }
 
     /**
@@ -633,6 +661,10 @@ class SQLHandler implements Context, Interfaces\SQLHandlerInterface
 
         if (isset(self::$entityCollection[$inputEntity]) && self::$entityCollection[$inputEntity] instanceof Entity) {
             $this->entity = self::$entityCollection[$inputEntity];
+
+            $this->debugLog(sprintf('SET ENTITY: %s', $this->entity->getEntityName()));
+            $this->debugLog(sprintf('PRIMARY KEY: %s', $this->entity->getPrimaryKey()));
+
             return $this->entity;
         }
 
@@ -679,9 +711,8 @@ class SQLHandler implements Context, Interfaces\SQLHandlerInterface
             $this->entity->getTableName()
         );
 
-        // Bug, some tables may genuinely not have a primary key on them.
-        if (! $primaryKey) {
-            $primaryKey = 'id';
+        if (!$primaryKey) {
+            $primaryKey = null;
         }
 
         $this->entity->setPrimaryKey($primaryKey);

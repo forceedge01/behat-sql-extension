@@ -235,12 +235,17 @@ class DBManager implements Interfaces\DBManagerInterface
      * Get the last insert id.
      *
      * @param string $table For compatibility with postgres.
+     * @param string $primaryKey
      *
      * @return int|null
      */
-    public function getLastInsertId($table = null)
+    public function getLastInsertId($table = null, $primaryKey = 'id')
     {
-        return $this->connection->lastInsertId(sprintf('%s_id_seq', $table));
+        if ($primaryKey === null) {
+            return null;
+        }
+
+        return $this->connection->lastInsertId(sprintf('%s_%s_seq', $table, $primaryKey));
     }
 
     /**
