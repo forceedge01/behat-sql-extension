@@ -20,6 +20,7 @@ New Feature in Minor:
 - 1: OBDC Support added.
 - 2: Count API call added.
 - 3: Read all columns of a table. Dev improvements.
+- 4: Ability to register external database providers.
 
 Patch fix:
 ------------
@@ -145,6 +146,27 @@ $this->get('dbManager')->getConnection()->setAttribute(
   PDO::ATTR_ERRMODE,
   PDO::ERRMODE_EXCEPTION
 );
+```
+
+Registering your own database provider class
+-----------------------------------
+
+In case the provided provider isn't compatible with your engine version or is missing, you can register your own provider before any calls are made like so:
+
+```php
+<?php
+
+class FeatureContext
+{
+    public function __construct()
+    {
+        $this->sqlContext = ...;
+        $this->sqlContext->get('dbManager')->getProviderFactory()->registerProvider(
+          string $engine,
+          string $providerClass
+        );
+    }
+}
 ```
 
 ###2. Environment variable

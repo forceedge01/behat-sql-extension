@@ -12,7 +12,15 @@ use Genesis\SQLExtension\Context\Interfaces\DatabaseProviderInterface;
  */
 class Factory implements DatabaseProviderFactoryInterface
 {
+    /**
+     * @var array Available providers.
+     */
     private $providers;
+
+    /**
+     * @var array instantiated providers.
+     */
+    private $instantiated;
 
     public function __construct()
     {
@@ -33,13 +41,19 @@ class Factory implements DatabaseProviderFactoryInterface
      */
     public function getProvider($engine, DBManagerInterface $executor)
     {
+        if (isset($this->instantiated[$engine])) {
+            return $this->instantiated[$engine];
+        }
+
         $providerClass = $this->getClass($engine);
 
         if (!$providerClass) {
             throw new Exception("Provider for engine '$engine' not found.");
         }
 
-        return new $providerClass($executor);
+        $this->instantiated[$engine] = new $providerClass($executor);
+
+        return $this->instantiated[$engine];
     }
 
     /**
@@ -52,6 +66,14 @@ class Factory implements DatabaseProviderFactoryInterface
      */
     public function registerProvider($name, $class)
     {
+        if (!is_subclass_of($class, DatabaseProviderInterface::class)) {
+            throw new Exception(sprintf(
+                'Provider class \'%s\' must implement \'%s\'',
+                $class,
+                DatabaseProviderInterface::class
+            ));
+        }
+
         $this->providers[$name] = $class;
 
         return $this;
