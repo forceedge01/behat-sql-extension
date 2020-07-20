@@ -24,7 +24,7 @@ New Feature in Minor:
 
 Patch fix:
 ------------
-NA
+- 1: LastInsertId fetch adjusted to work correctly with the postgresql driver.
 
 Installation
 ------------
