@@ -376,7 +376,7 @@ class SQLHandler implements Context, Interfaces\SQLHandlerInterface
     private function procureLastId(Entity $entity, QueryParams $queryParams, DBManagerInterface $dbManager, $commandType)
     {
         $lastId = null;
-        $primaryKey = $this->getEntity()->getPrimaryKey();
+        $primaryKey = $entity->getPrimaryKey();
         if (isset($queryParams->getRawValues()[$primaryKey]) &&
             $commandType === Interfaces\SQLHandlerInterface::COMMAND_TYPE_INSERT
         ) {
