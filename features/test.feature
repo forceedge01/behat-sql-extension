@@ -3,19 +3,55 @@ Feature:
     As the maintainer of the extension
     I want to run a test using the extension
 
+    @postgres
     # Scenario:
-        # Given I have a "testing" where:
-        #     | id |
-        #     | 5  |
-        # And I should have a "testing" with:
-        #     | column | value |
-        #     | id     | 5     |
-        # And I do not have a "testing" where:
-        #     | id |
-        #     | 5 |
-        # Then I should not have a "testing" with:
-        #     | column | value |
-        #     | id     | 5     |
+    #     And I do not have a "testing" where:
+    #         | id |
+    #         | 5  |
+    #     Given I have a "testing" where:
+    #         | id |
+    #         | 5  |
+    #     And I should have a "testing" with:
+    #         | column | value |
+    #         | id     | 5     |
+    #     And I do not have a "testing" where:
+    #         | id |
+    #         | 5  |
+    #     Then I should not have a "testing" with:
+    #         | column | value |
+    #         | id   | 5    |
+
+    #     And I do not have a "noprimarykey" where:
+    #         | name |
+    #         | aq   |
+    #     Given I have a "noprimarykey" where:
+    #         | name |
+    #         | aq   |
+    #     And I should have a "noprimarykey" with:
+    #         | column | value |
+    #         | name   | aq    |
+    #     And I do not have a "noprimarykey" where:
+    #         | name |
+    #         | aq   |
+    #     Then I should not have a "noprimarykey" with:
+    #         | column | value |
+    #         | name   | aq    |
+
+    #     And I do not have a "primarykeynotid" where:
+    #         | name   |
+    #         | unique |
+    #     Given I have a "primarykeynotid" where:
+    #         | name   |
+    #         | unique |
+    #     And I should have a "primarykeynotid" with:
+    #         | column | value  |
+    #         | name   | unique |
+    #     And I do not have a "primarykeynotid" where:
+    #         | name   |
+    #         | unique |
+    #     Then I should not have a "primarykeynotid" with:
+    #         | column | value  |
+    #         | name   | unique |
 
     Scenario: Test insert query.
         And I have a "User" where:
